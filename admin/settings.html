@@ -89,6 +89,27 @@
     <div class="admin-body">
       <div id="alert" class="alert" style="display:none"></div>
 
+      <!-- ══ LOGO ══ -->
+      <div style="margin-bottom:28px">
+        <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:6px">לוגו האתר</div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:16px">הלוגו מופיע בכל עמודי האתר ובפאנל הניהול. לחצו להחלפה — נשמר אוטומטית.</div>
+        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+          <!-- preview -->
+          <div id="logoDrop" style="width:180px;height:120px;border:2px dashed rgba(27,98,115,.3);border-radius:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(255,255,255,.7);backdrop-filter:blur(4px);position:relative;overflow:hidden;transition:.2s" onclick="document.getElementById('logoFile').click()">
+            <img id="logoPreviewImg" style="width:100%;height:100%;object-fit:contain;display:none;padding:8px" />
+            <div id="logoDropLabel" style="text-align:center;color:var(--muted);font-size:13px;pointer-events:none">
+              <div style="font-size:32px;margin-bottom:6px">🖼️</div>העלו לוגו
+            </div>
+            <input type="file" id="logoFile" accept="image/*" style="display:none" onchange="uploadLogo(this)" />
+          </div>
+          <div>
+            <div style="font-size:13px;color:var(--soft);margin-bottom:10px">מומלץ: PNG עם רקע שקוף · יחס 1:1 או 4:3</div>
+            <button class="btn btn-line btn-sm" onclick="clearLogo()">הסרת לוגו</button>
+            <span id="logoStatus" style="font-size:12px;color:var(--teal);margin-right:12px"></span>
+          </div>
+        </div>
+      </div>
+
       <!-- ══ HOMEPAGE IMAGES — PRIMARY SECTION ══ -->
       <div style="margin-bottom:28px">
         <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:6px">תמונות דף הבית</div>
@@ -210,13 +231,41 @@
 requireAuth();
 
 // Current values from API
-let heroUrl = '', aboutUrl = '', approachUrl = '';
+let heroUrl = '', aboutUrl = '', approachUrl = '', logoUrl = '';
+
+function setLogoPreview(url) {
+  logoUrl = url;
+  const img = document.getElementById('logoPreviewImg');
+  const lbl = document.getElementById('logoDropLabel');
+  const drop = document.getElementById('logoDrop');
+  if (url) {
+    img.src = url; img.style.display = 'block'; lbl.style.display = 'none';
+    drop.style.border = '2px solid rgba(27,98,115,.25)';
+  } else {
+    img.style.display = 'none'; lbl.style.display = 'block';
+    drop.style.border = '2px dashed rgba(27,98,115,.3)';
+  }
+}
+async function uploadLogo(input) {
+  const file = input.files[0]; if (!file) return;
+  document.getElementById('logoStatus').textContent = 'מעלה...';
+  try {
+    const url = await uploadFile(file);
+    setLogoPreview(url);
+    await api('PUT', '/settings', { logo_url: url });
+    document.getElementById('logoStatus').textContent = '✓ נשמר';
+    setTimeout(() => document.getElementById('logoStatus').textContent = '', 2500);
+  } catch(e) { document.getElementById('logoStatus').textContent = e.message; }
+  input.value = '';
+}
+function clearLogo() { setLogoPreview(''); }
 
 async function load() {
   const s = await api('GET', '/settings');
   ['site_name','site_tagline','hero_title','hero_subtitle','address','phone','email','about_text'].forEach(k => {
     const el = document.getElementById(k); if (el) el.value = s[k] || '';
   });
+  if (s.logo_url)       { setLogoPreview(s.logo_url); }
   if (s.hero_image)     { heroUrl     = s.hero_image;     setPreview('hero',     s.hero_image); }
   if (s.about_image)    { aboutUrl    = s.about_image;    setPreview('about',    s.about_image); }
   if (s.approach_image) { approachUrl = s.approach_image; setPreview('approach', s.approach_image); }
@@ -279,6 +328,7 @@ async function saveAll() {
       address:       document.getElementById('address').value,
       phone:         document.getElementById('phone').value,
       email:         document.getElementById('email').value,
+      logo_url:       logoUrl,
       hero_image:     heroUrl,
       about_image:    aboutUrl,
       approach_image: approachUrl,

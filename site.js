@@ -38,6 +38,15 @@
     const s = await get('/settings');
     if (!s) return;
 
+    // Logo
+    if (s.logo_url) {
+      document.querySelectorAll('.logo-mark').forEach(mark => {
+        mark.innerHTML = `<img src="${s.logo_url}" alt="לוגו" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;padding:4px" />`;
+        mark.style.background = '#fff';
+        mark.style.boxShadow = '0 4px 14px rgba(14,58,70,.15)';
+      });
+    }
+
     // Hero title
     const h1 = document.querySelector('.hero h1');
     if (h1 && s.hero_title) h1.innerHTML = s.hero_title;

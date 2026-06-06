@@ -77,7 +77,22 @@ function renderUser() {
   if (el) el.textContent = getUser() || 'מנהל';
 }
 
+// Inject logo into admin sidebar if one is set
+async function loadAdminLogo() {
+  try {
+    const r = await fetch('/api/settings');
+    if (!r.ok) return;
+    const s = await r.json();
+    if (!s.logo_url) return;
+    document.querySelectorAll('.sidebar-logo .logo-mark, .logo-mark').forEach(mark => {
+      mark.innerHTML = `<img src="${s.logo_url}" alt="לוגו" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;padding:3px" />`;
+      mark.style.background = '#fff';
+    });
+  } catch {}
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   markActive();
   renderUser();
+  loadAdminLogo();
 });
