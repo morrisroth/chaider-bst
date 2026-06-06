@@ -15,6 +15,24 @@
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
+  // Inject an image into a blob shape div (keeps overflow:hidden clip)
+  function injectBlobImg(blob, url) {
+    if (!blob || !url) return;
+    // Remove placeholder caption
+    blob.querySelector('.ph-cap')?.remove();
+    blob.querySelector('.blob-cap')?.remove();
+    // Remove any previously injected img
+    blob.querySelector('img.blob-injected')?.remove();
+    // Insert absolutely-positioned img — clipped by the blob's overflow:hidden
+    const img = document.createElement('img');
+    img.src = url;
+    img.className = 'blob-injected';
+    img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;border-radius:inherit;';
+    blob.style.position = 'relative';
+    blob.style.background = 'transparent';
+    blob.prepend(img);
+  }
+
   // ── Settings → update hero, about, contact info ──
   async function loadSettings() {
     const s = await get('/settings');
@@ -28,17 +46,8 @@
     const lead = document.querySelector('.hero-lead');
     if (lead && s.hero_subtitle) lead.textContent = s.hero_subtitle;
 
-    // Hero image → set as blob background
-    if (s.hero_image) {
-      const blob = document.querySelector('.blob-img');
-      if (blob) {
-        blob.style.backgroundImage = `url(${s.hero_image})`;
-        blob.style.backgroundSize = 'cover';
-        blob.style.backgroundPosition = 'center';
-        const cap = blob.querySelector('.ph-cap');
-        if (cap) cap.style.display = 'none';
-      }
-    }
+    // Hero image (right blob in hero section)
+    if (s.hero_image) injectBlobImg(document.querySelector('.blob-img'), s.hero_image);
 
     // About text
     if (s.about_text) {
@@ -46,17 +55,8 @@
       if (prosePs.length) prosePs[0].textContent = s.about_text;
     }
 
-    // About image → set as blob-soft background
-    if (s.about_image) {
-      const blobSoft = document.querySelector('.blob-soft');
-      if (blobSoft) {
-        blobSoft.style.backgroundImage = `url(${s.about_image})`;
-        blobSoft.style.backgroundSize = 'cover';
-        blobSoft.style.backgroundPosition = 'center';
-        const cap = blobSoft.querySelector('.blob-cap');
-        if (cap) cap.style.display = 'none';
-      }
-    }
+    // About image (left blob in about section)
+    if (s.about_image) injectBlobImg(document.querySelector('.blob-soft'), s.about_image);
 
     // Phone links
     if (s.phone) {

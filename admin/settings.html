@@ -7,6 +7,55 @@
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../flow.css">
 <link rel="stylesheet" href="admin.css">
+<style>
+.img-card {
+  background: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.9);
+  border-radius: 20px; padding: 24px; box-shadow: 0 8px 24px rgba(14,58,70,.08);
+}
+.img-card h3 { font-family: var(--serif); font-size: 17px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.img-card .sub { font-size: 12.5px; color: var(--muted); margin-bottom: 16px; }
+
+.img-drop {
+  position: relative; border-radius: 16px; overflow: hidden;
+  background: repeating-linear-gradient(135deg,#cfe2e5 0 2px,#e6f1f2 2px 16px);
+  cursor: pointer; transition: .2s;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px dashed transparent;
+}
+.img-drop:hover { border-color: var(--aqua); }
+.img-drop.has-img { background: #000; }
+.img-drop img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.img-drop input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.img-drop-label {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px;
+  color: var(--soft); font-size: 13px; pointer-events: none;
+  background: rgba(255,255,255,.55); backdrop-filter: blur(2px);
+  transition: .2s;
+}
+.img-drop.has-img .img-drop-label {
+  background: rgba(14,58,70,.45); color: #fff;
+  opacity: 0;
+}
+.img-drop.has-img:hover .img-drop-label { opacity: 1; }
+.img-drop-label svg { width: 28px; height: 28px; opacity: .7; }
+
+.save-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(34,197,94,.14); color: #15803d;
+  border: 1px solid rgba(34,197,94,.28); border-radius: 999px;
+  padding: 4px 14px; font-size: 13px; font-weight: 600;
+  opacity: 0; transition: opacity .4s;
+}
+.save-chip.show { opacity: 1; }
+
+.page-diagram {
+  background: rgba(14,58,70,.06); border-radius: 12px; padding: 12px 14px;
+  font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 8px;
+  margin-bottom: 14px;
+}
+.page-diagram .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+</style>
 </head>
 <body>
 <div class="admin-layout">
@@ -23,23 +72,85 @@
       <a href="registrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>הרשמות</a>
       <a href="inbox.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>תיבת דואר</a>
       <div class="sidebar-section">הגדרות</div>
-      <a href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg>הגדרות האתר</a>
+      <a href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>הגדרות האתר</a>
     </nav>
     <div class="sidebar-footer"><span id="admin-username"></span> · <a href="#" onclick="logout()">יציאה</a></div>
   </aside>
 
   <div class="admin-main">
     <div class="admin-topbar">
-      <div><h1>הגדרות האתר</h1><div class="breadcrumb">עדכון תוכן ומידע כללי</div></div>
+      <div><h1>הגדרות האתר</h1><div class="breadcrumb">עדכון תמונות, תוכן ומידע</div></div>
       <div class="topbar-actions">
-        <button class="btn btn-grad btn-sm" onclick="save()">שמירת שינויים</button>
+        <span class="save-chip" id="savedChip">✓ נשמר</span>
+        <button class="btn btn-grad btn-sm" onclick="saveAll()">שמירת הכל</button>
       </div>
     </div>
+
     <div class="admin-body">
       <div id="alert" class="alert" style="display:none"></div>
 
+      <!-- ══ HOMEPAGE IMAGES — PRIMARY SECTION ══ -->
+      <div style="margin-bottom:28px">
+        <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:6px">תמונות דף הבית</div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:20px">לחצו על תמונה או גררו קובץ אליה כדי להחליף. השינוי נשמר אוטומטית.</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+          <!-- Image 1: Hero -->
+          <div class="img-card">
+            <div class="page-diagram">
+              <div class="dot" style="background:var(--teal)"></div>
+              תמונה 1 — מופיעה בצד שמאל של הגיבור (Hero), מעוצבת בצורה אורגנית
+            </div>
+            <h3>תמונת הגיבור</h3>
+            <div class="sub">ילד לומד, כיתה, או רגע מחיי החיידר</div>
+
+            <div class="img-drop" id="heroDrop" style="height:260px" onclick="document.getElementById('heroFile').click()">
+              <img id="heroImg" style="display:none" />
+              <div class="img-drop-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                לחצו להעלאת תמונה
+              </div>
+              <input type="file" id="heroFile" accept="image/*" onchange="uploadImg('hero', this)" />
+            </div>
+
+            <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+              <button class="btn btn-line btn-sm" onclick="clearImg('hero')">הסרת תמונה</button>
+              <span id="heroStatus" style="font-size:12px;color:var(--muted)"></span>
+            </div>
+          </div>
+
+          <!-- Image 2: About -->
+          <div class="img-card">
+            <div class="page-diagram">
+              <div class="dot" style="background:var(--gold)"></div>
+              תמונה 2 — מופיעה בצד ימין של סעיף "מי אנחנו", מעוצבת בצורה אורגנית
+            </div>
+            <h3>תמונת אודות</h3>
+            <div class="sub">חצר החיידר, פעילות, או מורים עם תלמידים</div>
+
+            <div class="img-drop" id="aboutDrop" style="height:260px" onclick="document.getElementById('aboutFile').click()">
+              <img id="aboutImg" style="display:none" />
+              <div class="img-drop-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                לחצו להעלאת תמונה
+              </div>
+              <input type="file" id="aboutFile" accept="image/*" onchange="uploadImg('about', this)" />
+            </div>
+
+            <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+              <button class="btn btn-line btn-sm" onclick="clearImg('about')">הסרת תמונה</button>
+              <span id="aboutStatus" style="font-size:12px;color:var(--muted)"></span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ══ REST OF SETTINGS ══ -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
-        <!-- General -->
+
+        <!-- General info -->
         <div class="form-panel">
           <h2>פרטי המוסד</h2>
           <div class="form-group"><label>שם האתר</label><input type="text" id="site_name" /></div>
@@ -49,35 +160,12 @@
           <div class="form-group"><label>דוא"ל</label><input type="email" id="email" dir="ltr" /></div>
         </div>
 
-        <!-- Hero -->
+        <!-- Hero text -->
         <div class="form-panel">
-          <h2>דף הבית — Hero</h2>
+          <h2>טקסט דף הבית</h2>
           <div class="form-group"><label>כותרת ראשית</label><input type="text" id="hero_title" /></div>
-          <div class="form-group"><label>טקסט משנה</label><textarea id="hero_subtitle" rows="3"></textarea></div>
-          <div class="form-group"><label>תמונת Hero (URL)</label><input type="text" id="hero_image" dir="ltr" placeholder="https://..." /></div>
-          <div class="form-group">
-            <label>העלאת תמונת Hero</label>
-            <div class="img-upload-box" onclick="document.getElementById('heroFile').click()" style="padding:14px">
-              <img id="heroPreview" style="display:none;max-height:100px;margin:0 auto 8px;border-radius:8px" />
-              <p id="heroPlaceholder" style="font-size:13px">לחצו להעלאה</p>
-              <input type="file" id="heroFile" accept="image/*" style="display:none" onchange="uploadHero(this)" />
-            </div>
-          </div>
-        </div>
-
-        <!-- About -->
-        <div class="form-panel" style="grid-column:1/-1">
-          <h2>אודות</h2>
-          <div class="form-group"><label>טקסט אודות</label><textarea id="about_text" rows="5"></textarea></div>
-          <div class="form-group"><label>תמונת אודות (URL)</label><input type="text" id="about_image" dir="ltr" placeholder="https://..." /></div>
-          <div class="form-group">
-            <label>העלאת תמונת אודות</label>
-            <div class="img-upload-box" onclick="document.getElementById('aboutFile').click()" style="padding:14px">
-              <img id="aboutPreview" style="display:none;max-height:100px;margin:0 auto 8px;border-radius:8px" />
-              <p id="aboutPlaceholder" style="font-size:13px">לחצו להעלאה</p>
-              <input type="file" id="aboutFile" accept="image/*" style="display:none" onchange="uploadAbout(this)" />
-            </div>
-          </div>
+          <div class="form-group"><label>טקסט משנה</label><textarea id="hero_subtitle" rows="4"></textarea></div>
+          <div class="form-group"><label>טקסט אודות</label><textarea id="about_text" rows="4"></textarea></div>
         </div>
 
         <!-- Password -->
@@ -87,6 +175,7 @@
           <div class="form-group"><label>סיסמה חדשה</label><input type="password" id="newPass" /></div>
           <button class="btn btn-line btn-sm" onclick="changePass()">עדכן סיסמה</button>
         </div>
+
       </div>
     </div>
   </div>
@@ -96,54 +185,88 @@
 <script>
 requireAuth();
 
+// Current values from API
+let heroUrl = '', aboutUrl = '';
+
 async function load() {
   const s = await api('GET', '/settings');
   ['site_name','site_tagline','hero_title','hero_subtitle','address','phone','email','about_text'].forEach(k => {
-    if (document.getElementById(k)) document.getElementById(k).value = s[k] || '';
+    const el = document.getElementById(k); if (el) el.value = s[k] || '';
   });
-  if (s.hero_image) { document.getElementById('hero_image').value = s.hero_image; showImgPreview('heroPreview','heroPlaceholder', s.hero_image); }
-  if (s.about_image) { document.getElementById('about_image').value = s.about_image; showImgPreview('aboutPreview','aboutPlaceholder', s.about_image); }
+  if (s.hero_image)  { heroUrl  = s.hero_image;  setPreview('hero',  s.hero_image); }
+  if (s.about_image) { aboutUrl = s.about_image; setPreview('about', s.about_image); }
 }
 
-function showImgPreview(previewId, phId, url) {
-  const p = document.getElementById(previewId); p.src = url; p.style.display = 'block';
-  document.getElementById(phId).style.display = 'none';
+function setPreview(which, url) {
+  const img  = document.getElementById(which + 'Img');
+  const drop = document.getElementById(which + 'Drop');
+  if (url) {
+    img.src = url; img.style.display = 'block';
+    drop.classList.add('has-img');
+  } else {
+    img.src = ''; img.style.display = 'none';
+    drop.classList.remove('has-img');
+  }
 }
 
-async function uploadHero(input) {
+function setStatus(which, msg, ok = true) {
+  const el = document.getElementById(which + 'Status');
+  el.textContent = msg;
+  el.style.color = ok ? 'var(--teal)' : '#dc2626';
+  if (msg) setTimeout(() => { el.textContent = ''; }, 3000);
+}
+
+async function uploadImg(which, input) {
   const file = input.files[0]; if (!file) return;
-  const url = await uploadFile(file);
-  document.getElementById('hero_image').value = url;
-  showImgPreview('heroPreview','heroPlaceholder', url);
-}
-async function uploadAbout(input) {
-  const file = input.files[0]; if (!file) return;
-  const url = await uploadFile(file);
-  document.getElementById('about_image').value = url;
-  showImgPreview('aboutPreview','aboutPlaceholder', url);
+  setStatus(which, 'מעלה...', true);
+  try {
+    const url = await uploadFile(file);
+    if (which === 'hero')  heroUrl  = url;
+    else                   aboutUrl = url;
+    setPreview(which, url);
+    // Auto-save the image immediately
+    await saveImages();
+    setStatus(which, '✓ נשמר');
+  } catch(e) { setStatus(which, e.message, false); }
+  input.value = '';
 }
 
-async function save() {
+function clearImg(which) {
+  if (which === 'hero')  heroUrl  = '';
+  else                   aboutUrl = '';
+  setPreview(which, '');
+}
+
+async function saveImages() {
+  await api('PUT', '/settings', { hero_image: heroUrl, about_image: aboutUrl });
+}
+
+async function saveAll() {
   try {
     await api('PUT', '/settings', {
-      site_name: document.getElementById('site_name').value,
-      site_tagline: document.getElementById('site_tagline').value,
-      hero_title: document.getElementById('hero_title').value,
+      site_name:     document.getElementById('site_name').value,
+      site_tagline:  document.getElementById('site_tagline').value,
+      hero_title:    document.getElementById('hero_title').value,
       hero_subtitle: document.getElementById('hero_subtitle').value,
-      hero_image: document.getElementById('hero_image').value,
-      about_image: document.getElementById('about_image').value,
-      about_text: document.getElementById('about_text').value,
-      address: document.getElementById('address').value,
-      phone: document.getElementById('phone').value,
-      email: document.getElementById('email').value,
+      about_text:    document.getElementById('about_text').value,
+      address:       document.getElementById('address').value,
+      phone:         document.getElementById('phone').value,
+      email:         document.getElementById('email').value,
+      hero_image:    heroUrl,
+      about_image:   aboutUrl,
     });
-    showAlert(document.getElementById('alert'), 'ההגדרות נשמרו ✓');
+    const chip = document.getElementById('savedChip');
+    chip.classList.add('show');
+    setTimeout(() => chip.classList.remove('show'), 2500);
   } catch(e) { showAlert(document.getElementById('alert'), e.message, 'error'); }
 }
 
 async function changePass() {
   try {
-    await api('POST', '/auth/change-password', { current: document.getElementById('curPass').value, newPass: document.getElementById('newPass').value });
+    await api('POST', '/auth/change-password', {
+      current: document.getElementById('curPass').value,
+      newPass:  document.getElementById('newPass').value
+    });
     document.getElementById('curPass').value = '';
     document.getElementById('newPass').value = '';
     showAlert(document.getElementById('alert'), 'הסיסמה עודכנה ✓');
