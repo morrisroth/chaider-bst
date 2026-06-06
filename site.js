@@ -355,12 +355,54 @@
     return false;
   };
 
+  // ── Mobile hamburger (JS toggle — reliable across all browsers) ──
+  function initMobileNav() {
+    const toggle = document.getElementById('navtoggle');
+    const nav    = document.querySelector('.site-nav');
+    const burger = document.querySelector('.nav-burger');
+    if (!toggle || !nav) return;
+
+    function setOpen(open) {
+      nav.style.display = open ? 'block' : '';
+      toggle.checked = open;
+    }
+
+    toggle.addEventListener('change', () => setOpen(toggle.checked));
+
+    // Close when any nav link is tapped
+    nav.querySelectorAll('a').forEach(a =>
+      a.addEventListener('click', () => setOpen(false))
+    );
+
+    // Close on outside tap
+    document.addEventListener('click', e => {
+      if (!nav.contains(e.target) && !burger?.contains(e.target) && e.target !== toggle)
+        setOpen(false);
+    }, { passive: true });
+  }
+
+  // ── Floating הרשמה button — mobile only, above WhatsApp ──
+  function injectMobileRegBtn() {
+    if (window.innerWidth > 768) return;
+    if (location.pathname.includes('register')) return;
+    const existing = document.querySelector('.mobile-reg');
+    if (existing) return; // already injected
+    const a = document.createElement('a');
+    a.href      = 'register.html';
+    a.className = 'mobile-reg';
+    a.innerHTML = '← הרשמה';
+    a.style.display = 'flex';
+    document.body.appendChild(a);
+  }
+
   // ── Run ──
   document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
     loadFeaturedPosts();
     loadAllPosts();
     loadGallery();
+    initMobileNav();
+    injectMobileRegBtn();
 
     // Modal close: button + backdrop + Escape
     const pmClose = document.getElementById('pmClose');
