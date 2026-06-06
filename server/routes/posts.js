@@ -16,6 +16,13 @@ router.get('/admin/all', auth, (_, res) => {
   res.json(posts);
 });
 
+// admin: single post regardless of published state
+router.get('/admin/:id', auth, (req, res) => {
+  const post = read('posts.json').find(p => p.id === req.params.id);
+  if (!post) return res.status(404).json({ error: 'לא נמצא' });
+  res.json(post);
+});
+
 router.get('/:id', (req, res) => {
   const post = read('posts.json').find(p => p.id === req.params.id && p.published);
   if (!post) return res.status(404).json({ error: 'לא נמצא' });

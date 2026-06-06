@@ -107,7 +107,7 @@ let imgUrlVal = '';
 
 if (postId) {
   document.getElementById('pageTitle').textContent = 'עריכת פוסט';
-  api('GET', `/posts/${postId}`).then(p => {
+  api('GET', `/posts/admin/${postId}`).then(p => {
     if (!p) return;
     document.getElementById('title').value = p.title;
     document.getElementById('excerpt').value = p.excerpt;
