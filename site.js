@@ -116,28 +116,102 @@
       </article>`).join('');
   }
 
-  // ── News page: full list ──
+  // ── News page: full list + category filter + article modal ──
   async function loadAllPosts() {
     const grid = document.getElementById('allNewsGrid');
+    const filterBar = document.getElementById('newsFilter');
     if (!grid) return;
+
     const posts = await get('/posts');
     if (!posts) return;
     if (!posts.length) {
       grid.innerHTML = '<p style="text-align:center;color:var(--muted);padding:40px;grid-column:1/-1">אין פרסומים עדיין</p>';
       return;
     }
-    grid.innerHTML = posts.map(p => `
-      <article class="post">
-        <div class="post-img" style="${p.image ? `background-image:url(${p.image});background-size:cover;background-position:center;min-height:180px` : ''}">
-          ${!p.image ? `<span class="glabel">// ${esc(p.category)}</span>` : ''}
-        </div>
-        <div class="post-body">
-          <div class="post-meta"><span class="post-tag">${esc(p.category)}</span><span>${fmtDate(p.date)}</span></div>
-          <h3>${esc(p.title)}</h3>
-          <p>${esc(p.excerpt)}</p>
-        </div>
-      </article>`).join('');
+
+    // Unique categories
+    const cats = ['הכל', ...new Set(posts.map(p => p.category).filter(Boolean))];
+    let active = 'הכל';
+
+    function renderGrid(list) {
+      if (!list.length) {
+        grid.innerHTML = '<p style="text-align:center;color:var(--muted);padding:40px;grid-column:1/-1">אין פרסומים בקטגוריה זו</p>';
+        return;
+      }
+      grid.innerHTML = list.map(p => `
+        <article class="post" style="cursor:pointer" data-post-id="${esc(p.id)}">
+          <div class="post-img" style="${p.image ? `background-image:url(${p.image});background-size:cover;background-position:center;min-height:180px` : ''}">
+            ${!p.image ? `<span class="glabel">// ${esc(p.category)}</span>` : ''}
+          </div>
+          <div class="post-body">
+            <div class="post-meta"><span class="post-tag">${esc(p.category)}</span><span>${fmtDate(p.date)}</span></div>
+            <h3>${esc(p.title)}</h3>
+            <p>${esc(p.excerpt)}</p>
+            <span class="post-link">קרא עוד ←</span>
+          </div>
+        </article>`).join('');
+    }
+
+    function renderFilter() {
+      if (!filterBar) return;
+      filterBar.innerHTML = cats.map(c =>
+        `<button class="nf-pill${c === active ? ' nf-active' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`
+      ).join('');
+    }
+
+    // Filter pill clicks
+    if (filterBar) {
+      filterBar.addEventListener('click', e => {
+        const btn = e.target.closest('.nf-pill');
+        if (!btn) return;
+        active = btn.dataset.cat;
+        filterBar.querySelectorAll('.nf-pill').forEach(b =>
+          b.classList.toggle('nf-active', b.dataset.cat === active)
+        );
+        renderGrid(active === 'הכל' ? posts : posts.filter(p => p.category === active));
+      });
+    }
+
+    // Card click → open modal
+    grid.addEventListener('click', e => {
+      const card = e.target.closest('[data-post-id]');
+      if (card) openPost(card.dataset.postId);
+    });
+
+    renderFilter();
+    renderGrid(posts);
   }
+
+  // ── Article modal ──
+  window.openPost = async function(id) {
+    const modal = document.getElementById('postModal');
+    const content = document.getElementById('postModalContent');
+    if (!modal || !content) return;
+    content.innerHTML = '<div style="padding:64px;text-align:center;color:var(--muted)">טוען…</div>';
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    const post = await get('/posts/' + id);
+    if (!post) {
+      content.innerHTML = '<div style="padding:64px;text-align:center;color:var(--muted)">שגיאה בטעינה</div>';
+      return;
+    }
+    content.innerHTML =
+      (post.image ? `<img class="pm-img" src="${esc(post.image)}" alt="${esc(post.title)}" />` : '') +
+      `<div class="pm-body">
+        <div class="pm-meta">
+          <span class="post-tag">${esc(post.category)}</span>
+          <span style="font-size:13px;color:var(--muted)">${fmtDate(post.date)}</span>
+        </div>
+        <div class="pm-title">${esc(post.title)}</div>
+        <div class="pm-content">${esc(post.content || post.excerpt)}</div>
+      </div>`;
+  };
+
+  window.closePost = function() {
+    const modal = document.getElementById('postModal');
+    if (modal) modal.style.display = 'none';
+    document.body.style.overflow = '';
+  };
 
   // ── Gallery page: dynamic grid + lightbox ──
   async function loadGallery() {
@@ -287,5 +361,12 @@
     loadFeaturedPosts();
     loadAllPosts();
     loadGallery();
+
+    // Modal close: button + backdrop + Escape
+    const pmClose = document.getElementById('pmClose');
+    const postModal = document.getElementById('postModal');
+    if (pmClose) pmClose.addEventListener('click', closePost);
+    if (postModal) postModal.addEventListener('click', e => { if (e.target === postModal) closePost(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && postModal?.style.display === 'flex') closePost(); });
   });
 })();
