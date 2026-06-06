@@ -7,16 +7,157 @@
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../flow.css">
 <link rel="stylesheet" href="admin.css">
+<style>
+/* ── DROP ZONE ── */
+.drop-zone {
+  border: 2.5px dashed rgba(27,98,115,.3);
+  border-radius: 20px; padding: 40px 24px;
+  text-align: center; cursor: pointer; transition: .2s;
+  background: rgba(255,255,255,.6); backdrop-filter: blur(4px);
+  position: relative;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--aqua);
+  background: rgba(111,177,191,.08);
+}
+.drop-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.drop-icon { font-size: 44px; margin-bottom: 12px; }
+.drop-title { font-family: var(--serif); font-size: 19px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.drop-sub { font-size: 13.5px; color: var(--muted); }
+.drop-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+/* ── UPLOAD QUEUE ── */
+.upload-queue { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; margin-top: 20px; }
+.queue-item {
+  position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1;
+  background: var(--cream-dark);
+}
+.queue-item img { width: 100%; height: 100%; object-fit: cover; }
+.queue-progress {
+  position: absolute; inset: 0; background: rgba(14,58,70,.5);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #fff;
+}
+.progress-bar-wrap { width: 70%; height: 4px; background: rgba(255,255,255,.3); border-radius: 2px; }
+.progress-bar { height: 100%; background: var(--gold-lt); border-radius: 2px; transition: width .2s; }
+.queue-done { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(34,197,94,.45); color: #fff; font-size: 28px; }
+.queue-err { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(239,68,68,.45); color: #fff; font-size: 22px; }
+
+/* ── GALLERY GRID ── */
+.photo-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;
+}
+.photo-card {
+  border-radius: 16px; overflow: hidden; position: relative;
+  background: rgba(255,255,255,.8); border: 1px solid rgba(255,255,255,.9);
+  box-shadow: 0 6px 20px rgba(14,58,70,.09); transition: .25s;
+}
+.photo-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(14,58,70,.15); }
+.photo-card-img {
+  width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block;
+}
+.photo-card-img-ph {
+  width: 100%; aspect-ratio: 4/3;
+  background: repeating-linear-gradient(135deg,#cfe2e5 0 2px,#e6f1f2 2px 14px);
+}
+.photo-card-body { padding: 12px 14px 14px; }
+.photo-card-caption {
+  font-size: 13px; color: var(--soft); width: 100%;
+  border: none; background: transparent; font-family: inherit;
+  direction: rtl; outline: none; border-bottom: 1.5px solid transparent;
+  transition: .18s; padding: 2px 0;
+}
+.photo-card-caption:focus { border-bottom-color: var(--aqua); }
+.photo-card-caption::placeholder { color: var(--muted); }
+
+.photo-card-meta {
+  display: flex; align-items: center; justify-content: space-between; margin-top: 8px;
+}
+.photo-cat-badge {
+  font-size: 11px; font-weight: 600; padding: 3px 10px;
+  border-radius: 999px; background: rgba(111,177,191,.15); color: var(--teal);
+  border: 1px solid rgba(111,177,191,.25);
+}
+
+.photo-actions {
+  position: absolute; top: 8px; left: 8px; display: flex; gap: 6px;
+  opacity: 0; transition: .2s;
+}
+.photo-card:hover .photo-actions { opacity: 1; }
+.photo-actions button {
+  width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(6px); transition: .18s;
+}
+.photo-actions .btn-del { background: rgba(239,68,68,.85); color: #fff; }
+.photo-actions .btn-del:hover { background: #dc2626; transform: scale(1.1); }
+.photo-actions .btn-view { background: rgba(255,255,255,.85); color: var(--ink); }
+.photo-actions .btn-view:hover { background: #fff; transform: scale(1.1); }
+
+/* ── LIGHTBOX ── */
+.lightbox {
+  position: fixed; inset: 0; background: rgba(14,58,70,.88);
+  display: none; align-items: center; justify-content: center; z-index: 999;
+  backdrop-filter: blur(8px);
+}
+.lightbox.open { display: flex; }
+.lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 16px; box-shadow: 0 32px 80px rgba(0,0,0,.5); }
+.lightbox-close {
+  position: absolute; top: 20px; left: 20px;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+  color: #fff; font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px); transition: .2s;
+}
+.lightbox-close:hover { background: rgba(255,255,255,.25); }
+
+/* ── FILTER BAR ── */
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filter-btn {
+  padding: 7px 18px; border-radius: 999px; border: 1.5px solid var(--border);
+  background: rgba(255,255,255,.7); font-size: 13.5px; font-weight: 500; cursor: pointer;
+  color: var(--soft); transition: .18s; font-family: inherit; backdrop-filter: blur(3px);
+}
+.filter-btn.active, .filter-btn:hover {
+  background: var(--grad-cool); color: #fff; border-color: transparent;
+  box-shadow: 0 6px 16px rgba(14,58,70,.2);
+}
+
+/* ── EMPTY STATE ── */
+.empty-state { text-align: center; padding: 64px 24px; color: var(--muted); }
+.empty-state .empty-icon { font-size: 56px; margin-bottom: 16px; opacity: .5; }
+.empty-state p { font-size: 15px; }
+
+/* ── SAVE TOAST ── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
+  background: rgba(14,58,70,.92); color: #fff; padding: 12px 24px;
+  border-radius: 999px; font-size: 14px; font-weight: 600;
+  backdrop-filter: blur(8px); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  z-index: 200; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 768px) {
+  .photo-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+}
+</style>
 </head>
 <body>
 <div class="admin-layout">
+
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <a class="sidebar-logo" href="/admin/dashboard.html"><span class="logo-mark">בש"ט</span><span><span>חיידר בעל שם טוב</span><br><small>פאנל ניהול</small></span></a>
     <nav class="sidebar-nav">
       <div class="sidebar-section">ראשי</div>
       <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>לוח בקרה</a>
       <div class="sidebar-section">תוכן</div>
-      <a href="posts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>חדשות ואירועים</a>
+      <a href="posts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>חדשות ואירועים</a>
       <a href="gallery.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>גלריה</a>
       <a href="slider.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="10" rx="2"/></svg>סליידר ראשי</a>
       <div class="sidebar-section">הרשמה</div>
@@ -28,96 +169,239 @@
     <div class="sidebar-footer"><span id="admin-username"></span> · <a href="#" onclick="logout()">יציאה</a></div>
   </aside>
 
+  <!-- MAIN -->
   <div class="admin-main">
     <div class="admin-topbar">
-      <div><h1>גלריה</h1><div class="breadcrumb">ניהול תמונות הגלריה</div></div>
+      <div>
+        <h1>גלריית תמונות</h1>
+        <div class="breadcrumb" id="photoCount">טוען...</div>
+      </div>
+      <div class="topbar-actions">
+        <a href="/" target="_blank" class="btn btn-line btn-sm">צפייה בגלריה ←</a>
+      </div>
     </div>
-    <div class="admin-body">
-      <div id="alert" class="alert" style="display:none"></div>
 
-      <!-- Upload -->
-      <div class="form-panel" style="margin-bottom:24px">
-        <h2>הוספת תמונה חדשה</h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr 200px;gap:16px;align-items:end">
-          <div class="form-group" style="margin:0">
-            <label>תמונה</label>
-            <div class="img-upload-box" style="padding:16px" onclick="document.getElementById('newImg').click()">
-              <img id="newPreview" style="display:none;max-height:100px;margin:0 auto 8px" />
-              <p id="newPlaceholder" style="font-size:13px">לחצו להעלאה</p>
-              <input type="file" id="newImg" accept="image/*" style="display:none" onchange="previewNew(this)" />
-            </div>
-          </div>
-          <div class="form-group" style="margin:0">
-            <label>כיתוב (אופציונלי)</label>
-            <input type="text" id="newCaption" placeholder="תיאור התמונה" />
-            <label style="margin-top:10px">קטגוריה</label>
-            <select id="newCat" style="margin-top:6px"><option>כללי</option><option>אירועים</option><option>טיולים</option><option>שבתות</option><option>לימוד</option></select>
-          </div>
-          <button class="btn btn-grad" onclick="addPhoto()">הוספה</button>
-        </div>
+    <div class="admin-body">
+
+      <!-- Upload zone -->
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this.files)" />
+        <div class="drop-icon">🖼️</div>
+        <div class="drop-title">גררו תמונות לכאן או לחצו להעלאה</div>
+        <div class="drop-sub">JPG, PNG, WebP · ניתן לבחור מספר תמונות בו-זמנית</div>
+        <div class="drop-hint">כל תמונה שתעלו תופיע מיד בגלריה הציבורית</div>
       </div>
 
-      <!-- Grid -->
-      <div class="admin-gallery" id="galleryGrid"></div>
+      <!-- Upload queue preview -->
+      <div class="upload-queue" id="uploadQueue"></div>
+
+      <!-- Filter bar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:28px 0 18px">
+        <div class="filter-bar" id="filterBar">
+          <button class="filter-btn active" onclick="setFilter('הכל',this)">הכל <span id="countAll" style="opacity:.6"></span></button>
+          <button class="filter-btn" onclick="setFilter('כללי',this)">כללי</button>
+          <button class="filter-btn" onclick="setFilter('אירועים',this)">אירועים</button>
+          <button class="filter-btn" onclick="setFilter('טיולים',this)">טיולים</button>
+          <button class="filter-btn" onclick="setFilter('שבתות',this)">שבתות</button>
+          <button class="filter-btn" onclick="setFilter('לימוד',this)">לימוד</button>
+        </div>
+        <div style="font-size:13px;color:var(--muted)">לחצו על כיתוב כדי לערוך · hover לאפשרויות</div>
+      </div>
+
+      <!-- Photo grid -->
+      <div class="photo-grid" id="photoGrid"></div>
+
     </div>
   </div>
 </div>
 
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="" onclick="event.stopPropagation()" />
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script src="admin.js"></script>
 <script>
 requireAuth();
-let items = [], newFile = null;
 
+const CATS = ['כללי','אירועים','טיולים','שבתות','לימוד'];
+let items = [], activeFilter = 'הכל';
+
+// ── Load ──
 async function load() {
   items = await api('GET', '/gallery');
-  render();
+  renderGrid();
+  updateCount();
 }
 
-function render() {
-  document.getElementById('galleryGrid').innerHTML = items.map(item => `
-    <div class="admin-gallery-item">
-      <img src="${escHtml(item.image)}" alt="${escHtml(item.caption)}" loading="lazy" />
-      <div class="overlay">
-        <button class="btn btn-gold btn-sm" onclick="del('${item.id}')">מחיקה</button>
+function updateCount() {
+  const visible = activeFilter === 'הכל' ? items : items.filter(i => i.category === activeFilter);
+  document.getElementById('photoCount').textContent = `${items.length} תמונות בגלריה`;
+  document.getElementById('countAll').textContent = items.length;
+}
+
+// ── Filter ──
+function setFilter(cat, btn) {
+  activeFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrid();
+}
+
+// ── Render grid ──
+function renderGrid() {
+  const visible = activeFilter === 'הכל' ? items : items.filter(i => i.category === activeFilter);
+  const grid = document.getElementById('photoGrid');
+
+  if (!visible.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">📷</div>
+      <p>${activeFilter === 'הכל' ? 'אין תמונות בגלריה עדיין. העלו תמונות בעזרת אזור הגרירה למעלה.' : `אין תמונות בקטגוריה "${activeFilter}"`}</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = visible.map(item => `
+    <div class="photo-card" id="card-${item.id}">
+      <div class="photo-actions">
+        <button class="btn-view" onclick="openLightbox('${escHtml(item.image)}')" title="הגדלה">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+        <button class="btn-del" onclick="delPhoto('${item.id}')" title="מחיקה">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        </button>
       </div>
-      ${item.caption ? `<div style="position:absolute;bottom:0;right:0;left:0;background:rgba(14,58,70,.6);color:#fff;font-size:12px;padding:6px 10px;text-align:right">${escHtml(item.caption)}</div>` : ''}
-    </div>`).join('') || '<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px">אין תמונות בגלריה</p>';
+      ${item.image
+        ? `<img class="photo-card-img" src="${escHtml(item.image)}" alt="${escHtml(item.caption)}" loading="lazy" />`
+        : `<div class="photo-card-img-ph"></div>`}
+      <div class="photo-card-body">
+        <input
+          class="photo-card-caption"
+          value="${escHtml(item.caption)}"
+          placeholder="הוסיפו כיתוב..."
+          onblur="saveCaption('${item.id}', this.value)"
+          onkeydown="if(event.key==='Enter'){this.blur()}"
+        />
+        <div class="photo-card-meta">
+          <select class="photo-cat-badge" onchange="saveCat('${item.id}', this.value)"
+            style="border:none;background:rgba(111,177,191,.12);color:var(--teal);font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;cursor:pointer;font-family:inherit">
+            ${CATS.map(c => `<option${c===item.category?' selected':''}>${c}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+    </div>`).join('');
 }
 
-function previewNew(input) {
-  newFile = input.files[0];
-  if (!newFile) return;
-  const url = URL.createObjectURL(newFile);
-  const prev = document.getElementById('newPreview');
-  prev.src = url; prev.style.display = 'block';
-  document.getElementById('newPlaceholder').style.display = 'none';
+// ── Upload ──
+async function handleFiles(files) {
+  const queue = document.getElementById('uploadQueue');
+  const arr = Array.from(files);
+
+  // Build preview queue items
+  arr.forEach((file, idx) => {
+    const div = document.createElement('div');
+    div.className = 'queue-item';
+    div.id = `q-${idx}`;
+    const url = URL.createObjectURL(file);
+    div.innerHTML = `
+      <img src="${url}" style="width:100%;height:100%;object-fit:cover" />
+      <div class="queue-progress" id="qp-${idx}">
+        <div style="font-size:11px">מעלה...</div>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="pb-${idx}" style="width:0%"></div></div>
+      </div>`;
+    queue.appendChild(div);
+  });
+
+  // Upload each
+  for (let i = 0; i < arr.length; i++) {
+    const pb = document.getElementById(`pb-${i}`);
+    const qp = document.getElementById(`qp-${i}`);
+    // Animate progress bar
+    let prog = 0;
+    const interval = setInterval(() => { prog = Math.min(prog + 10, 85); pb.style.width = prog + '%'; }, 120);
+
+    try {
+      const url = await uploadFile(arr[i]);
+      clearInterval(interval);
+      pb.style.width = '100%';
+      await new Promise(r => setTimeout(r, 200));
+      qp.innerHTML = '<div class="queue-done">✓</div>';
+
+      // Add to gallery
+      const newItem = await api('POST', '/gallery', {
+        image: url,
+        caption: '',
+        category: 'כללי'
+      });
+      items.unshift(newItem);
+      renderGrid();
+      updateCount();
+      showToast('התמונה הועלתה ✓');
+    } catch(e) {
+      clearInterval(interval);
+      qp.innerHTML = '<div class="queue-err">✕</div>';
+    }
+  }
+
+  // Clear queue after 2s
+  setTimeout(() => { queue.innerHTML = ''; }, 2000);
+  document.getElementById('fileInput').value = '';
 }
 
-async function addPhoto() {
-  if (!newFile) return showAlert(document.getElementById('alert'), 'בחרו תמונה קודם', 'error');
-  try {
-    const url = await uploadFile(newFile);
-    const item = await api('POST', '/gallery', {
-      image: url,
-      caption: document.getElementById('newCaption').value,
-      category: document.getElementById('newCat').value
-    });
-    items.unshift(item);
-    render();
-    newFile = null;
-    document.getElementById('newImg').value = '';
-    document.getElementById('newPreview').style.display = 'none';
-    document.getElementById('newPlaceholder').style.display = 'block';
-    document.getElementById('newCaption').value = '';
-    showAlert(document.getElementById('alert'), 'התמונה נוספה ✓');
-  } catch(e) { showAlert(document.getElementById('alert'), e.message, 'error'); }
+// ── Drag & drop ──
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+
+// ── Save caption ──
+async function saveCaption(id, caption) {
+  const item = items.find(i => i.id === id);
+  if (!item || item.caption === caption) return;
+  item.caption = caption;
+  await api('PATCH', `/gallery/${id}`, { caption });
+  showToast('כיתוב נשמר ✓');
 }
 
-async function del(id) {
+// ── Save category ──
+async function saveCat(id, category) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  item.category = category;
+  await api('PATCH', `/gallery/${id}`, { category });
+  showToast('קטגוריה עודכנה ✓');
+}
+
+// ── Delete ──
+async function delPhoto(id) {
   if (!confirm('למחוק תמונה זו?')) return;
   await api('DELETE', `/gallery/${id}`);
   items = items.filter(i => i.id !== id);
-  render();
+  const card = document.getElementById(`card-${id}`);
+  if (card) { card.style.opacity = '0'; card.style.transform = 'scale(.85)'; card.style.transition = '.3s'; setTimeout(() => { renderGrid(); updateCount(); }, 300); }
+  showToast('התמונה נמחקה');
+}
+
+// ── Lightbox ──
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+// ── Toast ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
 }
 
 load();
