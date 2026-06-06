@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>הרשמות — חיידר בעל שם טוב</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../flow.css">
+<link rel="stylesheet" href="admin.css">
+<style>
+.detail-panel { background:rgba(255,255,255,.85); border:1px solid rgba(255,255,255,.9); border-radius:20px; padding:28px; box-shadow:0 8px 24px rgba(14,58,70,.1); }
+.detail-row { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid rgba(230,221,205,.4); font-size:14px; }
+.detail-row:last-child { border-bottom:0; }
+.detail-row .label { color:var(--muted); font-weight:500; }
+.detail-row .val { color:var(--ink); font-weight:600; text-align:left; }
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="/admin/dashboard.html"><span class="logo-mark">בש"ט</span><span><span>חיידר בעל שם טוב</span><br><small>פאנל ניהול</small></span></a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">ראשי</div>
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>לוח בקרה</a>
+      <div class="sidebar-section">תוכן</div>
+      <a href="posts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>חדשות ואירועים</a>
+      <a href="gallery.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>גלריה</a>
+      <a href="slider.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="10" rx="2"/></svg>סליידר ראשי</a>
+      <div class="sidebar-section">הרשמה</div>
+      <a href="registrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>הרשמות</a>
+      <a href="inbox.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>תיבת דואר</a>
+      <div class="sidebar-section">הגדרות</div>
+      <a href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg>הגדרות האתר</a>
+    </nav>
+    <div class="sidebar-footer"><span id="admin-username"></span> · <a href="#" onclick="logout()">יציאה</a></div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div><h1>הרשמות</h1><div class="breadcrumb">ניהול טפסי ההרשמה</div></div>
+    </div>
+    <div class="admin-body">
+      <div id="alert" class="alert" style="display:none"></div>
+
+      <!-- Filter tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+        <button class="btn btn-line btn-sm" onclick="setFilter('all')" id="f-all">הכל</button>
+        <button class="btn btn-line btn-sm" onclick="setFilter('pending')" id="f-pending">ממתינים</button>
+        <button class="btn btn-line btn-sm" onclick="setFilter('accepted')" id="f-accepted">התקבלו</button>
+        <button class="btn btn-line btn-sm" onclick="setFilter('rejected')" id="f-rejected">נדחו</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start">
+        <div class="data-card">
+          <table>
+            <thead><tr><th>שם</th><th>טלפון</th><th>תאריך הגשה</th><th>סטטוס</th><th></th></tr></thead>
+            <tbody id="regsTbl"></tbody>
+          </table>
+        </div>
+        <!-- Detail panel -->
+        <div id="detailWrap" style="display:none">
+          <div class="detail-panel">
+            <div style="display:flex;gap:14px;align-items:center;margin-bottom:20px">
+              <img id="dPhoto" style="width:60px;height:60px;border-radius:50%;object-fit:cover;display:none;border:2px solid var(--line)" />
+              <div id="dPhotoPlaceholder" style="width:60px;height:60px;border-radius:50%;background:var(--grad-cool);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-family:var(--serif);font-weight:700">?</div>
+              <div><div id="dName" style="font-family:var(--serif);font-size:18px;font-weight:700;color:var(--ink)"></div><div id="dDate" style="font-size:12px;color:var(--muted)"></div></div>
+            </div>
+            <div id="dRows"></div>
+            <!-- Status -->
+            <div style="margin-top:20px">
+              <div style="font-size:13px;font-weight:600;color:var(--teal);margin-bottom:10px">שינוי סטטוס</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn btn-sm" style="background:rgba(34,197,94,.15);color:#15803d;border-color:rgba(34,197,94,.3)" onclick="setStatus('accepted')">התקבל ✓</button>
+                <button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#b91c1c;border-color:rgba(239,68,68,.25)" onclick="setStatus('rejected')">נדחה ✗</button>
+                <button class="btn btn-sm btn-line" onclick="setStatus('pending')">ממתין</button>
+              </div>
+            </div>
+            <!-- Notes -->
+            <div style="margin-top:16px">
+              <label style="font-size:13px;font-weight:600;color:var(--teal);display:block;margin-bottom:6px">הערות</label>
+              <textarea id="dNotes" rows="3" style="width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;font-family:inherit;font-size:14px;direction:rtl;resize:vertical"></textarea>
+              <button class="btn btn-line btn-sm" style="margin-top:8px" onclick="saveNotes()">שמור הערות</button>
+            </div>
+            <button class="btn btn-sm" style="margin-top:16px;background:rgba(239,68,68,.1);color:#b91c1c;border-color:rgba(239,68,68,.25);width:100%;justify-content:center" onclick="delReg()">מחיקת הרשמה</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+<script>
+requireAuth();
+let regs = [], filter = 'all', selected = null;
+
+async function load() {
+  regs = await api('GET', '/register');
+  render();
+}
+
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll('[id^="f-"]').forEach(b => b.classList.remove('btn-grad'));
+  document.getElementById('f-' + f).classList.add('btn-grad');
+  render();
+}
+
+function render() {
+  let list = regs;
+  if (filter !== 'all') list = list.filter(r => r.status === filter);
+  document.getElementById('regsTbl').innerHTML = list.map(r => `
+    <tr style="cursor:pointer${selected?.id===r.id?';background:rgba(250,246,238,.8)':''}" onclick="select('${r.id}')">
+      <td style="font-weight:600;color:var(--ink)">${escHtml(r.firstName)} ${escHtml(r.lastName)}</td>
+      <td>${escHtml(r.homePhone)}</td>
+      <td>${formatDate(r.submittedAt)}</td>
+      <td><span class="status status-${r.status}">${{pending:'ממתין',accepted:'התקבל',rejected:'נדחה'}[r.status]||r.status}</span></td>
+      <td><button class="btn-icon view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
+    </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted)">אין הרשמות</td></tr>';
+}
+
+function select(id) {
+  selected = regs.find(r => r.id === id);
+  if (!selected) return;
+  document.getElementById('detailWrap').style.display = 'block';
+  document.getElementById('dName').textContent = `${selected.firstName} ${selected.lastName}`;
+  document.getElementById('dDate').textContent = formatDate(selected.submittedAt);
+  document.getElementById('dNotes').value = selected.notes || '';
+  if (selected.photo) {
+    document.getElementById('dPhoto').src = selected.photo;
+    document.getElementById('dPhoto').style.display = 'block';
+    document.getElementById('dPhotoPlaceholder').style.display = 'none';
+  } else {
+    document.getElementById('dPhoto').style.display = 'none';
+    document.getElementById('dPhotoPlaceholder').style.display = 'flex';
+    document.getElementById('dPhotoPlaceholder').textContent = (selected.firstName||'?')[0];
+  }
+  document.getElementById('dRows').innerHTML = [
+    ['כיתה', selected.grade],
+    ['כתובת', selected.address],
+    ['שם האב', selected.fatherName],
+    ['שם האם', selected.motherName],
+    ['דוא"ל', selected.email],
+    ['מוסד קודם', selected.currentSchool],
+    ['ת.ל. עברי', selected.hebrewDob],
+  ].map(([l,v]) => v ? `<div class="detail-row"><span class="label">${l}</span><span class="val">${escHtml(v)}</span></div>` : '').join('');
+  render();
+}
+
+async function setStatus(status) {
+  if (!selected) return;
+  selected = await api('PATCH', `/register/${selected.id}`, { status });
+  regs = regs.map(r => r.id === selected.id ? selected : r);
+  select(selected.id);
+  showAlert(document.getElementById('alert'), 'הסטטוס עודכן');
+}
+
+async function saveNotes() {
+  if (!selected) return;
+  selected = await api('PATCH', `/register/${selected.id}`, { notes: document.getElementById('dNotes').value });
+  regs = regs.map(r => r.id === selected.id ? selected : r);
+  showAlert(document.getElementById('alert'), 'ההערות נשמרו');
+}
+
+async function delReg() {
+  if (!selected || !confirm('למחוק הרשמה זו?')) return;
+  await api('DELETE', `/register/${selected.id}`);
+  regs = regs.filter(r => r.id !== selected.id);
+  selected = null;
+  document.getElementById('detailWrap').style.display = 'none';
+  render();
+}
+
+setFilter('all');
+load();
+</script>
+</body>
+</html>

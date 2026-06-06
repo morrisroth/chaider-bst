@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>תיבת דואר — חיידר בעל שם טוב</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../flow.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="/admin/dashboard.html"><span class="logo-mark">בש"ט</span><span><span>חיידר בעל שם טוב</span><br><small>פאנל ניהול</small></span></a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">ראשי</div>
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>לוח בקרה</a>
+      <div class="sidebar-section">תוכן</div>
+      <a href="posts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>חדשות ואירועים</a>
+      <a href="gallery.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>גלריה</a>
+      <a href="slider.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="10" rx="2"/></svg>סליידר ראשי</a>
+      <div class="sidebar-section">הרשמה</div>
+      <a href="registrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>הרשמות</a>
+      <a href="inbox.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>תיבת דואר</a>
+      <div class="sidebar-section">הגדרות</div>
+      <a href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg>הגדרות האתר</a>
+    </nav>
+    <div class="sidebar-footer"><span id="admin-username"></span> · <a href="#" onclick="logout()">יציאה</a></div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div><h1>תיבת דואר</h1><div class="breadcrumb">הודעות ופניות מהאתר</div></div>
+    </div>
+    <div class="admin-body">
+      <div class="inbox-layout">
+        <!-- List -->
+        <div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <button class="btn btn-line btn-sm" onclick="setFilter('all')" id="f-all">הכל</button>
+            <button class="btn btn-line btn-sm" onclick="setFilter('unread')" id="f-unread">לא נקראו</button>
+          </div>
+          <div class="msg-list" id="msgList"></div>
+        </div>
+        <!-- Detail -->
+        <div>
+          <div id="noSel" style="text-align:center;padding:60px 20px;color:var(--muted)">
+            <div style="font-size:48px;margin-bottom:12px">✉️</div>
+            <div>בחרו הודעה לקריאה</div>
+          </div>
+          <div id="msgDetail" style="display:none" class="data-card" style="">
+            <div style="padding:24px">
+              <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:20px">
+                <div>
+                  <div id="mName" style="font-family:var(--serif);font-size:20px;font-weight:700;color:var(--ink)"></div>
+                  <div id="mMeta" style="font-size:13px;color:var(--muted);margin-top:4px"></div>
+                </div>
+                <button class="btn-icon del" onclick="delMsg()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+              </div>
+              <div id="mSubject" style="font-weight:600;color:var(--teal);margin-bottom:14px;font-size:15px"></div>
+              <div id="mBody" style="font-size:15px;color:var(--soft);line-height:1.8;white-space:pre-wrap"></div>
+              <div style="margin-top:24px;display:flex;gap:10px;flex-wrap:wrap">
+                <a id="mReplyEmail" href="#" class="btn btn-line btn-sm">השב במייל</a>
+                <a id="mReplyWa" href="#" target="_blank" class="btn btn-grad btn-sm" style="background:#25d366;box-shadow:none">WhatsApp</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+<script>
+requireAuth();
+let msgs = [], filter = 'all', selected = null;
+
+async function load() {
+  msgs = await api('GET', '/contact');
+  render();
+}
+
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll('[id^="f-"]').forEach(b => b.classList.remove('btn-grad'));
+  document.getElementById('f-' + f).classList.add('btn-grad');
+  render();
+}
+
+function render() {
+  let list = msgs;
+  if (filter === 'unread') list = list.filter(m => !m.read);
+  document.getElementById('msgList').innerHTML = list.map(m => `
+    <div class="msg-item${!m.read?' unread':''}${selected?.id===m.id?' active':''}" onclick="select('${m.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+        <div class="msg-name">${escHtml(m.name)}</div>
+        <div style="display:flex;align-items:center;gap:6px">${!m.read?'<div class="unread-dot"></div>':''}<div class="msg-time">${formatDate(m.submittedAt)}</div></div>
+      </div>
+      <div class="msg-preview">${escHtml(m.subject || m.message)}</div>
+    </div>`).join('') || '<div style="text-align:center;padding:32px;color:var(--muted)">אין הודעות</div>';
+}
+
+async function select(id) {
+  selected = msgs.find(m => m.id === id); if (!selected) return;
+  if (!selected.read) {
+    selected = await api('PATCH', `/contact/${selected.id}`, { read: true });
+    msgs = msgs.map(m => m.id === selected.id ? selected : m);
+    render();
+  }
+  document.getElementById('noSel').style.display = 'none';
+  document.getElementById('msgDetail').style.display = 'block';
+  document.getElementById('mName').textContent = selected.name;
+  document.getElementById('mMeta').textContent = `${selected.email || ''}${selected.email && selected.phone ? ' · ' : ''}${selected.phone || ''} · ${formatDate(selected.submittedAt)}`;
+  document.getElementById('mSubject').textContent = selected.subject || 'ללא נושא';
+  document.getElementById('mBody').textContent = selected.message;
+  document.getElementById('mReplyEmail').href = `mailto:${selected.email}?subject=Re: ${encodeURIComponent(selected.subject||'')}`;
+  const phone = (selected.phone||'').replace(/\D/g,'');
+  document.getElementById('mReplyWa').href = phone ? `https://wa.me/972${phone.replace(/^0/,'')}` : '#';
+}
+
+async function delMsg() {
+  if (!selected || !confirm('למחוק הודעה זו?')) return;
+  await api('DELETE', `/contact/${selected.id}`);
+  msgs = msgs.filter(m => m.id !== selected.id);
+  selected = null;
+  document.getElementById('msgDetail').style.display = 'none';
+  document.getElementById('noSel').style.display = 'block';
+  render();
+}
+
+setFilter('all');
+load();
+</script>
+</body>
+</html>

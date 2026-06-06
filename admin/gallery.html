@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>גלריה — חיידר בעל שם טוב</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../flow.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="/admin/dashboard.html"><span class="logo-mark">בש"ט</span><span><span>חיידר בעל שם טוב</span><br><small>פאנל ניהול</small></span></a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">ראשי</div>
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>לוח בקרה</a>
+      <div class="sidebar-section">תוכן</div>
+      <a href="posts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>חדשות ואירועים</a>
+      <a href="gallery.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>גלריה</a>
+      <a href="slider.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="10" rx="2"/></svg>סליידר ראשי</a>
+      <div class="sidebar-section">הרשמה</div>
+      <a href="registrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>הרשמות</a>
+      <a href="inbox.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>תיבת דואר</a>
+      <div class="sidebar-section">הגדרות</div>
+      <a href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg>הגדרות האתר</a>
+    </nav>
+    <div class="sidebar-footer"><span id="admin-username"></span> · <a href="#" onclick="logout()">יציאה</a></div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div><h1>גלריה</h1><div class="breadcrumb">ניהול תמונות הגלריה</div></div>
+    </div>
+    <div class="admin-body">
+      <div id="alert" class="alert" style="display:none"></div>
+
+      <!-- Upload -->
+      <div class="form-panel" style="margin-bottom:24px">
+        <h2>הוספת תמונה חדשה</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr 200px;gap:16px;align-items:end">
+          <div class="form-group" style="margin:0">
+            <label>תמונה</label>
+            <div class="img-upload-box" style="padding:16px" onclick="document.getElementById('newImg').click()">
+              <img id="newPreview" style="display:none;max-height:100px;margin:0 auto 8px" />
+              <p id="newPlaceholder" style="font-size:13px">לחצו להעלאה</p>
+              <input type="file" id="newImg" accept="image/*" style="display:none" onchange="previewNew(this)" />
+            </div>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label>כיתוב (אופציונלי)</label>
+            <input type="text" id="newCaption" placeholder="תיאור התמונה" />
+            <label style="margin-top:10px">קטגוריה</label>
+            <select id="newCat" style="margin-top:6px"><option>כללי</option><option>אירועים</option><option>טיולים</option><option>שבתות</option><option>לימוד</option></select>
+          </div>
+          <button class="btn btn-grad" onclick="addPhoto()">הוספה</button>
+        </div>
+      </div>
+
+      <!-- Grid -->
+      <div class="admin-gallery" id="galleryGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+<script>
+requireAuth();
+let items = [], newFile = null;
+
+async function load() {
+  items = await api('GET', '/gallery');
+  render();
+}
+
+function render() {
+  document.getElementById('galleryGrid').innerHTML = items.map(item => `
+    <div class="admin-gallery-item">
+      <img src="${escHtml(item.image)}" alt="${escHtml(item.caption)}" loading="lazy" />
+      <div class="overlay">
+        <button class="btn btn-gold btn-sm" onclick="del('${item.id}')">מחיקה</button>
+      </div>
+      ${item.caption ? `<div style="position:absolute;bottom:0;right:0;left:0;background:rgba(14,58,70,.6);color:#fff;font-size:12px;padding:6px 10px;text-align:right">${escHtml(item.caption)}</div>` : ''}
+    </div>`).join('') || '<p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px">אין תמונות בגלריה</p>';
+}
+
+function previewNew(input) {
+  newFile = input.files[0];
+  if (!newFile) return;
+  const url = URL.createObjectURL(newFile);
+  const prev = document.getElementById('newPreview');
+  prev.src = url; prev.style.display = 'block';
+  document.getElementById('newPlaceholder').style.display = 'none';
+}
+
+async function addPhoto() {
+  if (!newFile) return showAlert(document.getElementById('alert'), 'בחרו תמונה קודם', 'error');
+  try {
+    const url = await uploadFile(newFile);
+    const item = await api('POST', '/gallery', {
+      image: url,
+      caption: document.getElementById('newCaption').value,
+      category: document.getElementById('newCat').value
+    });
+    items.unshift(item);
+    render();
+    newFile = null;
+    document.getElementById('newImg').value = '';
+    document.getElementById('newPreview').style.display = 'none';
+    document.getElementById('newPlaceholder').style.display = 'block';
+    document.getElementById('newCaption').value = '';
+    showAlert(document.getElementById('alert'), 'התמונה נוספה ✓');
+  } catch(e) { showAlert(document.getElementById('alert'), e.message, 'error'); }
+}
+
+async function del(id) {
+  if (!confirm('למחוק תמונה זו?')) return;
+  await api('DELETE', `/gallery/${id}`);
+  items = items.filter(i => i.id !== id);
+  render();
+}
+
+load();
+</script>
+</body>
+</html>

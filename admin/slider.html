@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>סליידר ראשי — חיידר בעל שם טוב</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../flow.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="/admin/dashboard.html"><span class="logo-mark">בש"ט</span><span><span>חיידר בעל שם טוב</span><br><small>פאנל ניהול</small></span></a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">ראשי</div>
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>לוח בקרה</a>
+      <div class="sidebar-section">תוכן</div>
+      <a href="posts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>חדשות ואירועים</a>
+      <a href="gallery.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>גלריה</a>
+      <a href="slider.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="10" rx="2"/></svg>סליידר ראשי</a>
+      <div class="sidebar-section">הרשמה</div>
+      <a href="registrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>הרשמות</a>
+      <a href="inbox.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>תיבת דואר</a>
+      <div class="sidebar-section">הגדרות</div>
+      <a href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg>הגדרות האתר</a>
+    </nav>
+    <div class="sidebar-footer"><span id="admin-username"></span> · <a href="#" onclick="logout()">יציאה</a></div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div><h1>סליידר ראשי</h1><div class="breadcrumb">ניהול תמונות הסליידר בדף הבית</div></div>
+    </div>
+    <div class="admin-body">
+      <div id="alert" class="alert" style="display:none"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
+        <!-- Add -->
+        <div class="form-panel">
+          <h2>הוספת שקף חדש</h2>
+          <div class="img-upload-box" onclick="document.getElementById('slideFile').click()">
+            <img id="slidePreview" style="display:none;max-height:140px;margin:0 auto 10px" />
+            <p id="slidePlaceholder">לחצו להעלאת תמונה<br><small style="color:var(--muted)">JPG, PNG, WebP</small></p>
+            <input type="file" id="slideFile" accept="image/*" style="display:none" onchange="previewSlide(this)" />
+          </div>
+          <div class="form-group" style="margin-top:16px"><label>כותרת (אופציונלי)</label><input type="text" id="slideTitle" placeholder="כותרת על התמונה" /></div>
+          <div class="form-group"><label>כיתוב (אופציונלי)</label><textarea id="slideCaption" rows="2" placeholder="טקסט נוסף"></textarea></div>
+          <button class="btn btn-grad" style="width:100%;justify-content:center" onclick="addSlide()">הוספת שקף</button>
+        </div>
+
+        <!-- List -->
+        <div>
+          <div class="data-card">
+            <div class="data-card-head"><h2>שקפים קיימים</h2></div>
+            <div id="slidesList" style="padding:8px 0"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+<script>
+requireAuth();
+let slides = [], newFile = null;
+
+async function load() {
+  slides = await api('GET', '/slider');
+  render();
+}
+
+function render() {
+  document.getElementById('slidesList').innerHTML = slides.map(s => `
+    <div style="display:flex;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(230,221,205,.4)">
+      <img src="${escHtml(s.image)}" style="width:80px;height:52px;object-fit:cover;border-radius:8px;flex-shrink:0" />
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14px;color:var(--ink)">${escHtml(s.title || '(ללא כותרת)')}</div>
+        <div style="font-size:12px;color:var(--muted)">${escHtml(s.caption || '')}</div>
+      </div>
+      <button class="btn-icon del" onclick="del('${s.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>
+    </div>`).join('') || '<p style="text-align:center;padding:32px;color:var(--muted)">אין שקפים</p>';
+}
+
+function previewSlide(input) {
+  newFile = input.files[0]; if (!newFile) return;
+  const url = URL.createObjectURL(newFile);
+  const p = document.getElementById('slidePreview');
+  p.src = url; p.style.display = 'block';
+  document.getElementById('slidePlaceholder').style.display = 'none';
+}
+
+async function addSlide() {
+  if (!newFile) return showAlert(document.getElementById('alert'), 'בחרו תמונה', 'error');
+  try {
+    const url = await uploadFile(newFile);
+    const slide = await api('POST', '/slider', { image: url, title: document.getElementById('slideTitle').value, caption: document.getElementById('slideCaption').value });
+    slides.push(slide); render();
+    newFile = null; document.getElementById('slideFile').value = '';
+    document.getElementById('slidePreview').style.display = 'none';
+    document.getElementById('slidePlaceholder').style.display = 'block';
+    document.getElementById('slideTitle').value = ''; document.getElementById('slideCaption').value = '';
+    showAlert(document.getElementById('alert'), 'השקף נוסף ✓');
+  } catch(e) { showAlert(document.getElementById('alert'), e.message, 'error'); }
+}
+
+async function del(id) {
+  if (!confirm('למחוק שקף זה?')) return;
+  await api('DELETE', `/slider/${id}`);
+  slides = slides.filter(s => s.id !== id); render();
+}
+
+load();
+</script>
+</body>
+</html>

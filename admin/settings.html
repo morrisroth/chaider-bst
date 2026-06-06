@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>הגדרות האתר — חיידר בעל שם טוב</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../flow.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="/admin/dashboard.html"><span class="logo-mark">בש"ט</span><span><span>חיידר בעל שם טוב</span><br><small>פאנל ניהול</small></span></a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">ראשי</div>
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>לוח בקרה</a>
+      <div class="sidebar-section">תוכן</div>
+      <a href="posts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>חדשות ואירועים</a>
+      <a href="gallery.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>גלריה</a>
+      <a href="slider.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="10" rx="2"/></svg>סליידר ראשי</a>
+      <div class="sidebar-section">הרשמה</div>
+      <a href="registrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>הרשמות</a>
+      <a href="inbox.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>תיבת דואר</a>
+      <div class="sidebar-section">הגדרות</div>
+      <a href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg>הגדרות האתר</a>
+    </nav>
+    <div class="sidebar-footer"><span id="admin-username"></span> · <a href="#" onclick="logout()">יציאה</a></div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div><h1>הגדרות האתר</h1><div class="breadcrumb">עדכון תוכן ומידע כללי</div></div>
+      <div class="topbar-actions">
+        <button class="btn btn-grad btn-sm" onclick="save()">שמירת שינויים</button>
+      </div>
+    </div>
+    <div class="admin-body">
+      <div id="alert" class="alert" style="display:none"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <!-- General -->
+        <div class="form-panel">
+          <h2>פרטי המוסד</h2>
+          <div class="form-group"><label>שם האתר</label><input type="text" id="site_name" /></div>
+          <div class="form-group"><label>תגית</label><input type="text" id="site_tagline" /></div>
+          <div class="form-group"><label>כתובת</label><input type="text" id="address" /></div>
+          <div class="form-group"><label>טלפון</label><input type="text" id="phone" dir="ltr" /></div>
+          <div class="form-group"><label>דוא"ל</label><input type="email" id="email" dir="ltr" /></div>
+        </div>
+
+        <!-- Hero -->
+        <div class="form-panel">
+          <h2>דף הבית — Hero</h2>
+          <div class="form-group"><label>כותרת ראשית</label><input type="text" id="hero_title" /></div>
+          <div class="form-group"><label>טקסט משנה</label><textarea id="hero_subtitle" rows="3"></textarea></div>
+          <div class="form-group"><label>תמונת Hero (URL)</label><input type="text" id="hero_image" dir="ltr" placeholder="https://..." /></div>
+          <div class="form-group">
+            <label>העלאת תמונת Hero</label>
+            <div class="img-upload-box" onclick="document.getElementById('heroFile').click()" style="padding:14px">
+              <img id="heroPreview" style="display:none;max-height:100px;margin:0 auto 8px;border-radius:8px" />
+              <p id="heroPlaceholder" style="font-size:13px">לחצו להעלאה</p>
+              <input type="file" id="heroFile" accept="image/*" style="display:none" onchange="uploadHero(this)" />
+            </div>
+          </div>
+        </div>
+
+        <!-- About -->
+        <div class="form-panel" style="grid-column:1/-1">
+          <h2>אודות</h2>
+          <div class="form-group"><label>טקסט אודות</label><textarea id="about_text" rows="5"></textarea></div>
+          <div class="form-group"><label>תמונת אודות (URL)</label><input type="text" id="about_image" dir="ltr" placeholder="https://..." /></div>
+          <div class="form-group">
+            <label>העלאת תמונת אודות</label>
+            <div class="img-upload-box" onclick="document.getElementById('aboutFile').click()" style="padding:14px">
+              <img id="aboutPreview" style="display:none;max-height:100px;margin:0 auto 8px;border-radius:8px" />
+              <p id="aboutPlaceholder" style="font-size:13px">לחצו להעלאה</p>
+              <input type="file" id="aboutFile" accept="image/*" style="display:none" onchange="uploadAbout(this)" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-panel">
+          <h2>שינוי סיסמה</h2>
+          <div class="form-group"><label>סיסמה נוכחית</label><input type="password" id="curPass" /></div>
+          <div class="form-group"><label>סיסמה חדשה</label><input type="password" id="newPass" /></div>
+          <button class="btn btn-line btn-sm" onclick="changePass()">עדכן סיסמה</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+<script>
+requireAuth();
+
+async function load() {
+  const s = await api('GET', '/settings');
+  ['site_name','site_tagline','hero_title','hero_subtitle','address','phone','email','about_text'].forEach(k => {
+    if (document.getElementById(k)) document.getElementById(k).value = s[k] || '';
+  });
+  if (s.hero_image) { document.getElementById('hero_image').value = s.hero_image; showImgPreview('heroPreview','heroPlaceholder', s.hero_image); }
+  if (s.about_image) { document.getElementById('about_image').value = s.about_image; showImgPreview('aboutPreview','aboutPlaceholder', s.about_image); }
+}
+
+function showImgPreview(previewId, phId, url) {
+  const p = document.getElementById(previewId); p.src = url; p.style.display = 'block';
+  document.getElementById(phId).style.display = 'none';
+}
+
+async function uploadHero(input) {
+  const file = input.files[0]; if (!file) return;
+  const url = await uploadFile(file);
+  document.getElementById('hero_image').value = url;
+  showImgPreview('heroPreview','heroPlaceholder', url);
+}
+async function uploadAbout(input) {
+  const file = input.files[0]; if (!file) return;
+  const url = await uploadFile(file);
+  document.getElementById('about_image').value = url;
+  showImgPreview('aboutPreview','aboutPlaceholder', url);
+}
+
+async function save() {
+  try {
+    await api('PUT', '/settings', {
+      site_name: document.getElementById('site_name').value,
+      site_tagline: document.getElementById('site_tagline').value,
+      hero_title: document.getElementById('hero_title').value,
+      hero_subtitle: document.getElementById('hero_subtitle').value,
+      hero_image: document.getElementById('hero_image').value,
+      about_image: document.getElementById('about_image').value,
+      about_text: document.getElementById('about_text').value,
+      address: document.getElementById('address').value,
+      phone: document.getElementById('phone').value,
+      email: document.getElementById('email').value,
+    });
+    showAlert(document.getElementById('alert'), 'ההגדרות נשמרו ✓');
+  } catch(e) { showAlert(document.getElementById('alert'), e.message, 'error'); }
+}
+
+async function changePass() {
+  try {
+    await api('POST', '/auth/change-password', { current: document.getElementById('curPass').value, newPass: document.getElementById('newPass').value });
+    document.getElementById('curPass').value = '';
+    document.getElementById('newPass').value = '';
+    showAlert(document.getElementById('alert'), 'הסיסמה עודכנה ✓');
+  } catch(e) { showAlert(document.getElementById('alert'), e.message, 'error'); }
+}
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>חדשות ואירועים — חיידר בעל שם טוב</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../flow.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar" id="sidebar">
+    <a class="sidebar-logo" href="/admin/dashboard.html"><span class="logo-mark">בש"ט</span><span><span>חיידר בעל שם טוב</span><br><small>פאנל ניהול</small></span></a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">ראשי</div>
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>לוח בקרה</a>
+      <div class="sidebar-section">תוכן</div>
+      <a href="posts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>חדשות ואירועים</a>
+      <a href="gallery.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>גלריה</a>
+      <a href="slider.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="10" rx="2"/></svg>סליידר ראשי</a>
+      <div class="sidebar-section">הרשמה</div>
+      <a href="registrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>הרשמות</a>
+      <a href="inbox.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>תיבת דואר</a>
+      <div class="sidebar-section">הגדרות</div>
+      <a href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>הגדרות האתר</a>
+    </nav>
+    <div class="sidebar-footer"><span id="admin-username"></span> · <a href="#" onclick="logout()">יציאה</a></div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div><h1>חדשות ואירועים</h1><div class="breadcrumb">ניהול פוסטים ואירועים</div></div>
+      <div class="topbar-actions">
+        <a href="post-form.html" class="btn btn-grad btn-sm">+ פוסט חדש</a>
+      </div>
+    </div>
+    <div class="admin-body">
+      <div id="alert" class="alert" style="display:none"></div>
+      <!-- filter tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+        <button class="btn btn-line btn-sm" onclick="setFilter('all')" id="f-all">הכל</button>
+        <button class="btn btn-line btn-sm" onclick="setFilter('published')" id="f-published">פורסמו</button>
+        <button class="btn btn-line btn-sm" onclick="setFilter('draft')" id="f-draft">טיוטות</button>
+        <button class="btn btn-line btn-sm" onclick="setFilter('featured')" id="f-featured">מומלצים</button>
+      </div>
+      <div class="data-card">
+        <table>
+          <thead><tr><th>תמונה</th><th>כותרת</th><th>קטגוריה</th><th>תאריך</th><th>סטטוס</th><th>פעולות</th></tr></thead>
+          <tbody id="postsTbl"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+<script>
+requireAuth();
+let allPosts = [], filter = 'all';
+
+async function load() {
+  allPosts = await api('GET', '/posts/admin/all');
+  render();
+}
+
+function setFilter(f) {
+  filter = f;
+  document.querySelectorAll('[id^="f-"]').forEach(b => b.classList.remove('btn-grad'));
+  document.getElementById('f-' + f).classList.add('btn-grad');
+  render();
+}
+
+function render() {
+  let posts = allPosts;
+  if (filter === 'published') posts = posts.filter(p => p.published);
+  else if (filter === 'draft') posts = posts.filter(p => !p.published);
+  else if (filter === 'featured') posts = posts.filter(p => p.featured);
+  document.getElementById('postsTbl').innerHTML = posts.map(p => `
+    <tr>
+      <td>${p.image ? `<img class="post-thumb" src="${escHtml(p.image)}" />` : '<div class="post-thumb-ph"></div>'}</td>
+      <td style="font-weight:600;color:var(--ink);max-width:260px">${escHtml(p.title)}</td>
+      <td>${escHtml(p.category)}</td>
+      <td>${formatDate(p.date)}</td>
+      <td>
+        <span class="status status-${p.published ? 'published' : 'draft'}">${p.published ? 'פורסם' : 'טיוטה'}</span>
+        ${p.featured ? ' <span class="status status-accepted">מומלץ</span>' : ''}
+      </td>
+      <td style="display:flex;gap:6px">
+        <a href="post-form.html?id=${p.id}" class="btn-icon edit" title="עריכה"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></a>
+        <button class="btn-icon del" title="מחיקה" onclick="del('${p.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--muted)">אין פוסטים</td></tr>';
+}
+
+async function del(id) {
+  if (!confirm('למחוק את הפוסט?')) return;
+  try {
+    await api('DELETE', `/posts/${id}`);
+    allPosts = allPosts.filter(p => p.id !== id);
+    render();
+    showAlert(document.getElementById('alert'), 'הפוסט נמחק');
+  } catch(e) { showAlert(document.getElementById('alert'), e.message, 'error'); }
+}
+
+setFilter('all');
+load();
+</script>
+</body>
+</html>
