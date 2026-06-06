@@ -74,13 +74,34 @@
 .photo-card-caption::placeholder { color: var(--muted); }
 
 .photo-card-meta {
-  display: flex; align-items: center; justify-content: space-between; margin-top: 8px;
+  display: flex; align-items: center; justify-content: space-between; margin-top: 10px; gap: 8px;
 }
 .photo-cat-badge {
   font-size: 11px; font-weight: 600; padding: 3px 10px;
   border-radius: 999px; background: rgba(111,177,191,.15); color: var(--teal);
   border: 1px solid rgba(111,177,191,.25);
 }
+
+/* ── LAYOUT PICKER ── */
+.layout-picker { display: flex; gap: 5px; align-items: center; }
+.layout-picker-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.layout-btn {
+  width: 28px; height: 28px; border-radius: 7px; border: 1.5px solid var(--border);
+  background: rgba(255,255,255,.8); cursor: pointer; display: flex; align-items: center;
+  justify-content: center; transition: .15s; padding: 0; flex-shrink: 0;
+  position: relative;
+}
+.layout-btn:hover { border-color: var(--aqua); background: rgba(111,177,191,.1); }
+.layout-btn.active { border-color: var(--teal); background: rgba(27,98,115,.12); }
+.layout-btn svg { display: block; }
+/* Tooltip */
+.layout-btn::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: rgba(14,58,70,.88); color: #fff; font-size: 11px; white-space: nowrap;
+  padding: 4px 8px; border-radius: 6px; pointer-events: none; opacity: 0; transition: .15s;
+}
+.layout-btn:hover::after { opacity: 1; }
 
 .photo-actions {
   position: absolute; top: 8px; left: 8px; display: flex; gap: 6px;
@@ -229,6 +250,19 @@
 requireAuth();
 
 const CATS = ['כללי','אירועים','טיולים','שבתות','לימוד'];
+
+// Layout button SVG icons
+const LAYOUT_ICONS = {
+  normal: `<svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" fill="var(--teal)" opacity=".7"/></svg>`,
+  wide:   `<svg width="16" height="16" viewBox="0 0 16 16"><rect x="1" y="4" width="14" height="8" rx="2" fill="var(--teal)" opacity=".7"/></svg>`,
+  tall:   `<svg width="16" height="16" viewBox="0 0 16 16"><rect x="4" y="1" width="8" height="14" rx="2" fill="var(--teal)" opacity=".7"/></svg>`
+};
+const LAYOUT_TIPS = { normal: 'רגיל (1×1)', wide: 'רחב — תופס 2 עמודות', tall: 'גבוה — תופס 2 שורות' };
+
+function layoutBtn(id, type, current) {
+  return `<button class="layout-btn${type===current?' active':''}" data-tip="${LAYOUT_TIPS[type]}"
+    onclick="saveLayout('${id}','${type}',this)">${LAYOUT_ICONS[type]}</button>`;
+}
 let items = [], activeFilter = 'הכל';
 
 // ── Load ──
@@ -291,6 +325,12 @@ function renderGrid() {
             style="border:none;background:rgba(111,177,191,.12);color:var(--teal);font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;cursor:pointer;font-family:inherit">
             ${CATS.map(c => `<option${c===item.category?' selected':''}>${c}</option>`).join('')}
           </select>
+          <div class="layout-picker">
+            <span class="layout-picker-label">פריסה:</span>
+            ${layoutBtn(item.id, 'normal', item.layout||'normal')}
+            ${layoutBtn(item.id, 'wide',   item.layout||'normal')}
+            ${layoutBtn(item.id, 'tall',   item.layout||'normal')}
+          </div>
         </div>
       </div>
     </div>`).join('');
@@ -368,6 +408,17 @@ async function saveCaption(id, caption) {
   item.caption = caption;
   await api('PATCH', `/gallery/${id}`, { caption });
   showToast('כיתוב נשמר ✓');
+}
+
+// ── Save layout ──
+async function saveLayout(id, layout, btn) {
+  const item = items.find(i => i.id === id); if (!item) return;
+  item.layout = layout;
+  // Update button UI
+  btn.closest('.layout-picker').querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  await api('PATCH', `/gallery/${id}`, { layout });
+  showToast(`פריסה שונה ל${LAYOUT_TIPS[layout]} ✓`);
 }
 
 // ── Save category ──

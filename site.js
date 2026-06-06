@@ -137,14 +137,17 @@
     const items = await get('/gallery');
     if (!items || !items.length) return;
 
-    grid.innerHTML = items.map((item, i) => `
-      <div class="gtile${i === 0 ? ' tall' : ''}${i === 3 ? ' wide' : ''}">
+    grid.innerHTML = items.map(item => {
+      const cls = ['gtile', item.layout === 'wide' ? 'wide' : '', item.layout === 'tall' ? 'tall' : '']
+        .filter(Boolean).join(' ');
+      return `<div class="${cls}" style="position:relative">
         <img src="${esc(item.image)}"
           alt="${esc(item.caption)}"
           style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
           loading="lazy" />
         ${item.caption ? `<span class="glabel">${esc(item.caption)}</span>` : ''}
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   // ── Contact form → POST to API (override inline handler) ──
