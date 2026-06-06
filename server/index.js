@@ -28,14 +28,20 @@ app.use('/api/register', require('./routes/register'));
 app.use('/api/upload',   require('./routes/upload'));
 app.use('/api/stats',    require('./routes/stats'));
 
-// Inject settings into public HTML pages so images load instantly (no API round-trip)
+// Inject settings + gallery + posts into public HTML so everything loads instantly
 app.get(/^\/(?!admin\/|uploads\/).*\.html$/, (req, res, next) => {
   const filePath = path.join(__dirname, '..', req.path);
   if (!fs.existsSync(filePath)) return next();
   try {
     const settings = read('settings.json');
+    const gallery  = read('gallery.json').sort((a, b) => (a.order || 0) - (b.order || 0));
+    const posts    = read('posts.json').filter(p => p.published).sort((a, b) => new Date(b.date) - new Date(a.date));
     let html = fs.readFileSync(filePath, 'utf8');
-    const inject = `<script>window.__BST__=${JSON.stringify(settings)}</script>`;
+    const inject = `<script>
+window.__BST__=${JSON.stringify(settings)};
+window.__BST_GALLERY__=${JSON.stringify(gallery)};
+window.__BST_POSTS__=${JSON.stringify(posts)};
+</script>`;
     html = html.replace('</head>', inject + '\n</head>');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(html);

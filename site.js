@@ -109,9 +109,15 @@
   async function loadFeaturedPosts() {
     const grid = document.getElementById('newsGrid');
     if (!grid) return;
-    const posts = await get('/posts');
+    const posts = window.__BST_POSTS__ || await get('/posts');
     if (!posts || !posts.length) return;
+    // Background refresh
+    if (window.__BST_POSTS__) get('/posts').then(fresh => { if (fresh?.length) renderFeatured(grid, fresh); });
 
+    renderFeatured(grid, posts);
+  }
+
+  function renderFeatured(grid, posts) {
     const featured = posts.filter(p => p.featured).slice(0, 3);
     const toShow = featured.length ? featured : posts.slice(0, 3);
 
@@ -135,8 +141,9 @@
     const filterBar = document.getElementById('newsFilter');
     if (!grid) return;
 
-    const posts = await get('/posts');
+    const posts = window.__BST_POSTS__ || await get('/posts');
     if (!posts) return;
+    if (window.__BST_POSTS__) get('/posts').then(fresh => { if (fresh) { window.__BST_POSTS__ = fresh; } });
     if (!posts.length) {
       grid.innerHTML = '<p style="text-align:center;color:var(--muted);padding:40px;grid-column:1/-1">אין פרסומים עדיין</p>';
       return;
@@ -230,10 +237,20 @@
   async function loadGallery() {
     const grid = document.getElementById('galleryDynamic');
     if (!grid) return;
-    const items = await get('/gallery');
+    const items = window.__BST_GALLERY__ || await get('/gallery');
     if (!items || !items.length) return;
+    // Background refresh of gallery
+    if (window.__BST_GALLERY__) get('/gallery').then(fresh => { if (fresh?.length) renderGalleryGrid(grid, fresh); });
 
-    // Build grid tiles
+    renderGalleryGrid(grid, items);
+    initGalleryLightbox();
+  }
+
+  // Shared gallery items — updated when grid refreshes
+  let _galleryItems = [];
+
+  function renderGalleryGrid(grid, items) {
+    _galleryItems = items;
     grid.innerHTML = items.map((item, i) => {
       const cls = ['gtile', item.layout === 'wide' ? 'wide' : '', item.layout === 'tall' ? 'tall' : '']
         .filter(Boolean).join(' ');
@@ -254,21 +271,23 @@
         ${item.caption ? `<span class="glabel">${esc(item.caption)}</span>` : ''}
       </div>`;
     }).join('');
+  }
 
-    // ── Lightbox setup ──
-    const lb     = document.getElementById('glb');
-    const media  = document.getElementById('glbMedia');
-    const cap    = document.getElementById('glbCaption');
-    const ctr    = document.getElementById('glbCounter');
+  // ── Gallery lightbox (initialized once) ──
+  let _lbCur = 0, _lbReady = false;
+  function initGalleryLightbox() {
+    if (_lbReady) return;
+    const lb    = document.getElementById('glb');
+    const media = document.getElementById('glbMedia');
+    const cap   = document.getElementById('glbCaption');
+    const ctr   = document.getElementById('glbCounter');
     if (!lb) return;
-
-    let cur = 0;
+    _lbReady = true;
 
     function lbRender() {
-      const item = items[cur];
-      // Stop any playing video
+      const item = _galleryItems[_lbCur];
+      if (!item) return;
       const oldV = media.querySelector('video'); if (oldV) { oldV.pause(); oldV.src = ''; }
-
       if (item.type === 'video') {
         media.innerHTML = `<video src="${esc(item.video)}" controls autoplay playsinline
           style="max-width:100%;max-height:80vh;border-radius:14px;outline:none;display:block"></video>`;
@@ -277,50 +296,29 @@
           style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:14px;display:block" />`;
       }
       cap.textContent = item.caption || '';
-      ctr.textContent = items.length > 1 ? `${cur + 1} / ${items.length}` : '';
-      const showNav = items.length > 1;
+      ctr.textContent = _galleryItems.length > 1 ? `${_lbCur + 1} / ${_galleryItems.length}` : '';
+      const showNav = _galleryItems.length > 1;
       document.getElementById('glbPrev').style.display = showNav ? 'flex' : 'none';
       document.getElementById('glbNext').style.display = showNav ? 'flex' : 'none';
     }
 
-    window.glbOpen = function(idx) {
-      cur = idx; lbRender();
-      lb.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    };
-
-    function lbClose() {
-      lb.style.display = 'none';
-      document.body.style.overflow = '';
-      const v = media.querySelector('video'); if (v) { v.pause(); v.src = ''; }
-    }
-
-    function lbNav(dir) {
-      const v = media.querySelector('video'); if (v) { v.pause(); v.src = ''; }
-      cur = (cur + dir + items.length) % items.length;
-      lbRender();
-    }
+    window.glbOpen = function(idx) { _lbCur = idx; lbRender(); lb.style.display = 'flex'; document.body.style.overflow = 'hidden'; };
+    function lbClose() { lb.style.display = 'none'; document.body.style.overflow = ''; const v = media.querySelector('video'); if (v) { v.pause(); v.src = ''; } }
+    function lbNav(dir) { const v = media.querySelector('video'); if (v) { v.pause(); v.src = ''; } _lbCur = (_lbCur + dir + _galleryItems.length) % _galleryItems.length; lbRender(); }
 
     document.getElementById('glbClose').onclick = lbClose;
     document.getElementById('glbPrev').onclick  = () => lbNav(-1);
     document.getElementById('glbNext').onclick  = () => lbNav(1);
     lb.addEventListener('click', e => { if (e.target === lb) lbClose(); });
-
-    // Keyboard
     document.addEventListener('keydown', e => {
       if (lb.style.display !== 'flex') return;
-      if (e.key === 'Escape')      lbClose();
-      if (e.key === 'ArrowRight')  lbNav(-1);
-      if (e.key === 'ArrowLeft')   lbNav(1);
+      if (e.key === 'Escape')     lbClose();
+      if (e.key === 'ArrowRight') lbNav(-1);
+      if (e.key === 'ArrowLeft')  lbNav(1);
     });
-
-    // Touch swipe
     let tx = 0;
     lb.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
-    lb.addEventListener('touchend',   e => {
-      const dx = e.changedTouches[0].clientX - tx;
-      if (Math.abs(dx) > 50) lbNav(dx > 0 ? -1 : 1);
-    });
+    lb.addEventListener('touchend',   e => { const dx = e.changedTouches[0].clientX - tx; if (Math.abs(dx) > 50) lbNav(dx > 0 ? -1 : 1); });
   }
 
   // ── Contact form → POST to API (override inline handler) ──
