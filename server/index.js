@@ -6,24 +6,13 @@ const path = require('path');
 const app = express();
 
 app.use(cors());
-
-// Capture raw body for webhook signature verification before JSON parsing
-app.use((req, res, next) => {
-  if (req.path === '/webhook') {
-    let data = '';
-    req.setEncoding('utf8');
-    req.on('data', chunk => { data += chunk; });
-    req.on('end', () => { req.rawBody = data; req.body = JSON.parse(data || '{}'); next(); });
-  } else {
-    next();
-  }
-});
-
-app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Webhook (before API routes so raw body is captured)
-app.use('/webhook', require('./routes/webhook'));
+// Webhook: capture raw Buffer for HMAC verification, before express.json()
+app.use('/webhook', express.raw({ type: '*/*' }), require('./routes/webhook'));
+
+// Everything else uses JSON
+app.use(express.json());
 
 // API routes
 app.use('/api/auth',     require('./routes/auth'));
