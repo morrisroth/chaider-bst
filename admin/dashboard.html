@@ -55,6 +55,58 @@
         <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><div><div class="stat-num" id="s-msgs">—</div><div class="stat-label">הודעות שלא נקראו</div></div></div>
       </div>
 
+      <!-- ══ VISITOR ANALYTICS ══ -->
+      <div class="data-card" style="margin-bottom:24px">
+        <div class="data-card-head" style="border-bottom:none;padding-bottom:0">
+          <div>
+            <h2 style="display:flex;align-items:center;gap:8px">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+              מבקרים ייחודיים באתר
+            </h2>
+            <div style="font-size:12.5px;color:var(--muted);margin-top:3px">כל כתובת IP נספרת פעם אחת בלבד ביום</div>
+          </div>
+          <a href="/" target="_blank" class="btn btn-line btn-sm">צפייה באתר ←</a>
+        </div>
+        <div style="padding:20px 24px">
+          <!-- 4 visitor stat chips -->
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px">
+            <div style="background:var(--grad-cool);border-radius:16px;padding:20px 18px;color:#fff;position:relative;overflow:hidden">
+              <div style="position:absolute;top:-16px;left:-16px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.08)"></div>
+              <div style="font-size:11px;font-weight:600;opacity:.75;letter-spacing:1px;margin-bottom:8px;position:relative">היום</div>
+              <div id="v-today" style="font-family:var(--serif);font-size:38px;font-weight:700;line-height:1;position:relative">—</div>
+              <div style="font-size:12px;opacity:.65;margin-top:6px;position:relative">מבקרים</div>
+            </div>
+            <div style="background:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.9);border-radius:16px;padding:20px 18px;box-shadow:var(--shadow-sm)">
+              <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:1px;margin-bottom:8px">7 ימים אחרונים</div>
+              <div id="v-week" style="font-family:var(--serif);font-size:38px;font-weight:700;color:var(--ink);line-height:1">—</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:6px">מבקרים ייחודיים</div>
+            </div>
+            <div style="background:rgba(255,255,255,.8);border:1px solid rgba(255,255,255,.9);border-radius:16px;padding:20px 18px;box-shadow:var(--shadow-sm)">
+              <div style="font-size:11px;font-weight:600;color:var(--muted);letter-spacing:1px;margin-bottom:8px">30 ימים אחרונים</div>
+              <div id="v-month" style="font-family:var(--serif);font-size:38px;font-weight:700;color:var(--ink);line-height:1">—</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:6px">מבקרים ייחודיים</div>
+            </div>
+            <div style="background:linear-gradient(135deg,rgba(199,154,61,.14),rgba(231,200,122,.2));border:1px solid rgba(199,154,61,.25);border-radius:16px;padding:20px 18px">
+              <div style="font-size:11px;font-weight:600;color:var(--gold);letter-spacing:1px;margin-bottom:8px">סה"כ אי פעם</div>
+              <div id="v-total" style="font-family:var(--serif);font-size:38px;font-weight:700;color:var(--ink);line-height:1">—</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:6px">כתובות IP שונות</div>
+            </div>
+          </div>
+
+          <!-- 30-day bar chart -->
+          <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:13px;font-weight:600;color:var(--soft)">30 ימים אחרונים — מבקרים ייחודיים ליום</div>
+            <div style="font-size:12px;color:var(--muted)" id="chartPeak"></div>
+          </div>
+          <div style="position:relative">
+            <canvas id="visitorChart" height="140" style="width:100%;display:block;border-radius:8px"></canvas>
+            <div id="chartTooltip" style="display:none;position:absolute;background:rgba(14,58,70,.88);color:#fff;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;pointer-events:none;white-space:nowrap;backdrop-filter:blur(6px)"></div>
+          </div>
+          <!-- x-axis labels: first, middle, last -->
+          <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--muted)" id="chartLabels"></div>
+        </div>
+      </div>
+
       <!-- Recent posts -->
       <div class="data-card">
         <div class="data-card-head">
@@ -85,13 +137,108 @@
 <script src="admin.js"></script>
 <script>
 requireAuth();
+
+// ── Visitor chart ──
+function drawChart(data) {
+  const canvas = document.getElementById('visitorChart');
+  if (!canvas) return;
+  const dpr  = window.devicePixelRatio || 1;
+  const W    = canvas.offsetWidth || canvas.parentElement.offsetWidth;
+  const H    = 140;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const max    = Math.max(...data.map(d => d.count), 1);
+  const n      = data.length;
+  const padL   = 4, padR = 4, padT = 16, padB = 4;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const barW   = Math.max(1, chartW / n - 2);
+  const gap    = (chartW - barW * n) / (n - 1);
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, padT, 0, H);
+  grad.addColorStop(0, 'rgba(27,98,115,.75)');
+  grad.addColorStop(1, 'rgba(111,177,191,.18)');
+
+  data.forEach((d, i) => {
+    const x  = padL + i * (barW + gap);
+    const bh = d.count ? Math.max(3, (d.count / max) * chartH) : 2;
+    const y  = padT + chartH - bh;
+    const r  = Math.min(4, barW / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + barW - r, y);
+    ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
+    ctx.lineTo(x + barW, y + bh);
+    ctx.lineTo(x, y + bh);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+    ctx.fillStyle = d.count === max && max > 0 ? 'rgba(199,154,61,.85)' : grad;
+    ctx.fill();
+  });
+
+  // Hover tooltip
+  canvas.onmousemove = e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx   = (e.clientX - rect.left);
+    const tip  = document.getElementById('chartTooltip');
+    let found  = false;
+    data.forEach((d, i) => {
+      const x = padL + i * (barW + gap);
+      if (mx >= x && mx <= x + barW + gap) {
+        const label = new Date(d.date).toLocaleDateString('he-IL', { day:'2-digit', month:'2-digit' });
+        tip.textContent = `${label} · ${d.count} מבקרים`;
+        tip.style.display = 'block';
+        tip.style.right   = Math.max(0, W - x - barW / 2 - tip.offsetWidth / 2) + 'px';
+        tip.style.top     = (padT + chartH - (d.count ? Math.max(3,(d.count/max)*chartH) : 2) - 34) + 'px';
+        found = true;
+      }
+    });
+    if (!found) tip.style.display = 'none';
+  };
+  canvas.onmouseleave = () => { document.getElementById('chartTooltip').style.display = 'none'; };
+
+  // x-axis labels
+  const lbl = document.getElementById('chartLabels');
+  if (lbl && data.length) {
+    const fmt = d => new Date(d).toLocaleDateString('he-IL', { day:'2-digit', month:'2-digit' });
+    lbl.innerHTML = `<span>${fmt(data[0].date)}</span><span>${fmt(data[Math.floor(n/2)].date)}</span><span>${fmt(data[n-1].date)}</span>`;
+  }
+
+  // Peak label
+  const peak = document.getElementById('chartPeak');
+  if (peak && max > 0) {
+    const peakDay = data.find(d => d.count === max);
+    if (peakDay) {
+      const lf = new Date(peakDay.date).toLocaleDateString('he-IL', { day:'2-digit', month:'long' });
+      peak.textContent = `שיא: ${max} מבקרים · ${lf}`;
+    }
+  }
+}
+
 async function load() {
-  const [posts, gallery, regs, msgs] = await Promise.all([
+  const [posts, gallery, regs, msgs, stats] = await Promise.all([
     api('GET', '/posts/admin/all'),
     api('GET', '/gallery'),
     api('GET', '/register'),
-    api('GET', '/contact')
+    api('GET', '/contact'),
+    api('GET', '/stats')
   ]);
+
+  // Visitor stats
+  if (stats) {
+    document.getElementById('v-today').textContent = stats.today;
+    document.getElementById('v-week').textContent  = stats.week;
+    document.getElementById('v-month').textContent = stats.month;
+    document.getElementById('v-total').textContent = stats.total;
+    drawChart(stats.last30);
+  }
 
   document.getElementById('s-posts').textContent = posts.filter(p => p.published).length;
   document.getElementById('s-gallery').textContent = gallery.length;

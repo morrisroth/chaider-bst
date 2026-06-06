@@ -6,6 +6,7 @@ const path = require('path');
 const app = express();
 
 app.use(cors());
+app.use(require('./middleware/visitors'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Webhook: capture raw Buffer for HMAC verification, before express.json()
@@ -23,6 +24,7 @@ app.use('/api/settings', require('./routes/settings'));
 app.use('/api/contact',  require('./routes/contact'));
 app.use('/api/register', require('./routes/register'));
 app.use('/api/upload',   require('./routes/upload'));
+app.use('/api/stats',    require('./routes/stats'));
 
 // Serve public site + admin panel
 app.use(express.static(path.join(__dirname, '..')));
