@@ -1,7 +1,9 @@
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
-const cors = require('cors');
-const path = require('path');
+const cors    = require('cors');
+const path    = require('path');
+const fs      = require('fs');
+const { read } = require('./db');
 
 const app = express();
 
@@ -26,7 +28,23 @@ app.use('/api/register', require('./routes/register'));
 app.use('/api/upload',   require('./routes/upload'));
 app.use('/api/stats',    require('./routes/stats'));
 
-// Serve public site + admin panel
+// Inject settings into public HTML pages so images load instantly (no API round-trip)
+app.get(/^\/(?!admin\/|uploads\/).*\.html$/, (req, res, next) => {
+  const filePath = path.join(__dirname, '..', req.path);
+  if (!fs.existsSync(filePath)) return next();
+  try {
+    const settings = read('settings.json');
+    let html = fs.readFileSync(filePath, 'utf8');
+    const inject = `<script>window.__BST__=${JSON.stringify(settings)}</script>`;
+    html = html.replace('</head>', inject + '\n</head>');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  } catch {
+    next();
+  }
+});
+
+// Serve everything else (CSS, JS, images, admin pages)
 app.use(express.static(path.join(__dirname, '..')));
 
 const PORT = process.env.PORT || 4000;

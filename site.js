@@ -33,9 +33,8 @@
     blob.prepend(img);
   }
 
-  // ── Settings → update hero, about, contact info ──
-  async function loadSettings() {
-    const s = await get('/settings');
+  // ── Apply settings to DOM ──
+  function applySettings(s) {
     if (!s) return;
 
     // Logo
@@ -90,6 +89,20 @@
 
     // Page title
     if (s.site_name) document.title = `${document.title.split('—')[0].trim()} — ${s.site_name}`;
+  }
+
+  // ── Settings loader — uses server-injected data first, then refreshes from API ──
+  async function loadSettings() {
+    // window.__BST__ is injected by the server into every HTML page — instant, no API call
+    if (window.__BST__) {
+      applySettings(window.__BST__);
+      // Refresh silently in background so updated settings appear on next interaction
+      get('/settings').then(fresh => { if (fresh) applySettings(fresh); });
+      return;
+    }
+    // Fallback for any case server didn't inject (shouldn't happen in production)
+    const s = await get('/settings');
+    applySettings(s);
   }
 
   // ── Home page: featured news grid ──
