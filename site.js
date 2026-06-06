@@ -55,8 +55,11 @@
       if (prosePs.length) prosePs[0].textContent = s.about_text;
     }
 
-    // About image (left blob in about section)
+    // About image — about section on homepage AND about.html page
     if (s.about_image) injectBlobImg(document.querySelector('.blob-soft'), s.about_image);
+
+    // Approach image — approach.html page (blob-soft.cool)
+    if (s.approach_image) injectBlobImg(document.querySelector('.blob-soft.cool'), s.approach_image);
 
     // Phone links
     if (s.phone) {

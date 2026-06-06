@@ -94,7 +94,7 @@
         <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:6px">תמונות דף הבית</div>
         <div style="font-size:14px;color:var(--muted);margin-bottom:20px">לחצו על תמונה או גררו קובץ אליה כדי להחליף. השינוי נשמר אוטומטית.</div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px">
 
           <!-- Image 1: Hero -->
           <div class="img-card">
@@ -144,6 +144,30 @@
             </div>
           </div>
 
+          <!-- Image 3: Approach -->
+          <div class="img-card">
+            <div class="page-diagram">
+              <div class="dot" style="background:var(--aqua)"></div>
+              תמונה 3 — מופיעה בדף "הדרך החינוכית" (approach.html)
+            </div>
+            <h3>תמונת הדרך החינוכית</h3>
+            <div class="sub">שיעור גמרא, מורה עם תלמידים, לימוד בחברותא</div>
+
+            <div class="img-drop" id="approachDrop" style="height:260px" onclick="document.getElementById('approachFile').click()">
+              <img id="approachImg" style="display:none" />
+              <div class="img-drop-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                לחצו להעלאת תמונה
+              </div>
+              <input type="file" id="approachFile" accept="image/*" onchange="uploadImg('approach', this)" />
+            </div>
+
+            <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+              <button class="btn btn-line btn-sm" onclick="clearImg('approach')">הסרת תמונה</button>
+              <span id="approachStatus" style="font-size:12px;color:var(--muted)"></span>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -186,15 +210,16 @@
 requireAuth();
 
 // Current values from API
-let heroUrl = '', aboutUrl = '';
+let heroUrl = '', aboutUrl = '', approachUrl = '';
 
 async function load() {
   const s = await api('GET', '/settings');
   ['site_name','site_tagline','hero_title','hero_subtitle','address','phone','email','about_text'].forEach(k => {
     const el = document.getElementById(k); if (el) el.value = s[k] || '';
   });
-  if (s.hero_image)  { heroUrl  = s.hero_image;  setPreview('hero',  s.hero_image); }
-  if (s.about_image) { aboutUrl = s.about_image; setPreview('about', s.about_image); }
+  if (s.hero_image)     { heroUrl     = s.hero_image;     setPreview('hero',     s.hero_image); }
+  if (s.about_image)    { aboutUrl    = s.about_image;    setPreview('about',    s.about_image); }
+  if (s.approach_image) { approachUrl = s.approach_image; setPreview('approach', s.approach_image); }
 }
 
 function setPreview(which, url) {
@@ -221,8 +246,9 @@ async function uploadImg(which, input) {
   setStatus(which, 'מעלה...', true);
   try {
     const url = await uploadFile(file);
-    if (which === 'hero')  heroUrl  = url;
-    else                   aboutUrl = url;
+    if (which === 'hero')        heroUrl     = url;
+    else if (which === 'about')  aboutUrl    = url;
+    else                         approachUrl = url;
     setPreview(which, url);
     // Auto-save the image immediately
     await saveImages();
@@ -232,13 +258,14 @@ async function uploadImg(which, input) {
 }
 
 function clearImg(which) {
-  if (which === 'hero')  heroUrl  = '';
-  else                   aboutUrl = '';
+  if (which === 'hero')        heroUrl     = '';
+  else if (which === 'about')  aboutUrl    = '';
+  else                         approachUrl = '';
   setPreview(which, '');
 }
 
 async function saveImages() {
-  await api('PUT', '/settings', { hero_image: heroUrl, about_image: aboutUrl });
+  await api('PUT', '/settings', { hero_image: heroUrl, about_image: aboutUrl, approach_image: approachUrl });
 }
 
 async function saveAll() {
@@ -252,8 +279,9 @@ async function saveAll() {
       address:       document.getElementById('address').value,
       phone:         document.getElementById('phone').value,
       email:         document.getElementById('email').value,
-      hero_image:    heroUrl,
-      about_image:   aboutUrl,
+      hero_image:     heroUrl,
+      about_image:    aboutUrl,
+      approach_image: approachUrl,
     });
     const chip = document.getElementById('savedChip');
     chip.classList.add('show');

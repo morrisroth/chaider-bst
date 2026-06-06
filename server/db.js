@@ -32,6 +32,7 @@ function write(file, data) {
       hero_image: '',
       about_image: '',
       about_text: 'חיידר בעל שם טוב ממוקם בלב שכונת רמה ד\' בבית שמש, ומחנך דורות של ילדים בדרך החסידות, התורה והשמחה.',
+      approach_image: '',
       phone: '052-2433693',
       address: 'רחוב המנונא 12, בית שמש',
       email: ''
