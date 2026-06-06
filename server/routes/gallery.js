@@ -11,9 +11,12 @@ router.post('/', auth, (req, res) => {
   const items = read('gallery.json');
   const item = {
     id: uuid(),
-    image: req.body.image || '',
+    type: req.body.type || 'image',   // 'image' | 'video'
+    image: req.body.image || '',       // image URL or video thumbnail
+    video: req.body.video || '',       // video URL (type=video only)
     caption: req.body.caption || '',
     category: req.body.category || 'כללי',
+    layout: req.body.layout || 'normal',
     order: items.length,
     created_at: new Date().toISOString()
   };

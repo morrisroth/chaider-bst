@@ -130,24 +130,101 @@
       </article>`).join('');
   }
 
-  // ── Gallery page: dynamic grid ──
+  // ── Gallery page: dynamic grid + lightbox ──
   async function loadGallery() {
     const grid = document.getElementById('galleryDynamic');
     if (!grid) return;
     const items = await get('/gallery');
     if (!items || !items.length) return;
 
-    grid.innerHTML = items.map(item => {
+    // Build grid tiles
+    grid.innerHTML = items.map((item, i) => {
       const cls = ['gtile', item.layout === 'wide' ? 'wide' : '', item.layout === 'tall' ? 'tall' : '']
         .filter(Boolean).join(' ');
-      return `<div class="${cls}" style="position:relative">
-        <img src="${esc(item.image)}"
-          alt="${esc(item.caption)}"
-          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
-          loading="lazy" />
+      const isVideo = item.type === 'video';
+      const thumb = isVideo
+        ? `<video src="${esc(item.video)}#t=0.1" preload="metadata" muted playsinline
+             style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>
+           <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
+             <svg width="56" height="56" viewBox="0 0 60 60" fill="none">
+               <circle cx="30" cy="30" r="30" fill="rgba(255,255,255,.22)"/>
+               <polygon points="23,18 47,30 23,42" fill="#fff"/>
+             </svg>
+           </div>`
+        : `<img src="${esc(item.image)}" alt="${esc(item.caption)}"
+              style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" loading="lazy" />`;
+      return `<div class="${cls}" style="position:relative;cursor:pointer" onclick="glbOpen(${i})">
+        ${thumb}
         ${item.caption ? `<span class="glabel">${esc(item.caption)}</span>` : ''}
       </div>`;
     }).join('');
+
+    // ── Lightbox setup ──
+    const lb     = document.getElementById('glb');
+    const media  = document.getElementById('glbMedia');
+    const cap    = document.getElementById('glbCaption');
+    const ctr    = document.getElementById('glbCounter');
+    if (!lb) return;
+
+    let cur = 0;
+
+    function lbRender() {
+      const item = items[cur];
+      // Stop any playing video
+      const oldV = media.querySelector('video'); if (oldV) { oldV.pause(); oldV.src = ''; }
+
+      if (item.type === 'video') {
+        media.innerHTML = `<video src="${esc(item.video)}" controls autoplay playsinline
+          style="max-width:100%;max-height:80vh;border-radius:14px;outline:none;display:block"></video>`;
+      } else {
+        media.innerHTML = `<img src="${esc(item.image)}" alt="${esc(item.caption)}"
+          style="max-width:100%;max-height:80vh;object-fit:contain;border-radius:14px;display:block" />`;
+      }
+      cap.textContent = item.caption || '';
+      ctr.textContent = items.length > 1 ? `${cur + 1} / ${items.length}` : '';
+      const showNav = items.length > 1;
+      document.getElementById('glbPrev').style.display = showNav ? 'flex' : 'none';
+      document.getElementById('glbNext').style.display = showNav ? 'flex' : 'none';
+    }
+
+    window.glbOpen = function(idx) {
+      cur = idx; lbRender();
+      lb.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    };
+
+    function lbClose() {
+      lb.style.display = 'none';
+      document.body.style.overflow = '';
+      const v = media.querySelector('video'); if (v) { v.pause(); v.src = ''; }
+    }
+
+    function lbNav(dir) {
+      const v = media.querySelector('video'); if (v) { v.pause(); v.src = ''; }
+      cur = (cur + dir + items.length) % items.length;
+      lbRender();
+    }
+
+    document.getElementById('glbClose').onclick = lbClose;
+    document.getElementById('glbPrev').onclick  = () => lbNav(-1);
+    document.getElementById('glbNext').onclick  = () => lbNav(1);
+    lb.addEventListener('click', e => { if (e.target === lb) lbClose(); });
+
+    // Keyboard
+    document.addEventListener('keydown', e => {
+      if (lb.style.display !== 'flex') return;
+      if (e.key === 'Escape')      lbClose();
+      if (e.key === 'ArrowRight')  lbNav(-1);
+      if (e.key === 'ArrowLeft')   lbNav(1);
+    });
+
+    // Touch swipe
+    let tx = 0;
+    lb.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+    lb.addEventListener('touchend',   e => {
+      const dx = e.changedTouches[0].clientX - tx;
+      if (Math.abs(dx) > 50) lbNav(dx > 0 ? -1 : 1);
+    });
   }
 
   // ── Contact form → POST to API (override inline handler) ──

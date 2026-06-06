@@ -10,168 +10,163 @@
 <style>
 /* ── DROP ZONE ── */
 .drop-zone {
-  border: 2.5px dashed rgba(27,98,115,.3);
-  border-radius: 20px; padding: 40px 24px;
+  border: 2.5px dashed rgba(27,98,115,.3); border-radius: 20px; padding: 40px 24px;
   text-align: center; cursor: pointer; transition: .2s;
-  background: rgba(255,255,255,.6); backdrop-filter: blur(4px);
-  position: relative;
+  background: rgba(255,255,255,.6); backdrop-filter: blur(4px); position: relative;
 }
-.drop-zone:hover, .drop-zone.drag-over {
-  border-color: var(--aqua);
-  background: rgba(111,177,191,.08);
-}
-.drop-zone input[type=file] {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-}
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--aqua); background: rgba(111,177,191,.08); }
+.drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
 .drop-icon { font-size: 44px; margin-bottom: 12px; }
 .drop-title { font-family: var(--serif); font-size: 19px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
 .drop-sub { font-size: 13.5px; color: var(--muted); }
 .drop-hint { font-size: 12px; color: var(--muted); margin-top: 8px; }
 
 /* ── UPLOAD QUEUE ── */
-.upload-queue { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; margin-top: 20px; }
-.queue-item {
-  position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1;
-  background: var(--cream-dark);
-}
-.queue-item img { width: 100%; height: 100%; object-fit: cover; }
-.queue-progress {
-  position: absolute; inset: 0; background: rgba(14,58,70,.5);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #fff;
-}
+.upload-queue { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; margin-top: 16px; }
+.queue-item { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 1; background: var(--mist); }
+.queue-item img, .queue-item video { width: 100%; height: 100%; object-fit: cover; }
+.queue-progress { position: absolute; inset: 0; background: rgba(14,58,70,.55);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #fff; }
 .progress-bar-wrap { width: 70%; height: 4px; background: rgba(255,255,255,.3); border-radius: 2px; }
 .progress-bar { height: 100%; background: var(--gold-lt); border-radius: 2px; transition: width .2s; }
-.queue-done { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  background: rgba(34,197,94,.45); color: #fff; font-size: 28px; }
-.queue-err { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  background: rgba(239,68,68,.45); color: #fff; font-size: 22px; }
+.queue-done { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(34,197,94,.45); color: #fff; font-size: 28px; }
+.queue-err  { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(239,68,68,.45); color: #fff; font-size: 22px; }
 
-/* ── GALLERY GRID ── */
-.photo-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;
-}
+/* ── PHOTO/VIDEO GRID ── */
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px,1fr)); gap: 16px; }
 .photo-card {
   border-radius: 16px; overflow: hidden; position: relative;
-  background: rgba(255,255,255,.8); border: 1px solid rgba(255,255,255,.9);
+  background: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.9);
   box-shadow: 0 6px 20px rgba(14,58,70,.09); transition: .25s;
 }
-.photo-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(14,58,70,.15); }
-.photo-card-img {
-  width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block;
-}
-.photo-card-img-ph {
-  width: 100%; aspect-ratio: 4/3;
-  background: repeating-linear-gradient(135deg,#cfe2e5 0 2px,#e6f1f2 2px 14px);
-}
-.photo-card-body { padding: 12px 14px 14px; }
-.photo-card-caption {
-  font-size: 13px; color: var(--soft); width: 100%;
-  border: none; background: transparent; font-family: inherit;
-  direction: rtl; outline: none; border-bottom: 1.5px solid transparent;
-  transition: .18s; padding: 2px 0;
-}
-.photo-card-caption:focus { border-bottom-color: var(--aqua); }
-.photo-card-caption::placeholder { color: var(--muted); }
+.photo-card:hover { transform: translateY(-4px); box-shadow: 0 18px 42px rgba(14,58,70,.15); }
 
-.photo-card-meta {
-  display: flex; align-items: center; justify-content: space-between; margin-top: 10px; gap: 8px;
-}
-.photo-cat-badge {
-  font-size: 11px; font-weight: 600; padding: 3px 10px;
-  border-radius: 999px; background: rgba(111,177,191,.15); color: var(--teal);
-  border: 1px solid rgba(111,177,191,.25);
-}
+/* media container */
+.media-wrap { position: relative; width: 100%; aspect-ratio: 4/3; overflow: hidden; cursor: pointer; background: #0e3a46; }
+.media-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s; }
+.media-wrap:hover img { transform: scale(1.04); }
+.media-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* ── LAYOUT PICKER ── */
-.layout-picker { display: flex; gap: 5px; align-items: center; }
-.layout-picker-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
-.layout-btn {
-  width: 28px; height: 28px; border-radius: 7px; border: 1.5px solid var(--border);
-  background: rgba(255,255,255,.8); cursor: pointer; display: flex; align-items: center;
-  justify-content: center; transition: .15s; padding: 0; flex-shrink: 0;
-  position: relative;
+/* play badge on video tiles */
+.play-badge {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
 }
-.layout-btn:hover { border-color: var(--aqua); background: rgba(111,177,191,.1); }
-.layout-btn.active { border-color: var(--teal); background: rgba(27,98,115,.12); }
-.layout-btn svg { display: block; }
-/* Tooltip */
-.layout-btn::after {
-  content: attr(data-tip);
-  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
-  background: rgba(14,58,70,.88); color: #fff; font-size: 11px; white-space: nowrap;
-  padding: 4px 8px; border-radius: 6px; pointer-events: none; opacity: 0; transition: .15s;
-}
-.layout-btn:hover::after { opacity: 1; }
+.play-badge svg { width: 48px; height: 48px; filter: drop-shadow(0 4px 12px rgba(0,0,0,.45)); }
 
-.photo-actions {
-  position: absolute; top: 8px; left: 8px; display: flex; gap: 6px;
-  opacity: 0; transition: .2s;
+/* type chip */
+.type-chip {
+  position: absolute; top: 8px; right: 8px;
+  padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.4);
 }
+.type-chip.img { background: rgba(14,58,70,.65); color: #fff; }
+.type-chip.vid { background: rgba(199,154,61,.85); color: #3f2c06; }
+
+/* hover actions */
+.photo-actions { position: absolute; top: 8px; left: 8px; display: flex; gap: 6px; opacity: 0; transition: .2s; }
 .photo-card:hover .photo-actions { opacity: 1; }
 .photo-actions button {
   width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(6px); transition: .18s;
+  display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); transition: .18s;
 }
-.photo-actions .btn-del { background: rgba(239,68,68,.85); color: #fff; }
-.photo-actions .btn-del:hover { background: #dc2626; transform: scale(1.1); }
-.photo-actions .btn-view { background: rgba(255,255,255,.85); color: var(--ink); }
-.photo-actions .btn-view:hover { background: #fff; transform: scale(1.1); }
+.btn-del  { background: rgba(239,68,68,.85); color: #fff; }
+.btn-del:hover  { background: #dc2626; transform: scale(1.1); }
+.btn-view { background: rgba(255,255,255,.85); color: var(--ink); }
+.btn-view:hover { background: #fff; transform: scale(1.1); }
 
-/* ── LIGHTBOX ── */
-.lightbox {
-  position: fixed; inset: 0; background: rgba(14,58,70,.88);
-  display: none; align-items: center; justify-content: center; z-index: 999;
-  backdrop-filter: blur(8px);
+/* card body */
+.photo-card-body { padding: 12px 14px 14px; }
+.photo-card-caption {
+  font-size: 13px; color: var(--soft); width: 100%;
+  border: none; background: transparent; font-family: inherit; direction: rtl;
+  outline: none; border-bottom: 1.5px solid transparent; transition: .18s; padding: 2px 0;
 }
-.lightbox.open { display: flex; }
-.lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 16px; box-shadow: 0 32px 80px rgba(0,0,0,.5); }
-.lightbox-close {
-  position: absolute; top: 20px; left: 20px;
-  width: 44px; height: 44px; border-radius: 50%;
-  background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
-  color: #fff; font-size: 20px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(4px); transition: .2s;
-}
-.lightbox-close:hover { background: rgba(255,255,255,.25); }
+.photo-card-caption:focus { border-bottom-color: var(--aqua); }
+.photo-card-caption::placeholder { color: var(--muted); }
+.photo-card-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; gap: 6px; flex-wrap: wrap; }
 
-/* ── FILTER BAR ── */
-.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+/* layout picker */
+.layout-picker { display: flex; gap: 4px; }
+.layout-btn {
+  width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid var(--border);
+  background: rgba(255,255,255,.8); cursor: pointer; display: flex; align-items: center;
+  justify-content: center; transition: .15s; padding: 0; position: relative;
+}
+.layout-btn:hover { border-color: var(--aqua); }
+.layout-btn.active { border-color: var(--teal); background: rgba(27,98,115,.12); }
+.layout-btn::after {
+  content: attr(data-tip); position: absolute; bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%);
+  background: rgba(14,58,70,.88); color: #fff; font-size: 11px; white-space: nowrap;
+  padding: 3px 8px; border-radius: 5px; pointer-events: none; opacity: 0; transition: .15s;
+}
+.layout-btn:hover::after { opacity: 1; }
+
+/* filter bar */
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; }
 .filter-btn {
   padding: 7px 18px; border-radius: 999px; border: 1.5px solid var(--border);
   background: rgba(255,255,255,.7); font-size: 13.5px; font-weight: 500; cursor: pointer;
-  color: var(--soft); transition: .18s; font-family: inherit; backdrop-filter: blur(3px);
+  color: var(--soft); transition: .18s; font-family: inherit;
 }
-.filter-btn.active, .filter-btn:hover {
-  background: var(--grad-cool); color: #fff; border-color: transparent;
-  box-shadow: 0 6px 16px rgba(14,58,70,.2);
+.filter-btn.active, .filter-btn:hover { background: var(--grad-cool); color: #fff; border-color: transparent; box-shadow: 0 6px 16px rgba(14,58,70,.2); }
+
+/* empty state */
+.empty-state { text-align: center; padding: 64px 24px; color: var(--muted); grid-column: 1/-1; }
+.empty-state .ei { font-size: 56px; margin-bottom: 14px; opacity: .45; }
+
+/* ── ADMIN LIGHTBOX ── */
+.a-lightbox {
+  position: fixed; inset: 0; background: rgba(8,24,30,.92);
+  display: none; align-items: center; justify-content: center; z-index: 999;
+  backdrop-filter: blur(10px);
 }
+.a-lightbox.open { display: flex; }
+.a-lb-inner {
+  position: relative; max-width: min(90vw, 1000px); width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.a-lb-media { width: 100%; max-height: 78vh; border-radius: 14px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center; background: #000; }
+.a-lb-media img { max-width: 100%; max-height: 78vh; object-fit: contain; border-radius: 14px; display: block; }
+.a-lb-media video { max-width: 100%; max-height: 78vh; border-radius: 14px; outline: none; }
+.a-lb-caption { color: rgba(255,255,255,.75); font-size: 14px; text-align: center; }
+.a-lb-close {
+  position: absolute; top: -44px; left: 0; width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.25);
+  color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: .2s;
+}
+.a-lb-close:hover { background: rgba(255,255,255,.28); }
+.a-lb-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 46px; height: 46px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.3);
+  background: rgba(255,255,255,.12); color: #fff; font-size: 22px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: .2s; backdrop-filter: blur(6px);
+}
+.a-lb-nav:hover { background: rgba(255,255,255,.26); transform: translateY(-50%) scale(1.08); }
+.a-lb-prev { right: calc(100% + 14px); }
+.a-lb-next { left:  calc(100% + 14px); }
+.a-lb-counter { color: rgba(255,255,255,.5); font-size: 13px; }
 
-/* ── EMPTY STATE ── */
-.empty-state { text-align: center; padding: 64px 24px; color: var(--muted); }
-.empty-state .empty-icon { font-size: 56px; margin-bottom: 16px; opacity: .5; }
-.empty-state p { font-size: 15px; }
-
-/* ── SAVE TOAST ── */
+/* toast */
 .toast {
   position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
-  background: rgba(14,58,70,.92); color: #fff; padding: 12px 24px;
-  border-radius: 999px; font-size: 14px; font-weight: 600;
-  backdrop-filter: blur(8px); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
-  z-index: 200; white-space: nowrap;
+  background: rgba(14,58,70,.92); color: #fff; padding: 12px 24px; border-radius: 999px;
+  font-size: 14px; font-weight: 600; backdrop-filter: blur(8px);
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1); z-index: 200; white-space: nowrap;
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
 @media (max-width: 768px) {
-  .photo-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .photo-grid { grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 12px; }
+  .a-lb-prev, .a-lb-next { display: none; }
 }
 </style>
 </head>
 <body>
 <div class="admin-layout">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <a class="sidebar-logo" href="/admin/dashboard.html"><span class="logo-mark">בש"ט</span><span><span>חיידר בעל שם טוב</span><br><small>פאנל ניהול</small></span></a>
     <nav class="sidebar-nav">
@@ -190,59 +185,55 @@
     <div class="sidebar-footer"><span id="admin-username"></span> · <a href="#" onclick="logout()">יציאה</a></div>
   </aside>
 
-  <!-- MAIN -->
   <div class="admin-main">
     <div class="admin-topbar">
-      <div>
-        <h1>גלריית תמונות</h1>
-        <div class="breadcrumb" id="photoCount">טוען...</div>
-      </div>
-      <div class="topbar-actions">
-        <a href="/" target="_blank" class="btn btn-line btn-sm">צפייה בגלריה ←</a>
-      </div>
+      <div><h1>גלריית תמונות ווידאו</h1><div class="breadcrumb" id="photoCount">טוען...</div></div>
+      <div class="topbar-actions"><a href="/gallery.html" target="_blank" class="btn btn-line btn-sm">צפייה בגלריה ←</a></div>
     </div>
-
     <div class="admin-body">
 
-      <!-- Upload zone -->
+      <!-- Drop zone -->
       <div class="drop-zone" id="dropZone">
-        <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this.files)" />
+        <input type="file" id="fileInput" accept="image/*,video/*" multiple onchange="handleFiles(this.files)" />
         <div class="drop-icon">🖼️</div>
-        <div class="drop-title">גררו תמונות לכאן או לחצו להעלאה</div>
-        <div class="drop-sub">JPG, PNG, WebP · ניתן לבחור מספר תמונות בו-זמנית</div>
-        <div class="drop-hint">כל תמונה שתעלו תופיע מיד בגלריה הציבורית</div>
+        <div class="drop-title">גררו תמונות או סרטונים לכאן</div>
+        <div class="drop-sub">תמונות: JPG, PNG, WebP · סרטונים: MP4, MOV, WebM</div>
+        <div class="drop-hint">ניתן לבחור מספר קבצים בו-זמנית · כל קובץ יופיע מיד בגלריה</div>
       </div>
-
-      <!-- Upload queue preview -->
       <div class="upload-queue" id="uploadQueue"></div>
 
       <!-- Filter bar -->
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:28px 0 18px">
         <div class="filter-bar" id="filterBar">
           <button class="filter-btn active" onclick="setFilter('הכל',this)">הכל <span id="countAll" style="opacity:.6"></span></button>
+          <button class="filter-btn" onclick="setFilter('תמונות',this)">📷 תמונות</button>
+          <button class="filter-btn" onclick="setFilter('סרטונים',this)">🎬 סרטונים</button>
           <button class="filter-btn" onclick="setFilter('כללי',this)">כללי</button>
           <button class="filter-btn" onclick="setFilter('אירועים',this)">אירועים</button>
           <button class="filter-btn" onclick="setFilter('טיולים',this)">טיולים</button>
           <button class="filter-btn" onclick="setFilter('שבתות',this)">שבתות</button>
           <button class="filter-btn" onclick="setFilter('לימוד',this)">לימוד</button>
         </div>
-        <div style="font-size:13px;color:var(--muted)">לחצו על כיתוב כדי לערוך · hover לאפשרויות</div>
+        <div style="font-size:12.5px;color:var(--muted)">לחצו על כיתוב לעריכה · hover לאפשרויות</div>
       </div>
 
-      <!-- Photo grid -->
       <div class="photo-grid" id="photoGrid"></div>
-
     </div>
   </div>
 </div>
 
-<!-- Lightbox -->
-<div class="lightbox" id="lightbox" onclick="closeLightbox()">
-  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightboxImg" src="" alt="" onclick="event.stopPropagation()" />
+<!-- Admin Lightbox -->
+<div class="a-lightbox" id="aLightbox">
+  <div class="a-lb-inner">
+    <button class="a-lb-close" onclick="lbClose()">✕</button>
+    <button class="a-lb-nav a-lb-prev" onclick="lbNav(-1)">‹</button>
+    <button class="a-lb-nav a-lb-next" onclick="lbNav(1)">›</button>
+    <div class="a-lb-media" id="aLbMedia"></div>
+    <div class="a-lb-caption" id="aLbCaption"></div>
+    <div class="a-lb-counter" id="aLbCounter"></div>
+  </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script src="admin.js"></script>
@@ -250,31 +241,24 @@
 requireAuth();
 
 const CATS = ['כללי','אירועים','טיולים','שבתות','לימוד'];
-
-// Layout button SVG icons
 const LAYOUT_ICONS = {
-  normal: `<svg width="16" height="16" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" fill="var(--teal)" opacity=".7"/></svg>`,
-  wide:   `<svg width="16" height="16" viewBox="0 0 16 16"><rect x="1" y="4" width="14" height="8" rx="2" fill="var(--teal)" opacity=".7"/></svg>`,
-  tall:   `<svg width="16" height="16" viewBox="0 0 16 16"><rect x="4" y="1" width="8" height="14" rx="2" fill="var(--teal)" opacity=".7"/></svg>`
+  normal: `<svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="1" width="12" height="12" rx="2" fill="currentColor" opacity=".7"/></svg>`,
+  wide:   `<svg width="14" height="14" viewBox="0 0 14 14"><rect x="1" y="3" width="12" height="8" rx="2" fill="currentColor" opacity=".7"/></svg>`,
+  tall:   `<svg width="14" height="14" viewBox="0 0 14 14"><rect x="3" y="1" width="8" height="12" rx="2" fill="currentColor" opacity=".7"/></svg>`
 };
-const LAYOUT_TIPS = { normal: 'רגיל (1×1)', wide: 'רחב — תופס 2 עמודות', tall: 'גבוה — תופס 2 שורות' };
+const LAYOUT_TIPS = { normal:'רגיל (1×1)', wide:'רחב — 2 עמודות', tall:'גבוה — 2 שורות' };
 
-function layoutBtn(id, type, current) {
-  return `<button class="layout-btn${type===current?' active':''}" data-tip="${LAYOUT_TIPS[type]}"
-    onclick="saveLayout('${id}','${type}',this)">${LAYOUT_ICONS[type]}</button>`;
-}
-let items = [], activeFilter = 'הכל';
+let items = [], activeFilter = 'הכל', lbItems = [], lbIdx = 0;
 
 // ── Load ──
 async function load() {
   items = await api('GET', '/gallery');
-  renderGrid();
-  updateCount();
+  renderGrid(); updateCount();
 }
 
 function updateCount() {
-  const visible = activeFilter === 'הכל' ? items : items.filter(i => i.category === activeFilter);
-  document.getElementById('photoCount').textContent = `${items.length} תמונות בגלריה`;
+  document.getElementById('photoCount').textContent =
+    `${items.filter(i=>i.type!=='video').length} תמונות · ${items.filter(i=>i.type==='video').length} סרטונים`;
   document.getElementById('countAll').textContent = items.length;
 }
 
@@ -286,173 +270,198 @@ function setFilter(cat, btn) {
   renderGrid();
 }
 
-// ── Render grid ──
-function renderGrid() {
-  const visible = activeFilter === 'הכל' ? items : items.filter(i => i.category === activeFilter);
-  const grid = document.getElementById('photoGrid');
+function visibleItems() {
+  if (activeFilter === 'הכל')    return items;
+  if (activeFilter === 'תמונות') return items.filter(i => i.type !== 'video');
+  if (activeFilter === 'סרטונים') return items.filter(i => i.type === 'video');
+  return items.filter(i => i.category === activeFilter);
+}
 
-  if (!visible.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-      <div class="empty-icon">📷</div>
-      <p>${activeFilter === 'הכל' ? 'אין תמונות בגלריה עדיין. העלו תמונות בעזרת אזור הגרירה למעלה.' : `אין תמונות בקטגוריה "${activeFilter}"`}</p>
-    </div>`;
+// ── Render ──
+function layoutBtn(id, type, current) {
+  return `<button class="layout-btn${type===current?' active':''}" data-tip="${LAYOUT_TIPS[type]}"
+    onclick="saveLayout('${id}','${type}',this)">${LAYOUT_ICONS[type]}</button>`;
+}
+
+function renderGrid() {
+  const vis = visibleItems();
+  lbItems = vis; // for lightbox navigation
+  const grid = document.getElementById('photoGrid');
+  if (!vis.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="ei">${activeFilter==='סרטונים'?'🎬':'📷'}</div>
+      <p>${activeFilter==='הכל'?'אין פריטים בגלריה. גררו קבצים למעלה.':'אין פריטים בסינון הנוכחי'}</p></div>`;
     return;
   }
-
-  grid.innerHTML = visible.map(item => `
+  grid.innerHTML = vis.map((item, i) => {
+    const isVideo = item.type === 'video';
+    const mediaHtml = isVideo
+      ? `<video src="${escHtml(item.video)}" preload="metadata" muted playsinline style="width:100%;height:100%;object-fit:cover;display:block"></video>
+         <div class="play-badge"><svg viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="30" fill="rgba(255,255,255,.22)"/><polygon points="23,18 47,30 23,42" fill="#fff"/></svg></div>`
+      : `<img src="${escHtml(item.image)}" alt="${escHtml(item.caption)}" loading="lazy" />`;
+    return `
     <div class="photo-card" id="card-${item.id}">
+      <div class="media-wrap" onclick="lbOpen(${i})">
+        ${mediaHtml}
+        <div class="type-chip ${isVideo?'vid':'img'}">${isVideo?'📹 וידאו':'🖼 תמונה'}</div>
+      </div>
       <div class="photo-actions">
-        <button class="btn-view" onclick="openLightbox('${escHtml(item.image)}')" title="הגדלה">
+        <button class="btn-view" onclick="event.stopPropagation();lbOpen(${i})" title="הגדלה">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         </button>
-        <button class="btn-del" onclick="delPhoto('${item.id}')" title="מחיקה">
+        <button class="btn-del" onclick="event.stopPropagation();delItem('${item.id}')" title="מחיקה">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
         </button>
       </div>
-      ${item.image
-        ? `<img class="photo-card-img" src="${escHtml(item.image)}" alt="${escHtml(item.caption)}" loading="lazy" />`
-        : `<div class="photo-card-img-ph"></div>`}
       <div class="photo-card-body">
-        <input
-          class="photo-card-caption"
-          value="${escHtml(item.caption)}"
-          placeholder="הוסיפו כיתוב..."
-          onblur="saveCaption('${item.id}', this.value)"
-          onkeydown="if(event.key==='Enter'){this.blur()}"
-        />
+        <input class="photo-card-caption" value="${escHtml(item.caption)}" placeholder="הוסיפו כיתוב..."
+          onblur="saveCaption('${item.id}',this.value)" onkeydown="if(event.key==='Enter')this.blur()" />
         <div class="photo-card-meta">
-          <select class="photo-cat-badge" onchange="saveCat('${item.id}', this.value)"
-            style="border:none;background:rgba(111,177,191,.12);color:var(--teal);font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;cursor:pointer;font-family:inherit">
-            ${CATS.map(c => `<option${c===item.category?' selected':''}>${c}</option>`).join('')}
+          <select onchange="saveCat('${item.id}',this.value)"
+            style="border:none;background:rgba(111,177,191,.12);color:var(--teal);font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;cursor:pointer;font-family:inherit;border:1px solid rgba(111,177,191,.25)">
+            ${CATS.map(c=>`<option${c===item.category?' selected':''}>${c}</option>`).join('')}
           </select>
           <div class="layout-picker">
-            <span class="layout-picker-label">פריסה:</span>
-            ${layoutBtn(item.id, 'normal', item.layout||'normal')}
-            ${layoutBtn(item.id, 'wide',   item.layout||'normal')}
-            ${layoutBtn(item.id, 'tall',   item.layout||'normal')}
+            ${layoutBtn(item.id,'normal',item.layout||'normal')}
+            ${layoutBtn(item.id,'wide',  item.layout||'normal')}
+            ${layoutBtn(item.id,'tall',  item.layout||'normal')}
           </div>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 // ── Upload ──
+function isVideoFile(file) { return file.type.startsWith('video/'); }
+
 async function handleFiles(files) {
   const queue = document.getElementById('uploadQueue');
   const arr = Array.from(files);
-
-  // Build preview queue items
-  arr.forEach((file, idx) => {
+  arr.forEach((file, i) => {
     const div = document.createElement('div');
-    div.className = 'queue-item';
-    div.id = `q-${idx}`;
+    div.className = 'queue-item'; div.id = `q-${i}`;
     const url = URL.createObjectURL(file);
-    div.innerHTML = `
-      <img src="${url}" style="width:100%;height:100%;object-fit:cover" />
-      <div class="queue-progress" id="qp-${idx}">
-        <div style="font-size:11px">מעלה...</div>
-        <div class="progress-bar-wrap"><div class="progress-bar" id="pb-${idx}" style="width:0%"></div></div>
-      </div>`;
+    if (isVideoFile(file)) {
+      div.innerHTML = `<video src="${url}" muted preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>
+        <div class="queue-progress" id="qp-${i}"><div style="font-size:11px">מעלה סרטון...</div>
+          <div class="progress-bar-wrap"><div class="progress-bar" id="pb-${i}" style="width:0%"></div></div></div>`;
+    } else {
+      div.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover"/>
+        <div class="queue-progress" id="qp-${i}"><div style="font-size:11px">מעלה...</div>
+          <div class="progress-bar-wrap"><div class="progress-bar" id="pb-${i}" style="width:0%"></div></div></div>`;
+    }
     queue.appendChild(div);
   });
 
-  // Upload each
   for (let i = 0; i < arr.length; i++) {
+    const file = arr[i]; const vid = isVideoFile(file);
     const pb = document.getElementById(`pb-${i}`);
     const qp = document.getElementById(`qp-${i}`);
-    // Animate progress bar
     let prog = 0;
-    const interval = setInterval(() => { prog = Math.min(prog + 10, 85); pb.style.width = prog + '%'; }, 120);
-
+    const iv = setInterval(() => { prog = Math.min(prog + (vid?4:12), 85); pb.style.width = prog+'%'; }, 150);
     try {
-      const url = await uploadFile(arr[i]);
-      clearInterval(interval);
-      pb.style.width = '100%';
-      await new Promise(r => setTimeout(r, 200));
+      const url = await uploadFile(file, vid);
+      clearInterval(iv); pb.style.width = '100%';
+      await new Promise(r => setTimeout(r,200));
       qp.innerHTML = '<div class="queue-done">✓</div>';
-
-      // Add to gallery
       const newItem = await api('POST', '/gallery', {
-        image: url,
-        caption: '',
-        category: 'כללי'
+        type: vid ? 'video' : 'image',
+        image: vid ? '' : url,
+        video: vid ? url  : '',
+        caption: '', category: 'כללי', layout: 'normal'
       });
       items.unshift(newItem);
-      renderGrid();
-      updateCount();
-      showToast('התמונה הועלתה ✓');
+      renderGrid(); updateCount();
+      showToast(vid ? '✓ הסרטון הועלה' : '✓ התמונה הועלתה');
     } catch(e) {
-      clearInterval(interval);
+      clearInterval(iv);
       qp.innerHTML = '<div class="queue-err">✕</div>';
+      showToast('שגיאה: ' + e.message, true);
     }
   }
-
-  // Clear queue after 2s
-  setTimeout(() => { queue.innerHTML = ''; }, 2000);
+  setTimeout(() => { queue.innerHTML = ''; }, 2500);
   document.getElementById('fileInput').value = '';
 }
 
-// ── Drag & drop ──
+// drag & drop
 const dz = document.getElementById('dropZone');
 dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
 dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
-dz.addEventListener('drop', e => {
-  e.preventDefault(); dz.classList.remove('drag-over');
-  handleFiles(e.dataTransfer.files);
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+
+// ── Admin Lightbox ──
+function lbOpen(idx) {
+  lbIdx = idx; lbRender();
+  document.getElementById('aLightbox').classList.add('open');
+}
+function lbClose() {
+  const lb = document.getElementById('aLightbox');
+  lb.classList.remove('open');
+  // Stop any playing video
+  const v = lb.querySelector('video'); if (v) { v.pause(); v.src = ''; }
+}
+function lbNav(dir) {
+  const v = document.querySelector('#aLightbox video'); if (v) { v.pause(); v.src = ''; }
+  lbIdx = (lbIdx + dir + lbItems.length) % lbItems.length;
+  lbRender();
+}
+function lbRender() {
+  const item = lbItems[lbIdx]; if (!item) return;
+  const media = document.getElementById('aLbMedia');
+  if (item.type === 'video') {
+    media.innerHTML = `<video src="${escHtml(item.video)}" controls autoplay playsinline
+      style="max-width:100%;max-height:78vh;border-radius:14px;outline:none"></video>`;
+  } else {
+    media.innerHTML = `<img src="${escHtml(item.image)}" alt="${escHtml(item.caption)}"
+      style="max-width:100%;max-height:78vh;object-fit:contain;border-radius:14px;display:block" />`;
+  }
+  document.getElementById('aLbCaption').textContent = item.caption || '';
+  document.getElementById('aLbCounter').textContent = `${lbIdx+1} / ${lbItems.length}`;
+  // Hide nav if single item
+  const show = lbItems.length > 1;
+  document.querySelector('.a-lb-prev').style.display = show ? '' : 'none';
+  document.querySelector('.a-lb-next').style.display = show ? '' : 'none';
+}
+document.getElementById('aLightbox').addEventListener('click', e => { if (e.target === e.currentTarget) lbClose(); });
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('aLightbox').classList.contains('open')) return;
+  if (e.key === 'Escape') lbClose();
+  if (e.key === 'ArrowRight') lbNav(1);
+  if (e.key === 'ArrowLeft')  lbNav(-1);
 });
 
-// ── Save caption ──
+// ── Edit helpers ──
 async function saveCaption(id, caption) {
-  const item = items.find(i => i.id === id);
-  if (!item || item.caption === caption) return;
-  item.caption = caption;
-  await api('PATCH', `/gallery/${id}`, { caption });
-  showToast('כיתוב נשמר ✓');
+  const item = items.find(i=>i.id===id); if (!item||item.caption===caption) return;
+  item.caption = caption; await api('PATCH',`/gallery/${id}`,{caption}); showToast('כיתוב נשמר ✓');
 }
-
-// ── Save layout ──
-async function saveLayout(id, layout, btn) {
-  const item = items.find(i => i.id === id); if (!item) return;
-  item.layout = layout;
-  // Update button UI
-  btn.closest('.layout-picker').querySelectorAll('.layout-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  await api('PATCH', `/gallery/${id}`, { layout });
-  showToast(`פריסה שונה ל${LAYOUT_TIPS[layout]} ✓`);
-}
-
-// ── Save category ──
 async function saveCat(id, category) {
-  const item = items.find(i => i.id === id);
-  if (!item) return;
-  item.category = category;
-  await api('PATCH', `/gallery/${id}`, { category });
-  showToast('קטגוריה עודכנה ✓');
+  const item = items.find(i=>i.id===id); if (!item) return;
+  item.category = category; await api('PATCH',`/gallery/${id}`,{category}); showToast('קטגוריה עודכנה ✓');
 }
-
-// ── Delete ──
-async function delPhoto(id) {
-  if (!confirm('למחוק תמונה זו?')) return;
-  await api('DELETE', `/gallery/${id}`);
-  items = items.filter(i => i.id !== id);
+async function saveLayout(id, layout, btn) {
+  const item = items.find(i=>i.id===id); if (!item) return;
+  item.layout = layout;
+  btn.closest('.layout-picker').querySelectorAll('.layout-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  await api('PATCH',`/gallery/${id}`,{layout});
+  showToast(`פריסה: ${LAYOUT_TIPS[layout]} ✓`);
+}
+async function delItem(id) {
+  if (!confirm('למחוק פריט זה?')) return;
+  await api('DELETE',`/gallery/${id}`);
+  items = items.filter(i=>i.id!==id);
   const card = document.getElementById(`card-${id}`);
-  if (card) { card.style.opacity = '0'; card.style.transform = 'scale(.85)'; card.style.transition = '.3s'; setTimeout(() => { renderGrid(); updateCount(); }, 300); }
-  showToast('התמונה נמחקה');
+  if (card) { card.style.opacity='0'; card.style.transform='scale(.85)'; card.style.transition='.3s'; }
+  setTimeout(()=>{ renderGrid(); updateCount(); }, 300);
+  showToast('הפריט נמחק');
 }
-
-// ── Lightbox ──
-function openLightbox(src) {
-  document.getElementById('lightboxImg').src = src;
-  document.getElementById('lightbox').classList.add('open');
-}
-function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
 
 // ── Toast ──
-function showToast(msg) {
+function showToast(msg, err=false) {
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+  t.textContent = msg; t.style.background = err ? 'rgba(185,28,28,.92)' : 'rgba(14,58,70,.92)';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 2400);
 }
 
 load();
