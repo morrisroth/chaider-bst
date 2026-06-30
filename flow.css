@@ -5,10 +5,10 @@
    =========================================================== */
 
 :root{
-  --ink:#15282d; --soft:#4a5f64; --muted:#869599;
+  --ink:#15282d; --soft:#4a5f64; --muted:#5a6e73;
   --cream:#faf6ee; --mist:#dfeef0;
   --deep:#0e3a46; --teal:#1b6273; --aqua:#6fb1bf;
-  --gold:#c79a3d; --gold-lt:#e7c87a; --white:#fff;
+  --gold:#c79a3d; --gold-lt:#e7c87a; --gold-text:#6b4c10; --white:#fff;
   --line:#e6ddcd;
   --grad-cool:linear-gradient(135deg,#0e3a46 0%,#1b6273 52%,#6fb1bf 100%);
   --grad-gold:linear-gradient(120deg,#e7c87a 0%,#c79a3d 100%);
@@ -35,10 +35,35 @@ body::before,body::after{
 body::before{ top:-80px; right:-60px; width:380px; height:380px; background:#9fd0d8; }
 body::after{ bottom:-100px; left:-80px; width:360px; height:360px; background:#f0d99a; }
 
+/* ── Skip link (accessibility) ── */
+.skip-link{
+  position:absolute;top:-100px;right:0;z-index:9999;
+  background:var(--deep);color:#fff;padding:14px 24px;border-radius:0 0 14px 14px;
+  font-size:15px;font-weight:600;text-decoration:none;transition:top .15s;
+  white-space:nowrap;
+}
+.skip-link:focus{top:0}
+
 a{text-decoration:none;color:inherit}
 ul{list-style:none}
 img{max-width:100%;display:block}
 button,input,select,textarea{font-family:inherit}
+
+/* ── Global focus style (accessibility) ── */
+:focus-visible{
+  outline:3px solid var(--aqua);
+  outline-offset:3px;
+  border-radius:4px;
+}
+
+/* ── Gallery tiles / news cards keyboard focus ── */
+.gtile:focus-visible,.post[tabindex]:focus-visible{
+  outline:3px solid var(--aqua);
+  outline-offset:3px;
+}
+
+/* ── Required field asterisk ── */
+.form-group label span[aria-hidden]{color:var(--teal)}
 
 .wrap{max-width:1140px;margin:0 auto;padding:0 44px;position:relative;z-index:2}
 .serif{font-family:var(--serif)}
@@ -81,7 +106,7 @@ button,input,select,textarea{font-family:inherit}
 .hero{position:relative;padding:52px 0 72px}
 .hero-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:60px;align-items:center}
 .eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:22px}
-.eyebrow span{color:var(--gold);font-size:13px;letter-spacing:2.5px;font-weight:600}
+.eyebrow span{color:var(--gold-text);font-size:13px;letter-spacing:2.5px;font-weight:600}
 .eyebrow .ln{width:54px;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
 .hero h1{font-family:var(--serif);font-weight:700;font-size:64px;line-height:1.04;letter-spacing:-.6px;margin-bottom:22px}
 .hero-lead{color:var(--soft);font-size:19px;font-weight:300;max-width:480px;margin-bottom:34px;line-height:1.75}
@@ -126,7 +151,7 @@ button,input,select,textarea{font-family:inherit}
 .sec{padding:84px 0;position:relative}
 .sec-head{text-align:center;max-width:660px;margin:0 auto 54px}
 .sec-head.start{text-align:right;margin-inline:0}
-.kick{display:inline-block;color:var(--gold);font-size:13px;letter-spacing:2.5px;font-weight:600;margin-bottom:14px}
+.kick{display:inline-block;color:var(--gold-text);font-size:13px;letter-spacing:2.5px;font-weight:600;margin-bottom:14px}
 .sec-head h2{font-family:var(--serif);font-weight:700;font-size:42px;line-height:1.1;letter-spacing:-.4px}
 .sec-head p{color:var(--soft);font-size:18px;font-weight:300;margin-top:12px}
 
@@ -199,7 +224,7 @@ button,input,select,textarea{font-family:inherit}
   width:100%;padding:13px 16px;border:1px solid var(--line);border-radius:14px;font-size:15px;
   background:rgba(255,255,255,.85);color:var(--ink);direction:rtl;transition:.2s}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{
-  outline:none;border-color:var(--aqua);box-shadow:0 0 0 4px rgba(111,177,191,.18);background:#fff}
+  outline:2px solid var(--aqua);outline-offset:0;border-color:var(--aqua);box-shadow:0 0 0 4px rgba(111,177,191,.18);background:#fff}
 .form-group textarea{resize:vertical;min-height:130px}
 .form-note{font-size:13px;color:var(--muted);margin-top:6px}
 .photo-up{display:flex;align-items:center;gap:14px;flex-wrap:wrap}

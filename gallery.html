@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="flow.css">
 </head>
 <body>
+<a class="skip-link" href="#main-content">דלג לתוכן הראשי</a>
 
 <header class="site-header">
   <div class="wrap header-inner">
@@ -17,14 +18,14 @@
       <span class="logo-mark">בש"ט</span>
       <span><span class="logo-name">חיידר בעל שם טוב</span><br><span class="logo-tag">רמה ד' · בית שמש</span></span>
     </a>
-    <input type="checkbox" id="navtoggle" class="nav-toggle" />
-    <label for="navtoggle" class="nav-burger" aria-label="תפריט"><span></span><span></span><span></span></label>
-    <nav class="site-nav">
+    <input type="checkbox" id="navtoggle" class="nav-toggle" aria-hidden="true" tabindex="-1" />
+    <label for="navtoggle" class="nav-burger" aria-label="פתח תפריט ניווט" aria-controls="site-nav" aria-expanded="false"><span></span><span></span><span></span></label>
+    <nav class="site-nav" id="site-nav" aria-label="ניווט ראשי">
       <ul>
         <li><a href="index.html">בית</a></li>
         <li><a href="about.html">אודות</a></li>
         <li><a href="approach.html">הדרך החינוכית</a></li>
-        <li><a class="on" href="gallery.html">גלריה</a></li>
+        <li><a class="on" href="gallery.html" aria-current="page">גלריה</a></li>
         <li><a href="news.html">חדשות</a></li>
         <li><a href="contact.html">צור קשר</a></li>
       </ul>
@@ -32,6 +33,8 @@
     <a class="cta-pill" href="register.html">הרשמה</a>
   </div>
 </header>
+
+<main id="main-content">
 
 <section class="page-hero">
   <div class="wrap">
@@ -44,17 +47,17 @@
 
 <section class="sec" style="padding-top:30px">
   <div class="wrap">
-    <div class="gallery" id="galleryDynamic">
-      <div class="gtile tall"><span class="glabel">// תפילת שחרית במניין</span></div>
-      <div class="gtile wide warm"><span class="glabel">// סדר גמרא בכיתה</span></div>
-      <div class="gtile"><span class="glabel">// הפסקה בחצר</span></div>
-      <div class="gtile warm"><span class="glabel">// מסיבת חומש</span></div>
-      <div class="gtile wide"><span class="glabel">// טיול שנתי</span></div>
-      <div class="gtile tall warm"><span class="glabel">// בית המדרש</span></div>
-      <div class="gtile"><span class="glabel">// שמחת תורה</span></div>
-      <div class="gtile"><span class="glabel">// לימוד בחברותא</span></div>
-      <div class="gtile wide warm"><span class="glabel">// סעודת ראש חודש</span></div>
-      <div class="gtile"><span class="glabel">// חזרה הביתה</span></div>
+    <div class="gallery" id="galleryDynamic" aria-label="גלריית תמונות">
+      <div class="gtile tall" role="img" aria-label="תפילת שחרית במניין"><span class="glabel" aria-hidden="true">// תפילת שחרית במניין</span></div>
+      <div class="gtile wide warm" role="img" aria-label="סדר גמרא בכיתה"><span class="glabel" aria-hidden="true">// סדר גמרא בכיתה</span></div>
+      <div class="gtile" role="img" aria-label="הפסקה בחצר"><span class="glabel" aria-hidden="true">// הפסקה בחצר</span></div>
+      <div class="gtile warm" role="img" aria-label="מסיבת חומש"><span class="glabel" aria-hidden="true">// מסיבת חומש</span></div>
+      <div class="gtile wide" role="img" aria-label="טיול שנתי"><span class="glabel" aria-hidden="true">// טיול שנתי</span></div>
+      <div class="gtile tall warm" role="img" aria-label="בית המדרש"><span class="glabel" aria-hidden="true">// בית המדרש</span></div>
+      <div class="gtile" role="img" aria-label="שמחת תורה"><span class="glabel" aria-hidden="true">// שמחת תורה</span></div>
+      <div class="gtile" role="img" aria-label="לימוד בחברותא"><span class="glabel" aria-hidden="true">// לימוד בחברותא</span></div>
+      <div class="gtile wide warm" role="img" aria-label="סעודת ראש חודש"><span class="glabel" aria-hidden="true">// סעודת ראש חודש</span></div>
+      <div class="gtile" role="img" aria-label="חזרה הביתה"><span class="glabel" aria-hidden="true">// חזרה הביתה</span></div>
     </div>
   </div>
 </section>
@@ -64,9 +67,11 @@
   <div class="wrap"><div class="cta">
     <h2>רוצים לראות הכל מקרוב?</h2>
     <p>בקרו אותנו בחיידר ותרגישו את האווירה בעצמכם.</p>
-    <div class="hero-btns"><a class="btn btn-gold" href="contact.html">לקביעת ביקור ←</a><a class="btn btn-glass" href="register.html">הרשמה</a></div>
+    <div class="hero-btns"><a class="btn btn-gold" href="contact.html">לקביעת ביקור <span aria-hidden="true">←</span></a><a class="btn btn-glass" href="register.html">הרשמה</a></div>
   </div></div>
 </section>
+
+</main>
 
 <footer class="site-footer">
   <div class="wrap">
@@ -82,20 +87,21 @@
       <div><h5>יצירת קשר</h5><ul>
         <li><a href="contact.html">רחוב המנונא 12, בית שמש</a></li>
         <li><a href="tel:0522433693">052-2433693</a></li>
-        <li><a href="register.html">הרשמה</a></li></ul></div>
+        <li><a href="register.html">הרשמה</a></li>
+        <li><a href="accessibility.html">הצהרת נגישות</a></li></ul></div>
     </div>
-    <div class="fbot"><span>© 2026 חיידר בעל שם טוב. כל הזכויות שמורות.</span><span>בית שמש · רמה ד'</span></div>
+    <div class="fbot"><span>© 2026 חיידר בעל שם טוב. כל הזכויות שמורות.</span><span><a href="accessibility.html" style="color:inherit;text-decoration:underline">נגישות</a></span></div>
   </div>
 </footer>
 
 <!-- Public Lightbox -->
-<div id="glb" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(8,24,30,.93);backdrop-filter:blur(12px);align-items:center;justify-content:center;flex-direction:column;gap:16px">
-  <button id="glbClose" style="position:absolute;top:20px;left:20px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:.2s">✕</button>
-  <button id="glbPrev" style="position:absolute;top:50%;transform:translateY(-50%);right:20px;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.28);color:#fff;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;backdrop-filter:blur(6px)">‹</button>
-  <button id="glbNext" style="position:absolute;top:50%;transform:translateY(-50%);left:20px;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.28);color:#fff;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;backdrop-filter:blur(6px)">›</button>
+<div id="glb" role="dialog" aria-modal="true" aria-label="תצוגת תמונה" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(8,24,30,.93);backdrop-filter:blur(12px);align-items:center;justify-content:center;flex-direction:column;gap:16px">
+  <button id="glbClose" aria-label="סגור גלריה" style="position:absolute;top:20px;left:20px;width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:10;transition:.2s">✕</button>
+  <button id="glbPrev" aria-label="תמונה קודמת" style="position:absolute;top:50%;transform:translateY(-50%);right:20px;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.28);color:#fff;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;backdrop-filter:blur(6px)">‹</button>
+  <button id="glbNext" aria-label="תמונה הבאה" style="position:absolute;top:50%;transform:translateY(-50%);left:20px;width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.28);color:#fff;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;backdrop-filter:blur(6px)">›</button>
   <div id="glbMedia" style="max-width:min(92vw,1100px);width:100%;display:flex;align-items:center;justify-content:center"></div>
-  <div id="glbCaption" style="color:rgba(255,255,255,.72);font-size:15px;text-align:center;padding:0 60px"></div>
-  <div id="glbCounter" style="color:rgba(255,255,255,.38);font-size:13px"></div>
+  <div id="glbCaption" aria-live="polite" style="color:rgba(255,255,255,.72);font-size:15px;text-align:center;padding:0 60px"></div>
+  <div id="glbCounter" aria-live="polite" style="color:rgba(255,255,255,.38);font-size:13px"></div>
 </div>
 
 <a class="wa" href="https://wa.me/972522433693" target="_blank" rel="noopener" aria-label="וואטסאפ">

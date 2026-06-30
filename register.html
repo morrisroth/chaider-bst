@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="flow.css">
 </head>
 <body>
+<a class="skip-link" href="#main-content">דלג לתוכן הראשי</a>
 
 <header class="site-header">
   <div class="wrap header-inner">
@@ -17,9 +18,9 @@
       <span class="logo-mark">בש"ט</span>
       <span><span class="logo-name">חיידר בעל שם טוב</span><br><span class="logo-tag">רמה ד' · בית שמש</span></span>
     </a>
-    <input type="checkbox" id="navtoggle" class="nav-toggle" />
-    <label for="navtoggle" class="nav-burger" aria-label="תפריט"><span></span><span></span><span></span></label>
-    <nav class="site-nav">
+    <input type="checkbox" id="navtoggle" class="nav-toggle" aria-hidden="true" tabindex="-1" />
+    <label for="navtoggle" class="nav-burger" aria-label="פתח תפריט ניווט" aria-controls="site-nav" aria-expanded="false"><span></span><span></span><span></span></label>
+    <nav class="site-nav" id="site-nav" aria-label="ניווט ראשי">
       <ul>
         <li><a href="index.html">בית</a></li>
         <li><a href="about.html">אודות</a></li>
@@ -29,9 +30,11 @@
         <li><a href="contact.html">צור קשר</a></li>
       </ul>
     </nav>
-    <a class="cta-pill" href="register.html">הרשמה</a>
+    <a class="cta-pill" href="register.html" aria-current="page">הרשמה</a>
   </div>
 </header>
+
+<main id="main-content">
 
 <section class="page-hero">
   <div class="wrap">
@@ -45,20 +48,20 @@
 <section class="sec" style="padding-top:30px">
   <div class="wrap" style="max-width:840px">
     <div class="card-panel">
-      <form id="rform" onsubmit="return submitReg(event)">
+      <form id="rform" onsubmit="return submitReg(event)" novalidate>
         <!-- child -->
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px">
-          <span class="vi" style="width:46px;height:46px;margin:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></svg></span>
+          <span class="vi" style="width:46px;height:46px;margin:0" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></svg></span>
           <h2 class="serif" style="font-size:24px">פרטי התלמיד</h2>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>שם פרטי</label><input type="text" name="firstName" required /></div>
-          <div class="form-group"><label>שם משפחה</label><input type="text" name="lastName" required /></div>
+          <div class="form-group"><label for="r-firstName">שם פרטי <span aria-hidden="true">*</span></label><input type="text" id="r-firstName" name="firstName" required aria-required="true" autocomplete="given-name" /></div>
+          <div class="form-group"><label for="r-lastName">שם משפחה <span aria-hidden="true">*</span></label><input type="text" id="r-lastName" name="lastName" required aria-required="true" autocomplete="family-name" /></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>תאריך לידה</label><input type="date" name="birthDate" required /></div>
-          <div class="form-group"><label>כיתה לשנה"ל תשפ"ז</label>
-            <select name="grade" required>
+          <div class="form-group"><label for="r-birthDate">תאריך לידה <span aria-hidden="true">*</span></label><input type="date" id="r-birthDate" name="birthDate" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-grade">כיתה לשנה"ל תשפ"ז <span aria-hidden="true">*</span></label>
+            <select id="r-grade" name="grade" required aria-required="true">
               <option value="">בחרו כיתה...</option>
               <option>גן חובה</option><option>כיתה א'</option><option>כיתה ב'</option>
               <option>כיתה ג'</option><option>כיתה ד'</option><option>כיתה ה'</option>
@@ -66,35 +69,37 @@
             </select>
           </div>
         </div>
-        <div class="form-group"><label>מוסד לימודים נוכחי</label><input type="text" name="currentSchool" placeholder="שם המוסד הקודם (אם קיים)" /></div>
+        <div class="form-group"><label for="r-currentSchool">מוסד לימודים נוכחי</label><input type="text" id="r-currentSchool" name="currentSchool" placeholder="שם המוסד הקודם (אם קיים)" /></div>
 
         <!-- parents -->
         <div style="display:flex;align-items:center;gap:12px;margin:34px 0 22px">
-          <span class="vi" style="width:46px;height:46px;margin:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg></span>
+          <span class="vi" style="width:46px;height:46px;margin:0" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg></span>
           <h2 class="serif" style="font-size:24px">פרטי ההורים</h2>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>שם האב</label><input type="text" name="fatherName" required /></div>
-          <div class="form-group"><label>שם האם</label><input type="text" name="motherName" required /></div>
+          <div class="form-group"><label for="r-fatherName">שם האב <span aria-hidden="true">*</span></label><input type="text" id="r-fatherName" name="fatherName" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-motherName">שם האם <span aria-hidden="true">*</span></label><input type="text" id="r-motherName" name="motherName" required aria-required="true" /></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>טלפון</label><input type="tel" name="phone" required placeholder="050-0000000" /></div>
-          <div class="form-group"><label>דוא"ל</label><input type="email" name="email" required placeholder="name@email.com" /></div>
+          <div class="form-group"><label for="r-phone">טלפון <span aria-hidden="true">*</span></label><input type="tel" id="r-phone" name="phone" required aria-required="true" placeholder="050-0000000" autocomplete="tel" /></div>
+          <div class="form-group"><label for="r-email">דוא"ל <span aria-hidden="true">*</span></label><input type="email" id="r-email" name="email" required aria-required="true" placeholder="name@email.com" autocomplete="email" /></div>
         </div>
-        <div class="form-group"><label>כתובת מגורים</label><input type="text" name="address" placeholder="רחוב, מספר, עיר" /></div>
-        <div class="form-group"><label>הערות נוספות</label><textarea name="notes" placeholder="כל מידע שתרצו לשתף איתנו..."></textarea></div>
+        <div class="form-group"><label for="r-address">כתובת מגורים</label><input type="text" id="r-address" name="address" placeholder="רחוב, מספר, עיר" autocomplete="street-address" /></div>
+        <div class="form-group"><label for="r-notes">הערות נוספות</label><textarea id="r-notes" name="notes" placeholder="כל מידע שתרצו לשתף איתנו..."></textarea></div>
 
-        <button type="submit" class="btn btn-grad" style="width:100%;justify-content:center;margin-top:8px">שליחת טופס הרשמה ←</button>
+        <button type="submit" class="btn btn-grad" style="width:100%;justify-content:center;margin-top:8px">שליחת טופס הרשמה <span aria-hidden="true">←</span></button>
         <p class="form-note" style="text-align:center;margin-top:14px">לאחר השליחה ניצור עמכם קשר לתיאום פגישת היכרות.</p>
       </form>
-      <div id="rsuccess" class="success" style="display:none;padding:30px 0">
-        <div class="ic">✓</div><h3>הטופס נשלח בהצלחה!</h3>
+      <div id="rsuccess" class="success" role="alert" aria-live="assertive" style="display:none;padding:30px 0">
+        <div class="ic" aria-hidden="true">✓</div><h3>הטופס נשלח בהצלחה!</h3>
         <p>תודה שבחרתם בחיידר בעל שם טוב. ניצור עמכם קשר בימים הקרובים לתיאום פגישה.</p>
         <a class="btn btn-line" href="index.html" style="margin-top:22px">חזרה לדף הבית</a>
       </div>
     </div>
   </div>
 </section>
+
+</main>
 
 <footer class="site-footer">
   <div class="wrap">
@@ -110,9 +115,10 @@
       <div><h5>יצירת קשר</h5><ul>
         <li><a href="contact.html">רחוב המנונא 12, בית שמש</a></li>
         <li><a href="tel:0522433693">052-2433693</a></li>
-        <li><a href="register.html">הרשמה</a></li></ul></div>
+        <li><a href="register.html">הרשמה</a></li>
+        <li><a href="accessibility.html">הצהרת נגישות</a></li></ul></div>
     </div>
-    <div class="fbot"><span>© 2026 חיידר בעל שם טוב. כל הזכויות שמורות.</span><span>בית שמש · רמה ד'</span></div>
+    <div class="fbot"><span>© 2026 חיידר בעל שם טוב. כל הזכויות שמורות.</span><span><a href="accessibility.html" style="color:inherit;text-decoration:underline">נגישות</a></span></div>
   </div>
 </footer>
 

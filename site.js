@@ -130,7 +130,7 @@
           <div class="post-meta"><span class="post-tag">${esc(p.category)}</span><span>${fmtDate(p.date)}</span></div>
           <h3>${esc(p.title)}</h3>
           <p>${esc(p.excerpt)}</p>
-          <a class="post-link" href="news.html">קרא עוד ←</a>
+          <a class="post-link" href="news.html">קרא עוד <span aria-hidden="true">←</span></a>
         </div>
       </article>`).join('');
   }
@@ -159,7 +159,7 @@
         return;
       }
       grid.innerHTML = list.map(p => `
-        <article class="post" style="cursor:pointer" data-post-id="${esc(p.id)}">
+        <article class="post" style="cursor:pointer" tabindex="0" role="button" aria-label="קרא את הכתבה: ${esc(p.title)}" data-post-id="${esc(p.id)}">
           <div class="post-img" style="${p.image ? `background-image:url(${p.image});background-size:cover;background-position:center;min-height:180px` : ''}">
             ${!p.image ? `<span class="glabel">// ${esc(p.category)}</span>` : ''}
           </div>
@@ -167,7 +167,7 @@
             <div class="post-meta"><span class="post-tag">${esc(p.category)}</span><span>${fmtDate(p.date)}</span></div>
             <h3>${esc(p.title)}</h3>
             <p>${esc(p.excerpt)}</p>
-            <span class="post-link">קרא עוד ←</span>
+            <span class="post-link">קרא עוד <span aria-hidden="true">←</span></span>
           </div>
         </article>`).join('');
     }
@@ -192,10 +192,16 @@
       });
     }
 
-    // Card click → open modal
+    // Card click / Enter → open modal
     grid.addEventListener('click', e => {
       const card = e.target.closest('[data-post-id]');
       if (card) openPost(card.dataset.postId);
+    });
+    grid.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const card = e.target.closest('[data-post-id]');
+        if (card) { e.preventDefault(); openPost(card.dataset.postId); }
+      }
     });
 
     renderFilter();
@@ -203,13 +209,17 @@
   }
 
   // ── Article modal ──
+  let _lastFocused = null;
   window.openPost = async function(id) {
     const modal = document.getElementById('postModal');
     const content = document.getElementById('postModalContent');
     if (!modal || !content) return;
+    _lastFocused = document.activeElement;
     content.innerHTML = '<div style="padding:64px;text-align:center;color:var(--muted)">טוען…</div>';
     modal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    const closeBtn = document.getElementById('pmClose');
+    if (closeBtn) setTimeout(() => closeBtn.focus(), 50);
     const post = await get('/posts/' + id);
     if (!post) {
       content.innerHTML = '<div style="padding:64px;text-align:center;color:var(--muted)">שגיאה בטעינה</div>';
@@ -231,6 +241,7 @@
     const modal = document.getElementById('postModal');
     if (modal) modal.style.display = 'none';
     document.body.style.overflow = '';
+    if (_lastFocused) { _lastFocused.focus(); _lastFocused = null; }
   };
 
   // ── Gallery page: dynamic grid + lightbox ──
@@ -376,9 +387,11 @@
     function setOpen(open) {
       nav.style.display = open ? 'block' : '';
       toggle.checked = open;
+      if (burger) burger.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
 
     toggle.addEventListener('change', () => setOpen(toggle.checked));
+    burger?.addEventListener('click', () => setOpen(!toggle.checked));
 
     // Close when any nav link is tapped
     nav.querySelectorAll('a').forEach(a =>
@@ -401,7 +414,8 @@
     const a = document.createElement('a');
     a.href      = 'register.html';
     a.className = 'mobile-reg';
-    a.innerHTML = '← הרשמה';
+    a.setAttribute('aria-label', 'הרשמה לחיידר');
+    a.innerHTML = '<span aria-hidden="true">←</span> הרשמה';
     a.style.display = 'flex';
     document.body.appendChild(a);
   }

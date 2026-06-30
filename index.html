@@ -26,6 +26,7 @@
 </template>
 </head>
 <body>
+<a class="skip-link" href="#main-content">דלג לתוכן הראשי</a>
 
 <header class="site-header">
   <div class="wrap header-inner">
@@ -33,11 +34,11 @@
       <span class="logo-mark">בש"ט</span>
       <span><span class="logo-name">חיידר בעל שם טוב</span><br><span class="logo-tag">רמה ד' · בית שמש</span></span>
     </a>
-    <input type="checkbox" id="navtoggle" class="nav-toggle" />
-    <label for="navtoggle" class="nav-burger" aria-label="תפריט"><span></span><span></span><span></span></label>
-    <nav class="site-nav">
+    <input type="checkbox" id="navtoggle" class="nav-toggle" aria-hidden="true" tabindex="-1" />
+    <label for="navtoggle" class="nav-burger" aria-label="פתח תפריט ניווט" aria-controls="site-nav" aria-expanded="false"><span></span><span></span><span></span></label>
+    <nav class="site-nav" id="site-nav" aria-label="ניווט ראשי">
       <ul>
-        <li><a class="on" href="index.html">בית</a></li>
+        <li><a class="on" href="index.html" aria-current="page">בית</a></li>
         <li><a href="about.html">אודות</a></li>
         <li><a href="approach.html">הדרך החינוכית</a></li>
         <li><a href="gallery.html">גלריה</a></li>
@@ -49,6 +50,8 @@
   </div>
 </header>
 
+<main id="main-content">
+
 <!-- HERO -->
 <section class="hero">
   <div class="wrap hero-grid">
@@ -57,7 +60,7 @@
       <h1>חינוך שזורם<br>מן <span class="grad-txt">הלב</span>, בשמחה</h1>
       <p class="hero-lead">חיידר חסידי בלב רמה ד' בבית שמש — מרחב חינוכי מעודן שבו לימוד מעמיק נפגש באהבה, ברוגע ובליווי אישי לכל ילד וילד.</p>
       <div class="hero-btns">
-        <a class="btn btn-grad" href="register.html">הרשמה ←</a>
+        <a class="btn btn-grad" href="register.html">הרשמה <span aria-hidden="true">←</span></a>
         <a class="btn btn-line" href="contact.html">קביעת ביקור</a>
       </div>
       <svg class="flowline" viewBox="0 0 460 40" preserveAspectRatio="none"><path d="M0 22 C 50 4, 95 40, 150 22 S 255 4, 310 22 S 410 36, 460 18" /></svg>
@@ -103,7 +106,7 @@
         <div class="chk"><span class="c">✓</span><span>סביבה חמה ובטוחה</span></div>
         <div class="chk"><span class="c">✓</span><span>קשר אישי עם כל משפחה</span></div>
       </div>
-      <a class="btn btn-grad" href="about.html">קראו עוד אודותינו ←</a>
+      <a class="btn btn-grad" href="about.html">קראו עוד אודותינו <span aria-hidden="true">←</span></a>
     </div>
   </div>
 </section>
@@ -121,21 +124,21 @@
         <div class="post-body"><div class="post-meta"><span class="post-tag">שיעור מיוחד</span><span>ט"ו ניסן</span></div>
           <h3>שיעור הכנה לפסח לאבות ובנים</h3>
           <p>סדרת שיעורים חגיגית לקראת חג הפסח, בנושאי הלכה ומחשבה.</p>
-          <a class="post-link" href="news.html">קרא עוד ←</a></div>
+          <a class="post-link" href="news.html">קרא עוד <span aria-hidden="true">←</span></a></div>
       </article>
       <article class="post">
         <div class="post-img warm"><span class="glabel">// תמונה: מסיבת סיום</span></div>
         <div class="post-body"><div class="post-meta"><span class="post-tag">אירוע</span><span>י"ב ניסן</span></div>
           <h3>מסיבת חומש לכיתות א'</h3>
           <p>חגגנו עם תלמידי כיתה א' את קבלת החומש הראשון בשמחה גדולה.</p>
-          <a class="post-link" href="news.html">קרא עוד ←</a></div>
+          <a class="post-link" href="news.html">קרא עוד <span aria-hidden="true">←</span></a></div>
       </article>
       <article class="post">
         <div class="post-img"><span class="glabel">// תמונה: הרשמה</span></div>
         <div class="post-body"><div class="post-meta"><span class="post-tag">הרשמה</span><span>ט' ניסן</span></div>
           <h3>ההרשמה נפתחה</h3>
           <p>נרשמים כעת לשנת הלימודים הבאה. מספר המקומות מוגבל.</p>
-          <a class="post-link" href="register.html">להרשמה ←</a></div>
+          <a class="post-link" href="register.html">להרשמה <span aria-hidden="true">←</span></a></div>
       </article>
     </div>
   </div>
@@ -156,9 +159,11 @@
   <div class="wrap"><div class="cta">
     <h2>רוצים שגם הילד שלכם יפרח כאן?</h2>
     <p>ההרשמה לשנת הלימודים תשפ"ז נפתחה · מספר המקומות מוגבל</p>
-    <div class="hero-btns"><a class="btn btn-gold" href="register.html">להרשמה מיידית ←</a><a class="btn btn-glass" href="contact.html">דברו איתנו</a></div>
+    <div class="hero-btns"><a class="btn btn-gold" href="register.html">להרשמה מיידית <span aria-hidden="true">←</span></a><a class="btn btn-glass" href="contact.html">דברו איתנו</a></div>
   </div></div>
 </section>
+
+</main>
 
 <footer class="site-footer">
   <div class="wrap">
@@ -174,9 +179,10 @@
       <div><h5>יצירת קשר</h5><ul>
         <li><a href="contact.html">רחוב המנונא 12, בית שמש</a></li>
         <li><a href="tel:0522433693">052-2433693</a></li>
-        <li><a href="register.html">הרשמה</a></li></ul></div>
+        <li><a href="register.html">הרשמה</a></li>
+        <li><a href="accessibility.html">הצהרת נגישות</a></li></ul></div>
     </div>
-    <div class="fbot"><span>© 2026 חיידר בעל שם טוב. כל הזכויות שמורות.</span><span>בית שמש · רמה ד'</span></div>
+    <div class="fbot"><span>© 2026 חיידר בעל שם טוב. כל הזכויות שמורות.</span><span><a href="accessibility.html" style="color:inherit;text-decoration:underline">נגישות</a></span></div>
   </div>
 </footer>
 
