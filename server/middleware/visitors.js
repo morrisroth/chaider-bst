@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { getClientIp } = require('../lib/clientIp');
 
 const FILE = path.join(__dirname, '../data/visitors.json');
 
@@ -9,12 +10,24 @@ function readData() {
 }
 function writeData(d) { fs.writeFileSync(FILE, JSON.stringify(d)); }
 
-function getIP(req) {
-  const fw = req.headers['x-forwarded-for'];
-  return (fw ? fw.split(',')[0] : req.socket?.remoteAddress || 'unknown').trim();
-}
-
 function today() { return new Date().toISOString().slice(0, 10); }
+
+// Search engine crawlers, AI crawlers, security scanners, and common HTTP
+// client libraries all self-identify in their User-Agent — this catches the
+// large majority of non-human traffic without needing anything fancier.
+const BOT_UA = /bot|crawl|spider|slurp|curl|wget|python-requests|scrapy|headless|phantom|selenium|puppeteer|playwright|censys|shodan|masscan|nmap|zgrab|go-http-client|libwww|lighthouse|pingdom|uptimerobot|facebookexternalhit|whatsapp|telegrambot|discordbot|slackbot|monitor|semrush|ahrefs|mj12bot|dotbot/i;
+
+// Paths that are only ever hit by bots/scanners probing for standard files —
+// never a real page a visitor navigated to.
+const BOT_PROBE_PATHS = new Set(['/robots.txt', '/favicon.ico']);
+
+function looksLikeBot(req) {
+  const ua = req.headers['user-agent'];
+  if (!ua) return true; // real browsers always send a User-Agent
+  if (BOT_UA.test(ua)) return true;
+  if (BOT_PROBE_PATHS.has(req.path)) return true;
+  return false;
+}
 
 // Express middleware — records unique IPs per day for public HTML pages
 module.exports = function trackVisitors(req, res, next) {
@@ -24,11 +37,12 @@ module.exports = function trackVisitors(req, res, next) {
     req.path.startsWith('/api/') ||
     req.path.startsWith('/admin/') ||
     req.path.startsWith('/uploads/') ||
-    /\.(css|js|png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|mp4|mov)$/i.test(req.path);
+    /\.(css|js|png|jpg|jpeg|gif|webp|svg|ico|woff|woff2|mp4|mov)$/i.test(req.path) ||
+    looksLikeBot(req);
 
   if (skip) return next();
 
-  const ip = getIP(req);
+  const ip = getClientIp(req);
   const date = today();
   const data = readData();
 

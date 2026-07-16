@@ -9,6 +9,7 @@ const { getEffectiveStatus } = require('../lib/documentStatus');
 const { withLock } = require('../lib/lock');
 const { isPngMagicBytes } = require('../lib/pdfValidate');
 const { embedSignature } = require('../lib/pdfSign');
+const { getClientIp } = require('../lib/clientIp');
 
 // A signing link is shared with (and can be signed by) many different
 // people — there is no single "the signer" and no "already signed" terminal
@@ -21,10 +22,6 @@ const ERROR_MESSAGES = {
   revoked: 'קישור זה בוטל על ידי המנהל',
   expired: 'פג תוקפו של קישור זה',
 };
-
-function getClientIp(req) {
-  return (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim();
-}
 
 function logEvent(documentId, type, message, req) {
   const events = read('document_events.json');

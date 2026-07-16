@@ -9,6 +9,7 @@ const { ORIGINALS_DIR, SIGNED_DIR } = require('../lib/documentPaths');
 const { generateToken, hashToken } = require('../lib/signToken');
 const { isPdfMagicBytes } = require('../lib/pdfValidate');
 const { getEffectiveStatus } = require('../lib/documentStatus');
+const { getClientIp } = require('../lib/clientIp');
 
 const APP_URL = process.env.APP_URL || 'http://localhost:4000';
 
@@ -21,7 +22,7 @@ function logEvent(documentId, type, message, req) {
     documentId,
     type,
     message: message || '',
-    ip: req ? (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim() : '',
+    ip: req ? getClientIp(req) : '',
     userAgent: req ? (req.headers['user-agent'] || '') : '',
     createdAt: new Date().toISOString()
   });
