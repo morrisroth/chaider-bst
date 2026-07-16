@@ -33,21 +33,20 @@ body { background: var(--grad-page); min-height: 100vh; }
 .pdf-pages { display: flex; flex-direction: column; gap: 14px; margin-bottom: 8px; }
 .pdf-page-wrap { position: relative; margin: 0 auto; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 16px rgba(14,58,70,.12); background: #fff; }
 .pdf-page-wrap canvas { display: block; width: 100%; height: auto; }
-.sig-marker { position: absolute; border: 2px dashed var(--gold); background: rgba(231,200,122,.25);
-  display: flex; align-items: center; justify-content: center; pointer-events: none; }
-.sig-marker span { font-size: 11px; font-weight: 700; color: var(--gold-text); background: rgba(255,255,255,.9);
-  padding: 2px 8px; border-radius: 6px; }
+
+/* The signature box, live and interactive, sitting exactly where it's marked on the document */
+.sig-box-live { position: absolute; border: 2px dashed var(--teal); border-radius: 6px;
+  background: rgba(111,177,191,.1); touch-action: none; }
+.sig-box-canvas { width: 100%; height: 100%; display: block; touch-action: none; }
+.sig-box-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: var(--teal); font-size: 11.5px; font-weight: 600; text-align: center; pointer-events: none; opacity: .8; padding: 4px; }
+.sig-toolbar { display: flex; justify-content: flex-end; margin: 6px 0 2px; }
 
 .form-group { margin-bottom: 16px; }
 .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--teal); margin-bottom: 6px; }
 .form-group input[type=text] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 12px;
   font-size: 16px; font-family: inherit; background: rgba(255,255,255,.9); color: var(--ink); direction: rtl; }
 .form-group input[type=text]:focus { outline: none; border-color: var(--aqua); box-shadow: 0 0 0 3px rgba(111,177,191,.18); }
-
-.sig-canvas-wrap { border: 2px dashed var(--line); border-radius: 14px; background: #fff; touch-action: none; position: relative; }
-.sig-canvas-wrap canvas { display: block; width: 100%; height: 200px; border-radius: 12px; touch-action: none; }
-.sig-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  color: var(--muted); font-size: 13px; pointer-events: none; }
 
 .consent-row { display: flex; align-items: flex-start; gap: 10px; margin: 16px 0; }
 .consent-row input[type=checkbox] { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; accent-color: var(--teal); }
@@ -57,7 +56,6 @@ body { background: var(--grad-page); min-height: 100vh; }
   border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: none; }
 
 .submit-btn { width: 100%; justify-content: center; padding: 16px; font-size: 16px; }
-.clear-btn { margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -88,7 +86,7 @@ body { background: var(--grad-page); min-height: 100vh; }
   <div id="sign-form">
     <div class="card">
       <h2 id="docTitle"></h2>
-      <p>קראו את המסמך במלואו לפני החתימה. לאחר החתימה לא ניתן לשנות את המסמך.</p>
+      <p>קראו את המסמך במלואו. במקום המסומן בעמוד, חתמו באצבע או בעכבר ישירות על המסמך.</p>
     </div>
 
     <div class="card">
@@ -103,15 +101,6 @@ body { background: var(--grad-page); min-height: 100vh; }
         <div class="form-group">
           <label for="signerName">שם מלא *</label>
           <input type="text" id="signerName" required autocomplete="name" />
-        </div>
-
-        <div class="form-group">
-          <label>חתימה *</label>
-          <div class="sig-canvas-wrap">
-            <canvas id="sigCanvas"></canvas>
-            <div class="sig-placeholder" id="sigPlaceholder">חתמו כאן באצבע או בעכבר</div>
-          </div>
-          <button type="button" class="btn btn-line btn-sm clear-btn" id="clearBtn">נקה חתימה</button>
         </div>
 
         <div class="consent-row">
