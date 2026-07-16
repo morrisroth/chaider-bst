@@ -58,6 +58,32 @@ async function uploadDocument(file) {
   return data; // { file, pageCount }
 }
 
+// navigator.clipboard only exists in "secure contexts" (HTTPS/localhost) —
+// on a plain-HTTP site it's undefined, so writeText() would throw. Fall back
+// to the older execCommand('copy') approach via a temporary textarea.
+function copyToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    return navigator.clipboard.writeText(text);
+  }
+  return new Promise((resolve, reject) => {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+      const ok = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      ok ? resolve() : reject(new Error('copy failed'));
+    } catch (e) {
+      document.body.removeChild(textarea);
+      reject(e);
+    }
+  });
+}
+
 function showAlert(el, msg, type = 'success') {
   el.className = `alert alert-${type}`;
   el.textContent = msg;

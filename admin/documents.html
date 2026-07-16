@@ -119,7 +119,7 @@ details[open] .events-toggle svg { transform:rotate(180deg); }
             </details>
 
             <div style="display:flex;flex-direction:column;gap:8px;margin-top:20px">
-              <button class="btn btn-line btn-sm" onclick="showLink()">🔗 קישור חתימה חדש</button>
+              <button class="btn btn-line btn-sm" onclick="showLink()">🔗 קישור חתימה</button>
               <button class="btn btn-sm" id="revokeBtn" style="background:rgba(239,68,68,.1);color:#b91c1c;border-color:rgba(239,68,68,.25)" onclick="revokeDoc()">ביטול קישור</button>
               <button class="btn btn-sm" style="background:rgba(239,68,68,.1);color:#b91c1c;border-color:rgba(239,68,68,.25)" onclick="deleteDoc()">מחיקת מסמך</button>
             </div>
@@ -135,12 +135,23 @@ details[open] .events-toggle svg { transform:rotate(180deg); }
   <div class="modal-card">
     <button class="modal-close" onclick="closeLinkModal()">✕</button>
     <h3>קישור חתימה</h3>
-    <div class="link-box" id="linkBoxText"></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-grad btn-sm" onclick="copyLink()">העתקת קישור</button>
-      <a id="waLink" class="btn btn-line btn-sm" target="_blank" rel="noopener">WhatsApp</a>
-      <a id="mailLink" class="btn btn-line btn-sm">אימייל</a>
+    <div id="linkModalNoLink" style="display:none;font-size:14px;color:var(--muted);margin-bottom:14px">
+      אין עדיין קישור פעיל למסמך זה.
     </div>
+    <div id="linkModalHasLink">
+      <div class="link-box" id="linkBoxText"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+        <button class="btn btn-grad btn-sm" onclick="copyLink()">העתקת קישור</button>
+        <a id="waLink" class="btn btn-line btn-sm" target="_blank" rel="noopener">WhatsApp</a>
+        <a id="mailLink" class="btn btn-line btn-sm">אימייל</a>
+      </div>
+    </div>
+    <button class="btn btn-line btn-sm" onclick="regenerateLink()" style="width:100%;justify-content:center">
+      הנפקת קישור חדש
+    </button>
+    <p style="font-size:11.5px;color:var(--muted);margin-top:8px">
+      הנפקת קישור חדש תבטל את הקישור הנוכחי — כל מי שכבר קיבל אותו לא יוכל להשתמש בו יותר.
+    </p>
   </div>
 </div>
 
@@ -272,21 +283,46 @@ async function select(id) {
   render();
 }
 
+function fillLinkModal(signUrl) {
+  currentSignUrl = signUrl;
+  const hasLink = !!signUrl;
+  document.getElementById('linkModalNoLink').style.display = hasLink ? 'none' : 'block';
+  document.getElementById('linkModalHasLink').style.display = hasLink ? 'block' : 'none';
+  if (hasLink) {
+    document.getElementById('linkBoxText').textContent = signUrl;
+    document.getElementById('waLink').href = 'https://wa.me/?text=' + encodeURIComponent(`נא לחתום על המסמך "${selected.title}" בקישור: ${signUrl}`);
+    document.getElementById('mailLink').href = 'mailto:' + encodeURIComponent(selected.clientEmail || '') + '?subject=' + encodeURIComponent(`חתימה על מסמך: ${selected.title}`) + '&body=' + encodeURIComponent(`נא לחתום על המסמך בקישור: ${signUrl}`);
+  }
+}
+
+// Shows the CURRENT signing link (already known from the document record) —
+// does not create a new one, so any copies already shared with parents keep working.
 function showLink() {
   if (!selected) return;
-  api('POST', `/documents/${selected.id}/relink`).then(res => {
-    currentSignUrl = res.signUrl;
-    document.getElementById('linkBoxText').textContent = currentSignUrl;
-    document.getElementById('waLink').href = 'https://wa.me/?text=' + encodeURIComponent(`נא לחתום על המסמך "${selected.title}" בקישור: ${currentSignUrl}`);
-    document.getElementById('mailLink').href = 'mailto:' + encodeURIComponent(selected.clientEmail || '') + '?subject=' + encodeURIComponent(`חתימה על מסמך: ${selected.title}`) + '&body=' + encodeURIComponent(`נא לחתום על המסמך בקישור: ${currentSignUrl}`);
-    document.getElementById('linkModal').style.display = 'flex';
-    select(selected.id);
-    load();
-  }).catch(e => showAlert(document.getElementById('alert'), e.message, 'error'));
+  fillLinkModal(selected.signUrl);
+  document.getElementById('linkModal').style.display = 'flex';
 }
+
+// Explicitly issues a fresh token, invalidating the previous link.
+async function regenerateLink() {
+  if (!selected) return;
+  if (!confirm('להנפיק קישור חדש? הקישור הנוכחי יפסיק לעבוד עבור כל מי שכבר קיבל אותו.')) return;
+  try {
+    selected = await api('POST', `/documents/${selected.id}/relink`);
+    docs = docs.map(d => d.id === selected.id ? { ...d, ...selected } : d);
+    fillLinkModal(selected.signUrl);
+    showAlert(document.getElementById('alert'), 'קישור חדש הונפק');
+    render();
+  } catch (e) {
+    showAlert(document.getElementById('alert'), e.message, 'error');
+  }
+}
+
 function closeLinkModal() { document.getElementById('linkModal').style.display = 'none'; }
 function copyLink() {
-  navigator.clipboard.writeText(currentSignUrl).then(() => showAlert(document.getElementById('alert'), 'הקישור הועתק'));
+  copyToClipboard(currentSignUrl)
+    .then(() => showAlert(document.getElementById('alert'), 'הקישור הועתק'))
+    .catch(() => showAlert(document.getElementById('alert'), 'שגיאה בהעתקה — יש להעתיק את הקישור ידנית', 'error'));
 }
 
 async function fetchPdfBlobUrl(url) {

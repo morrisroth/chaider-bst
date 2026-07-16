@@ -344,7 +344,9 @@ window.createDocument = async function createDocument() {
 };
 
 window.copyLink = function copyLink() {
-  navigator.clipboard.writeText(state.createdSignUrl).then(() => showAlert(document.getElementById('alert'), 'הקישור הועתק'));
+  copyToClipboard(state.createdSignUrl)
+    .then(() => showAlert(document.getElementById('alert'), 'הקישור הועתק'))
+    .catch(() => showAlert(document.getElementById('alert'), 'שגיאה בהעתקה — יש להעתיק את הקישור ידנית', 'error'));
 };
 
 // default expiry: +14 days

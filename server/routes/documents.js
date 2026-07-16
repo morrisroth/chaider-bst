@@ -28,9 +28,14 @@ function logEvent(documentId, type, message, req) {
   write('document_events.json', events);
 }
 
+// The raw token is stored (not just its hash) so the admin can look up and
+// re-copy the *same* signing link at any time, without rotating it and
+// breaking copies already shared with parents. It's never exposed to the
+// public signing routes — those still validate by hash. `publicDoc` strips
+// the raw token out of the response and replaces it with the built signUrl.
 function publicDoc(doc) {
-  const { tokenHash, ...rest } = doc;
-  return { ...rest, status: getEffectiveStatus(doc) };
+  const { tokenHash, token, ...rest } = doc;
+  return { ...rest, status: getEffectiveStatus(doc), signUrl: token ? `${APP_URL}/sign/${token}` : null };
 }
 
 // ── PDF upload (step 1 of the admin wizard — no document record yet) ──
@@ -131,6 +136,7 @@ router.post('/', auth, async (req, res) => {
     clientEmail: clientEmail || '',
     clientPhone: clientPhone || '',
     originalFile: path.basename(originalFile),
+    token,
     tokenHash: hashToken(token),
     status: 'pending',
     pageCount,
@@ -147,7 +153,7 @@ router.post('/', auth, async (req, res) => {
   logEvent(doc.id, 'created', '', req);
   logEvent(doc.id, 'link_generated', '', req);
 
-  res.status(201).json({ ...publicDoc(doc), signUrl: `${APP_URL}/sign/${token}` });
+  res.status(201).json(publicDoc(doc));
 });
 
 router.get('/', auth, (_, res) => {
@@ -194,6 +200,7 @@ router.post('/:id/relink', auth, (req, res) => {
   const token = generateToken();
   docs[idx] = {
     ...doc,
+    token,
     tokenHash: hashToken(token),
     status: 'pending',
     openedAt: null,
@@ -203,7 +210,7 @@ router.post('/:id/relink', auth, (req, res) => {
   };
   write('documents.json', docs);
   logEvent(doc.id, 'relinked', '', req);
-  res.json({ signUrl: `${APP_URL}/sign/${token}` });
+  res.json(publicDoc(docs[idx]));
 });
 
 router.post('/:id/revoke', auth, (req, res) => {
