@@ -7,7 +7,7 @@ let pad = null;
 
 function show(id) {
   ['sign-loading', 'sign-error', 'sign-done', 'sign-form'].forEach(s => {
-    document.getElementById(s).style.display = s === id ? (id === 'sign-form' ? 'block' : 'flex') : 'none';
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
   });
 }
 
