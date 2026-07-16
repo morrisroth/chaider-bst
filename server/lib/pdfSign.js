@@ -1,6 +1,10 @@
-const { PDFDocument, rgb } = require('pdf-lib');
-const fontkit = require('@pdf-lib/fontkit');
+const { PDFDocument } = require('pdf-lib');
 
+// Reusable Hebrew/RTL-safe text-drawing utilities. Not currently used by
+// embedSignature() below (the signed PDF only gets the signature image, no
+// drawn text) — kept because they solve a genuinely hard, easy-to-reintroduce
+// bug (see comment below) and may be needed again if text is ever added back.
+//
 // pdf-lib/fontkit's own font shaping DOES auto-reverse glyphs for Hebrew text
 // — but only as a *blanket* reversal of the entire string passed to a single
 // drawText() call, triggered whenever it detects any Hebrew character in that
@@ -49,79 +53,13 @@ function drawBidiText(page, text, { font, size, y, xRight, color }) {
   }
 }
 
-function widthOfBidiText(text, font, size) {
-  return splitRuns(text).reduce((sum, run) => sum + font.widthOfTextAtSize(run, size), 0);
-}
-
-// Draws "label: value" right-aligned at xRight.
-function drawLabelValue(page, { label, value, font, size, xRight, y, color }) {
-  const labelText = label + ': ';
-  const labelW = widthOfBidiText(labelText, font, size);
-  drawBidiText(page, labelText, { font, size, xRight, y, color });
-  const valueText = String(value);
-  drawBidiText(page, valueText, { font, size, xRight: xRight - labelW, y, color });
-}
-
-async function embedSignature(pdfBytes, opts) {
-  const {
-    page: pageNum, x, y, width, height, pngBytes,
-    signerName, signedAt, docId, ip, userAgent, title,
-    fontBytes, fontBoldBytes
-  } = opts;
-
+// Embeds the signer's PNG signature into the document at the configured
+// position — nothing else is drawn onto the page or appended to the PDF.
+async function embedSignature(pdfBytes, { page: pageNum, x, y, width, height, pngBytes }) {
   const pdfDoc = await PDFDocument.load(pdfBytes);
-  pdfDoc.registerFontkit(fontkit);
-  const font = await pdfDoc.embedFont(fontBytes);
-  const boldFont = fontBoldBytes ? await pdfDoc.embedFont(fontBoldBytes) : font;
-
   const pngImage = await pdfDoc.embedPng(pngBytes);
   const page = pdfDoc.getPage(pageNum - 1);
   page.drawImage(pngImage, { x, y, width, height });
-
-  const ink = rgb(0.08, 0.16, 0.18);
-  const muted = rgb(0.35, 0.43, 0.45);
-  const infoSize = 8;
-  const xRight = x + width;
-  let infoY = y - 12;
-  if (infoY < 10) infoY = y + height + 26; // signature sits at the very bottom — put the info block above it instead
-
-  drawLabelValue(page, { label: 'שם החותם', value: signerName, font, size: infoSize, xRight, y: infoY, color: ink });
-  drawLabelValue(page, { label: 'נחתם (UTC)', value: signedAt, font, size: infoSize, xRight, y: infoY - 11, color: muted });
-  drawLabelValue(page, { label: 'מזהה מסמך', value: docId, font, size: infoSize, xRight, y: infoY - 22, color: muted });
-
-  // ── final audit page ──
-  const auditPage = pdfDoc.addPage([595.28, 841.89]); // A4
-  const M = 56;
-  const right = 595.28 - M;
-  let cy = 780;
-
-  drawBidiText(auditPage, 'אישור חתימה אלקטרונית', { xRight: right, y: cy, size: 18, font: boldFont, color: ink });
-  cy -= 34;
-
-  const rows = [
-    ['כותרת המסמך', title],
-    ['מזהה מסמך', docId],
-    ['שם החותם', signerName],
-    ['תאריך ושעת החתימה (UTC)', signedAt],
-    ['כתובת IP', ip || 'לא ידוע'],
-    ['דפדפן/מכשיר', (userAgent || 'לא ידוע').slice(0, 70)],
-  ];
-  for (const [label, value] of rows) {
-    drawLabelValue(auditPage, { label, value, font, size: 11, xRight: right, y: cy, color: ink });
-    cy -= 22;
-  }
-
-  cy -= 20;
-  const declarationLines = [
-    'מסמך זה נחתם באמצעות חתימה אלקטרונית פשוטה, ולא באמצעות חתימה',
-    'דיגיטלית מאושרת מבוססת תעודה אלקטרונית כהגדרתה בחוק חתימה',
-    'אלקטרונית, תשס"א-2001. החתימה מהווה אישור להסכמת החותם לתוכן המסמך.'
-  ];
-  for (const line of declarationLines) {
-    drawBidiText(auditPage, line, { font, size: 10, xRight: right, y: cy, color: muted });
-    cy -= 16;
-  }
-
   return pdfDoc.save();
 }
 

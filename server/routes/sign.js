@@ -3,7 +3,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 const { read, write, uuid } = require('../db');
-const { ORIGINALS_DIR, SIGNED_DIR, FONTS_DIR } = require('../lib/documentPaths');
+const { ORIGINALS_DIR, SIGNED_DIR } = require('../lib/documentPaths');
 const { hashToken } = require('../lib/signToken');
 const { getEffectiveStatus } = require('../lib/documentStatus');
 const { withLock } = require('../lib/lock');
@@ -151,10 +151,7 @@ router.post('/:token', signSubmitLimiter, async (req, res) => {
         signedBytes = await embedSignature(fs.readFileSync(originalPath), {
           page: doc.signaturePage, x: doc.signatureX, y: doc.signatureY,
           width: doc.signatureWidth, height: doc.signatureHeight,
-          pngBytes, signerName: name, signedAt: signedAtIso, docId: doc.id, title: doc.title,
-          ip: getClientIp(req), userAgent: req.headers['user-agent'] || '',
-          fontBytes: fs.readFileSync(path.join(FONTS_DIR, 'Heebo-Regular.ttf')),
-          fontBoldBytes: fs.readFileSync(path.join(FONTS_DIR, 'Heebo-Bold.ttf'))
+          pngBytes
         });
       } catch (e) {
         console.error('PDF signing failed:', e);
