@@ -51,7 +51,7 @@
   </div>
 </div>
 <script>
-  if (localStorage.getItem('bst_token')) location.href = '/admin/dashboard.html';
+  if (localStorage.getItem('bst_token')) location.href = '/admin/dashboard';
   document.getElementById('loginForm').addEventListener('submit', async e => {
     e.preventDefault();
     const err = document.getElementById('err');
@@ -66,7 +66,7 @@
       if (!res.ok) { err.textContent = data.error; err.style.display = 'block'; return; }
       localStorage.setItem('bst_token', data.token);
       localStorage.setItem('bst_user', data.username);
-      location.href = '/admin/dashboard.html';
+      location.href = '/admin/dashboard';
     } catch { err.textContent = 'שגיאת חיבור'; err.style.display = 'block'; }
   });
 </script>

@@ -130,7 +130,7 @@
           <div class="post-meta"><span class="post-tag">${esc(p.category)}</span><span>${fmtDate(p.date)}</span></div>
           <h3>${esc(p.title)}</h3>
           <p>${esc(p.excerpt)}</p>
-          <a class="post-link" href="news.html">קרא עוד <span aria-hidden="true">←</span></a>
+          <a class="post-link" href="news">קרא עוד <span aria-hidden="true">←</span></a>
         </div>
       </article>`).join('');
   }
@@ -391,7 +391,6 @@
     }
 
     toggle.addEventListener('change', () => setOpen(toggle.checked));
-    burger?.addEventListener('click', () => setOpen(!toggle.checked));
 
     // Close when any nav link is tapped
     nav.querySelectorAll('a').forEach(a =>
@@ -412,7 +411,7 @@
     const existing = document.querySelector('.mobile-reg');
     if (existing) return; // already injected
     const a = document.createElement('a');
-    a.href      = 'register.html';
+    a.href      = 'register';
     a.className = 'mobile-reg';
     a.setAttribute('aria-label', 'הרשמה לחיידר');
     a.innerHTML = '<span aria-hidden="true">←</span> הרשמה';

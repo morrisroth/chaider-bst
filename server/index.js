@@ -38,9 +38,22 @@ app.use('/api/stats',    require('./routes/stats'));
 app.use('/api/documents', require('./routes/documents'));
 app.use('/api/sign',      require('./routes/sign'));
 
-// Inject settings + gallery + posts into public HTML so everything loads instantly
-app.get(/^\/(?!admin\/|uploads\/).*\.html$/, (req, res, next) => {
-  const filePath = path.join(__dirname, '..', req.path);
+// ── Clean URLs ──
+// Old *.html links still work but redirect (301) to the extensionless form,
+// so bookmarks/shared links get canonicalized instead of breaking.
+app.get(/\.html$/, (req, res) => {
+  const clean = req.path === '/index.html' ? '/' : req.path.slice(0, -'.html'.length);
+  const qs = req.url.slice(req.path.length);
+  res.redirect(301, clean + qs);
+});
+
+app.get('/admin', (req, res) => res.redirect(302, '/admin/dashboard'));
+
+// Public pages, served at extensionless URLs — settings/gallery/posts are
+// injected so everything loads instantly with no client-side flash.
+app.get(/^\/(?!admin\/|api\/|uploads\/|vendor\/|sign\/)[a-zA-Z0-9\-_]*$/, (req, res, next) => {
+  const slug = req.path === '/' ? 'index' : req.path.slice(1);
+  const filePath = path.join(__dirname, '..', slug + '.html');
   if (!fs.existsSync(filePath)) return next();
   try {
     const settings = read('settings.json');
@@ -58,6 +71,13 @@ window.__BST_POSTS__=${JSON.stringify(posts)};
   } catch {
     next();
   }
+});
+
+// Admin pages, served at extensionless URLs (e.g. /admin/documents -> admin/documents.html)
+app.get(/^\/admin\/[a-zA-Z0-9\-_]+$/, (req, res, next) => {
+  const filePath = path.join(__dirname, '..', req.path + '.html');
+  if (!fs.existsSync(filePath)) return next();
+  res.sendFile(filePath);
 });
 
 // Public signing page — same static shell for both URL shapes, state is

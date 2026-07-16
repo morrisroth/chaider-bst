@@ -5,13 +5,13 @@ function getToken() { return localStorage.getItem('bst_token'); }
 function getUser()  { return localStorage.getItem('bst_user'); }
 
 function requireAuth() {
-  if (!getToken()) { window.location.href = '/admin/login.html'; }
+  if (!getToken()) { window.location.href = '/admin/login'; }
 }
 
 function logout() {
   localStorage.removeItem('bst_token');
   localStorage.removeItem('bst_user');
-  window.location.href = '/admin/login.html';
+  window.location.href = '/admin/login';
 }
 
 async function api(method, path, body, isForm = false) {
