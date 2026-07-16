@@ -4,12 +4,20 @@ const cors    = require('cors');
 const path    = require('path');
 const fs      = require('fs');
 const { read } = require('./db');
+const { ensureDirs } = require('./lib/documentPaths');
+
+ensureDirs();
 
 const app = express();
 
 app.use(cors());
 app.use(require('./middleware/visitors'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Client-side libraries served straight from node_modules — no CDN, no build step
+app.use('/vendor/pdfjs', express.static(path.join(__dirname, '../node_modules/pdfjs-dist/build')));
+app.use('/vendor/pdfjs-cmaps', express.static(path.join(__dirname, '../node_modules/pdfjs-dist/cmaps')));
+app.use('/vendor/signature_pad', express.static(path.join(__dirname, '../node_modules/signature_pad/dist')));
 
 // Webhook: capture raw Buffer for HMAC verification, before express.json()
 app.use('/webhook', express.raw({ type: '*/*' }), require('./routes/webhook'));
@@ -27,6 +35,8 @@ app.use('/api/contact',  require('./routes/contact'));
 app.use('/api/register', require('./routes/register'));
 app.use('/api/upload',   require('./routes/upload'));
 app.use('/api/stats',    require('./routes/stats'));
+app.use('/api/documents', require('./routes/documents'));
+app.use('/api/sign',      require('./routes/sign'));
 
 // Inject settings + gallery + posts into public HTML so everything loads instantly
 app.get(/^\/(?!admin\/|uploads\/).*\.html$/, (req, res, next) => {
@@ -50,8 +60,21 @@ window.__BST_POSTS__=${JSON.stringify(posts)};
   }
 });
 
+// Public signing page — same static shell for both URL shapes, state is
+// derived client-side from GET /api/sign/:token
+app.get(['/sign/:token', '/sign/:token/completed'], (req, res) => {
+  res.sendFile(path.join(__dirname, '../sign.html'));
+});
+
 // Serve everything else (CSS, JS, images, admin pages)
 app.use(express.static(path.join(__dirname, '..')));
+
+// Never leak stack traces, storage paths, or internal error details to clients
+app.use((err, req, res, next) => {
+  console.error(err);
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: 'שגיאת שרת' });
+});
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

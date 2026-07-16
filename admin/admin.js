@@ -45,6 +45,19 @@ async function uploadFile(file, isVideo = false) {
   return data.url;
 }
 
+async function uploadDocument(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch(API + '/documents/upload', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${getToken()}` },
+    body: fd
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'שגיאת העלאה');
+  return data; // { file, pageCount }
+}
+
 function showAlert(el, msg, type = 'success') {
   el.className = `alert alert-${type}`;
   el.textContent = msg;

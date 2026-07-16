@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>מסמך חדש — חיידר בעל שם טוב</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../flow.css">
+<link rel="stylesheet" href="admin.css">
+<style>
+.wizard-steps { display:flex; gap:8px; margin-bottom:24px; }
+.wizard-steps .ws { flex:1; text-align:center; padding:10px 8px; border-radius:12px; font-size:13px; font-weight:600;
+  background:rgba(255,255,255,.5); color:var(--muted); border:1.5px solid var(--line); }
+.wizard-steps .ws.active { background:var(--grad-cool); color:#fff; border-color:transparent; }
+.wizard-steps .ws.done { background:rgba(34,197,94,.14); color:#15803d; border-color:rgba(34,197,94,.3); }
+.wizard-step { display:none; }
+.wizard-step.active { display:block; }
+
+.pdf-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;
+  background:rgba(255,255,255,.7); border-radius:12px; padding:10px 16px; }
+.pdf-toolbar .pageinfo { font-size:13.5px; color:var(--soft); font-weight:600; }
+.pdf-canvas-wrap { position:relative; margin:0 auto; max-width:100%; border-radius:12px; overflow:hidden;
+  box-shadow:0 8px 24px rgba(14,58,70,.14); background:#fff; touch-action:none; }
+.pdf-canvas-wrap canvas { display:block; width:100%; height:auto; }
+.sig-box { position:absolute; border:2px dashed var(--teal); background:rgba(111,177,191,.22);
+  cursor:move; box-sizing:border-box; touch-action:none; }
+.sig-box .sig-label { position:absolute; top:-24px; right:0; font-size:11px; font-weight:700; color:var(--teal);
+  background:rgba(255,255,255,.9); padding:2px 8px; border-radius:6px; white-space:nowrap; pointer-events:none; }
+.sig-box .resize-handle { position:absolute; bottom:-8px; left:-8px; width:18px; height:18px; border-radius:50%;
+  background:var(--teal); border:2px solid #fff; cursor:nwse-resize; touch-action:none; }
+
+.summary-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(230,221,205,.4); font-size:14px; }
+.summary-row .label { color:var(--muted); }
+.summary-row .val { color:var(--ink); font-weight:600; }
+.link-box { display:flex; align-items:center; gap:8px; background:rgba(250,246,238,.8); border:1px solid var(--line);
+  border-radius:12px; padding:10px 14px; font-size:13px; direction:ltr; text-align:left; word-break:break-all; margin:14px 0; }
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <a class="sidebar-logo" href="/admin/dashboard.html"><span class="logo-mark">בש"ט</span><span><span>חיידר בעל שם טוב</span><br><small>פאנל ניהול</small></span></a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section">ראשי</div>
+      <a href="dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>לוח בקרה</a>
+      <div class="sidebar-section">תוכן</div>
+      <a href="posts.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg>חדשות ואירועים</a>
+      <a href="gallery.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>גלריה</a>
+      <div class="sidebar-section">הרשמה</div>
+      <a href="registrations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>הרשמות</a>
+      <a href="inbox.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>תיבת דואר</a>
+      <div class="sidebar-section">מסמכים</div>
+      <a href="documents.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>מסמכים לחתימה</a>
+      <div class="sidebar-section">הגדרות</div>
+      <a href="settings.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg>הגדרות האתר</a>
+    </nav>
+    <div class="sidebar-footer"><span id="admin-username"></span> · <a href="#" onclick="logout()">יציאה</a></div>
+  </aside>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div><h1>מסמך חדש לחתימה</h1><div class="breadcrumb"><a href="documents.html" style="color:var(--muted)">מסמכים</a> ← מסמך חדש</div></div>
+    </div>
+    <div class="admin-body">
+      <div id="alert" class="alert" style="display:none"></div>
+
+      <div class="wizard-steps">
+        <div class="ws" id="ws1">1. פרטי מסמך וקובץ</div>
+        <div class="ws" id="ws2">2. מיקום החתימה</div>
+        <div class="ws" id="ws3">3. אישור ויצירת קישור</div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="wizard-step" id="step1">
+        <div class="form-panel">
+          <h2>פרטי המסמך</h2>
+          <div class="form-2col">
+            <div class="form-group"><label>כותרת המסמך *</label><input id="fTitle" placeholder="לדוגמה: אישור טיול שנתי כיתה ד׳" /></div>
+            <div class="form-group"><label>תיאור / קבוצת יעד (לא חובה)</label><input id="fClientName" placeholder="לדוגמה: כל הורי כיתה ד׳" /></div>
+            <div class="form-group"><label>איש קשר — דוא"ל (לא חובה)</label><input id="fClientEmail" type="email" /></div>
+            <div class="form-group"><label>איש קשר — טלפון (לא חובה)</label><input id="fClientPhone" /></div>
+            <div class="form-group"><label>תוקף הקישור עד (לא חובה)</label><input id="fExpiresAt" type="date" /></div>
+          </div>
+          <div class="form-group">
+            <label>קובץ PDF *</label>
+            <div class="drop-zone" id="dropZone" onclick="document.getElementById('fFile').click()">
+              <input type="file" id="fFile" accept="application/pdf" style="display:none" onchange="onFileChosen(this.files[0])" />
+              <div class="drop-icon">📄</div>
+              <div class="drop-title" id="dropTitle">בחירת קובץ PDF</div>
+              <div class="drop-sub">לחצו לבחירה, עד 20MB</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-grad" id="toStep2Btn" disabled onclick="goStep(2)">הבא ←</button>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="wizard-step" id="step2">
+        <div class="form-panel">
+          <h2>סמנו את מיקום החתימה</h2>
+          <p style="font-size:13.5px;color:var(--muted);margin-bottom:14px">גררו את התיבה למקום הרצוי, ושנו את הגודל מהנקודה בפינה. ניתן לנווט בין העמודים.</p>
+          <div class="pdf-toolbar">
+            <button class="btn btn-line btn-sm" onclick="changePage(-1)">→ הקודם</button>
+            <span class="pageinfo" id="pageInfo">עמוד 1 מתוך 1</span>
+            <button class="btn btn-line btn-sm" onclick="changePage(1)">הבא ←</button>
+          </div>
+          <div class="pdf-canvas-wrap" id="canvasWrap">
+            <canvas id="pdfCanvas"></canvas>
+            <div class="sig-box" id="sigBox" style="display:none">
+              <span class="sig-label">מיקום החתימה</span>
+              <div class="resize-handle" id="resizeHandle"></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <button class="btn btn-line" onclick="goStep(1)">→ חזרה</button>
+          <button class="btn btn-grad" onclick="goStep(3)">הבא ←</button>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="wizard-step" id="step3">
+        <div class="form-panel">
+          <h2>אישור ויצירת קישור</h2>
+          <div id="summaryRows"></div>
+          <div id="createArea" style="margin-top:20px">
+            <button class="btn btn-grad" onclick="createDocument()" id="createBtn">צור מסמך וקישור חתימה</button>
+          </div>
+          <div id="linkArea" style="display:none">
+            <div class="alert alert-success" style="display:block">המסמך נוצר בהצלחה! ניתן לשתף את הקישור עם כמה אנשים — כל אחד שיפתח אותו ויחתום יתווסף כחתימה נפרדת.</div>
+            <div class="link-box" id="linkBoxText"></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-grad btn-sm" onclick="copyLink()">העתקת קישור</button>
+              <a id="waLink" class="btn btn-line btn-sm" target="_blank" rel="noopener">WhatsApp</a>
+              <a id="mailLink" class="btn btn-line btn-sm">אימייל</a>
+              <a href="documents.html" class="btn btn-line btn-sm">חזרה לרשימת המסמכים</a>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-start" id="step3BackRow">
+          <button class="btn btn-line" onclick="goStep(2)">→ חזרה</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+<script src="pdf-coords.js"></script>
+<script type="module">
+import * as pdfjsLib from '/vendor/pdfjs/pdf.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.mjs';
+requireAuth();
+
+const state = {
+  uploadedFile: null, pageCount: 0, pdfDoc: null,
+  currentPage: 1, signaturePage: 1,
+  box: { x: 0, y: 0, w: 180, h: 60 },
+  pageSizePt: { w: 595, h: 842 },
+  canvasCssSize: { w: 0, h: 0 },
+  createdSignUrl: ''
+};
+
+// ── Step 1 ──
+function onFileChosen(file) {
+  if (!file) return;
+  document.getElementById('dropTitle').textContent = 'מעלה...';
+  uploadDocument(file).then(res => {
+    state.uploadedFile = res.file;
+    state.pageCount = res.pageCount;
+    document.getElementById('dropTitle').textContent = `${file.name} (${res.pageCount} עמודים) ✓`;
+    document.getElementById('toStep2Btn').disabled = false;
+  }).catch(e => {
+    document.getElementById('dropTitle').textContent = 'בחירת קובץ PDF';
+    showAlert(document.getElementById('alert'), e.message, 'error');
+  });
+}
+window.onFileChosen = onFileChosen;
+
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) onFileChosen(file);
+});
+
+// ── Step navigation ──
+window.goStep = function goStep(n) {
+  if (n === 2 && !state.uploadedFile) return;
+  ['step1','step2','step3'].forEach((id, i) => {
+    document.getElementById(id).classList.toggle('active', i === n - 1);
+  });
+  ['ws1','ws2','ws3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.toggle('active', i === n - 1);
+    el.classList.toggle('done', i < n - 1);
+  });
+  if (n === 2 && !state.pdfDoc) loadPdfPreview();
+  if (n === 3) fillSummary();
+};
+
+// ── Step 2: PDF render + placement ──
+async function loadPdfPreview() {
+  const res = await fetch(`/api/documents/preview/${state.uploadedFile}`, { headers: { Authorization: `Bearer ${getToken()}` } });
+  const buf = await res.arrayBuffer();
+  state.pdfDoc = await pdfjsLib.getDocument({ data: buf }).promise;
+  state.currentPage = 1;
+  state.signaturePage = 1;
+  await renderPage();
+}
+
+async function renderPage() {
+  const page = await state.pdfDoc.getPage(state.currentPage);
+  const wrap = document.getElementById('canvasWrap');
+  const containerWidth = wrap.parentElement.clientWidth || 700;
+  const baseViewport = page.getViewport({ scale: 1 });
+  const heightBudget = window.innerHeight * 0.62; // keep the whole page + resize handle in view without scrolling
+  const cssScale = Math.min(containerWidth / baseViewport.width, heightBudget / baseViewport.height, 1.4);
+  const cssWidth = baseViewport.width * cssScale;
+  const cssHeight = baseViewport.height * cssScale;
+  const dpr = window.devicePixelRatio || 1;
+
+  const canvas = document.getElementById('pdfCanvas');
+  canvas.width = cssWidth * dpr;
+  canvas.height = cssHeight * dpr;
+  canvas.style.width = cssWidth + 'px';
+  canvas.style.height = cssHeight + 'px';
+  wrap.style.width = cssWidth + 'px';
+
+  const renderViewport = page.getViewport({ scale: cssScale * dpr });
+  const ctx = canvas.getContext('2d');
+  await page.render({ canvasContext: ctx, viewport: renderViewport }).promise;
+
+  state.pageSizePt = { w: baseViewport.width, h: baseViewport.height };
+  state.canvasCssSize = { w: cssWidth, h: cssHeight };
+
+  // default box position: bottom-right area of the page
+  state.box = { x: Math.max(cssWidth - 210, 10), y: Math.max(cssHeight - 100, 10), w: 180, h: 60 };
+  renderBox();
+  document.getElementById('pageInfo').textContent = `עמוד ${state.currentPage} מתוך ${state.pageCount}`;
+}
+
+function renderBox() {
+  const box = document.getElementById('sigBox');
+  box.style.display = 'block';
+  box.style.left = state.box.x + 'px';
+  box.style.top = state.box.y + 'px';
+  box.style.width = state.box.w + 'px';
+  box.style.height = state.box.h + 'px';
+}
+
+window.changePage = function changePage(delta) {
+  const next = state.currentPage + delta;
+  if (next < 1 || next > state.pageCount) return;
+  state.currentPage = next;
+  state.signaturePage = next;
+  renderPage();
+};
+
+// Drag + resize (pointer events cover mouse + touch)
+const sigBox = document.getElementById('sigBox');
+const resizeHandle = document.getElementById('resizeHandle');
+let dragState = null;
+
+sigBox.addEventListener('pointerdown', e => {
+  if (e.target === resizeHandle) return;
+  dragState = { mode: 'move', startX: e.clientX, startY: e.clientY, origX: state.box.x, origY: state.box.y };
+  sigBox.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+resizeHandle.addEventListener('pointerdown', e => {
+  dragState = { mode: 'resize', startX: e.clientX, startY: e.clientY, origW: state.box.w, origH: state.box.h };
+  resizeHandle.setPointerCapture(e.pointerId);
+  e.preventDefault();
+  e.stopPropagation();
+});
+window.addEventListener('pointermove', e => {
+  if (!dragState) return;
+  const dx = e.clientX - dragState.startX, dy = e.clientY - dragState.startY;
+  if (dragState.mode === 'move') {
+    state.box.x = Math.min(Math.max(dragState.origX + dx, 0), state.canvasCssSize.w - state.box.w);
+    state.box.y = Math.min(Math.max(dragState.origY + dy, 0), state.canvasCssSize.h - state.box.h);
+  } else {
+    state.box.w = Math.min(Math.max(dragState.origW + dx, 60), state.canvasCssSize.w - state.box.x);
+    state.box.h = Math.min(Math.max(dragState.origH + dy, 30), state.canvasCssSize.h - state.box.y);
+  }
+  renderBox();
+});
+window.addEventListener('pointerup', () => { dragState = null; });
+
+// ── Step 3 ──
+function fillSummary() {
+  const rows = [
+    ['כותרת', document.getElementById('fTitle').value],
+    ['תיאור', document.getElementById('fClientName').value || '—'],
+    ['עמוד חתימה', `${state.signaturePage} מתוך ${state.pageCount}`],
+    ['תוקף', document.getElementById('fExpiresAt').value || 'ללא הגבלה'],
+  ];
+  document.getElementById('summaryRows').innerHTML = rows.map(([l,v]) =>
+    `<div class="summary-row"><span class="label">${l}</span><span class="val">${escHtml(v)}</span></div>`).join('');
+}
+
+window.createDocument = async function createDocument() {
+  const title = document.getElementById('fTitle').value.trim();
+  const clientName = document.getElementById('fClientName').value.trim();
+  if (!title) {
+    showAlert(document.getElementById('alert'), 'יש למלא כותרת למסמך', 'error');
+    goStep(1);
+    return;
+  }
+  const pdfBox = PdfCoords.domBoxToPdfBox({
+    domX: state.box.x, domY: state.box.y, domW: state.box.w, domH: state.box.h,
+    canvasWidthPx: state.canvasCssSize.w, canvasHeightPx: state.canvasCssSize.h,
+    pageWidthPt: state.pageSizePt.w, pageHeightPt: state.pageSizePt.h
+  });
+  const btn = document.getElementById('createBtn');
+  btn.disabled = true; btn.textContent = 'יוצר...';
+  try {
+    const expiresAtVal = document.getElementById('fExpiresAt').value;
+    const res = await api('POST', '/documents', {
+      title, clientName,
+      clientEmail: document.getElementById('fClientEmail').value.trim(),
+      clientPhone: document.getElementById('fClientPhone').value.trim(),
+      originalFile: state.uploadedFile,
+      signaturePage: state.signaturePage,
+      signatureX: pdfBox.pdfX, signatureY: pdfBox.pdfY, signatureWidth: pdfBox.pdfW, signatureHeight: pdfBox.pdfH,
+      expiresAt: expiresAtVal ? new Date(expiresAtVal + 'T23:59:59Z').toISOString() : null
+    });
+    state.createdSignUrl = res.signUrl;
+    document.getElementById('linkBoxText').textContent = res.signUrl;
+    document.getElementById('waLink').href = 'https://wa.me/?text=' + encodeURIComponent(`נא לחתום על המסמך "${title}" בקישור: ${res.signUrl}`);
+    document.getElementById('mailLink').href = 'mailto:' + encodeURIComponent(document.getElementById('fClientEmail').value.trim()) + '?subject=' + encodeURIComponent(`חתימה על מסמך: ${title}`) + '&body=' + encodeURIComponent(`נא לחתום על המסמך בקישור: ${res.signUrl}`);
+    document.getElementById('createArea').style.display = 'none';
+    document.getElementById('linkArea').style.display = 'block';
+    document.getElementById('step3BackRow').style.display = 'none';
+  } catch (e) {
+    showAlert(document.getElementById('alert'), e.message, 'error');
+    btn.disabled = false; btn.textContent = 'צור מסמך וקישור חתימה';
+  }
+};
+
+window.copyLink = function copyLink() {
+  navigator.clipboard.writeText(state.createdSignUrl).then(() => showAlert(document.getElementById('alert'), 'הקישור הועתק'));
+};
+
+// default expiry: +14 days
+const d = new Date(); d.setDate(d.getDate() + 14);
+document.getElementById('fExpiresAt').value = d.toISOString().slice(0, 10);
+
+goStep(1);
+</script>
+</body>
+</html>

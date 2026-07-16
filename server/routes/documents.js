@@ -1,0 +1,272 @@
+const router = require('express').Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const { PDFDocument } = require('pdf-lib');
+const { read, write, uuid } = require('../db');
+const auth = require('../middleware/auth');
+const { ORIGINALS_DIR, SIGNED_DIR } = require('../lib/documentPaths');
+const { generateToken, hashToken } = require('../lib/signToken');
+const { isPdfMagicBytes } = require('../lib/pdfValidate');
+const { getEffectiveStatus } = require('../lib/documentStatus');
+
+const APP_URL = process.env.APP_URL || 'http://localhost:4000';
+
+// ── helpers ──
+
+function logEvent(documentId, type, message, req) {
+  const events = read('document_events.json');
+  events.push({
+    id: uuid(),
+    documentId,
+    type,
+    message: message || '',
+    ip: req ? (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').split(',')[0].trim() : '',
+    userAgent: req ? (req.headers['user-agent'] || '') : '',
+    createdAt: new Date().toISOString()
+  });
+  write('document_events.json', events);
+}
+
+function publicDoc(doc) {
+  const { tokenHash, ...rest } = doc;
+  return { ...rest, status: getEffectiveStatus(doc) };
+}
+
+// ── PDF upload (step 1 of the admin wizard — no document record yet) ──
+
+const uploadStorage = multer.diskStorage({
+  destination: (_, __, cb) => cb(null, ORIGINALS_DIR),
+  filename: (_, file, cb) => {
+    cb(null, `doc-${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`);
+  }
+});
+
+const pdfUpload = multer({
+  storage: uploadStorage,
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (_, file, cb) => {
+    const extOk = path.extname(file.originalname).toLowerCase() === '.pdf';
+    const mimeOk = file.mimetype === 'application/pdf';
+    cb(extOk && mimeOk ? null : new Error('יש להעלות קובץ PDF בלבד'), extOk && mimeOk);
+  }
+});
+
+function handlePdfUpload(req, res, next) {
+  pdfUpload.single('file')(req, res, (err) => {
+    if (err) {
+      const msg = err.code === 'LIMIT_FILE_SIZE' ? 'הקובץ גדול מדי (מקסימום 20MB)' : (err.message || 'שגיאת העלאה');
+      return res.status(400).json({ error: msg });
+    }
+    next();
+  });
+}
+
+router.post('/upload', auth, handlePdfUpload, async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'לא נבחר קובץ' });
+  const filePath = path.join(ORIGINALS_DIR, req.file.filename);
+  try {
+    const buffer = fs.readFileSync(filePath);
+    if (!isPdfMagicBytes(buffer)) throw new Error('invalid');
+    const pdfDoc = await PDFDocument.load(buffer);
+    const pageCount = pdfDoc.getPageCount();
+    if (pageCount < 1) throw new Error('invalid');
+    res.json({ file: req.file.filename, pageCount });
+  } catch {
+    fs.unlink(filePath, () => {});
+    res.status(400).json({ error: 'קובץ ה-PDF אינו תקין או פגום' });
+  }
+});
+
+// Auth-gated stream of a just-uploaded original, before a document record exists
+router.get('/preview/:filename', auth, (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const filePath = path.join(ORIGINALS_DIR, filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'הקובץ לא נמצא' });
+  res.setHeader('Content-Type', 'application/pdf');
+  res.sendFile(filePath);
+});
+
+// ── document CRUD ──
+// A document's signing link can be opened and signed by many different
+// people — there is no single "the signer"; each submission is recorded
+// separately in document_signatures.json, each with its own generated PDF.
+
+router.post('/', auth, async (req, res) => {
+  const {
+    title, clientName, clientEmail, clientPhone, originalFile,
+    signaturePage, signatureX, signatureY, signatureWidth, signatureHeight,
+    expiresAt
+  } = req.body;
+
+  if (!title || !originalFile) {
+    return res.status(400).json({ error: 'חסרים פרטים: כותרת וקובץ מקור' });
+  }
+  const page = Number(signaturePage), x = Number(signatureX), y = Number(signatureY),
+    w = Number(signatureWidth), h = Number(signatureHeight);
+  if (![page, x, y, w, h].every(Number.isFinite) || w <= 0 || h <= 0) {
+    return res.status(400).json({ error: 'מיקום החתימה אינו תקין' });
+  }
+
+  const filePath = path.join(ORIGINALS_DIR, path.basename(originalFile));
+  if (!fs.existsSync(filePath)) return res.status(400).json({ error: 'קובץ המקור לא נמצא, יש להעלות מחדש' });
+
+  let pageCount;
+  try {
+    const pdfDoc = await PDFDocument.load(fs.readFileSync(filePath));
+    pageCount = pdfDoc.getPageCount();
+    if (page < 1 || page > pageCount) throw new Error('page');
+    const { width: pageW, height: pageH } = pdfDoc.getPage(page - 1).getSize();
+    if (x < 0 || y < 0 || x + w > pageW + 0.5 || y + h > pageH + 0.5) throw new Error('bounds');
+  } catch {
+    return res.status(400).json({ error: 'מיקום החתימה חורג מגבולות העמוד' });
+  }
+
+  const token = generateToken();
+  const now = new Date().toISOString();
+  const doc = {
+    id: uuid(),
+    title,
+    clientName: clientName || '',
+    clientEmail: clientEmail || '',
+    clientPhone: clientPhone || '',
+    originalFile: path.basename(originalFile),
+    tokenHash: hashToken(token),
+    status: 'pending',
+    pageCount,
+    signaturePage: page, signatureX: x, signatureY: y, signatureWidth: w, signatureHeight: h,
+    expiresAt: expiresAt || null,
+    openedAt: null, revokedAt: null,
+    createdAt: now, updatedAt: now,
+    createdBy: req.admin.id
+  };
+
+  const docs = read('documents.json');
+  docs.push(doc);
+  write('documents.json', docs);
+  logEvent(doc.id, 'created', '', req);
+  logEvent(doc.id, 'link_generated', '', req);
+
+  res.status(201).json({ ...publicDoc(doc), signUrl: `${APP_URL}/sign/${token}` });
+});
+
+router.get('/', auth, (_, res) => {
+  const docs = read('documents.json').sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const signatures = read('document_signatures.json');
+  const countByDoc = signatures.reduce((m, s) => (m[s.documentId] = (m[s.documentId] || 0) + 1, m), {});
+  res.json(docs.map(d => ({ ...publicDoc(d), signatureCount: countByDoc[d.id] || 0 })));
+});
+
+router.get('/:id', auth, (req, res) => {
+  const doc = read('documents.json').find(d => d.id === req.params.id);
+  if (!doc) return res.status(404).json({ error: 'המסמך לא נמצא' });
+  const events = read('document_events.json')
+    .filter(e => e.documentId === doc.id)
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const signatures = read('document_signatures.json')
+    .filter(s => s.documentId === doc.id)
+    .sort((a, b) => new Date(b.signedAt) - new Date(a.signedAt))
+    .map(({ documentId, ...rest }) => rest);
+  res.json({ ...publicDoc(doc), events, signatures });
+});
+
+router.patch('/:id', auth, (req, res) => {
+  const docs = read('documents.json');
+  const idx = docs.findIndex(d => d.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'המסמך לא נמצא' });
+  const { title, clientName, clientEmail, clientPhone, expiresAt } = req.body;
+  const patch = {};
+  if (title !== undefined) patch.title = title;
+  if (clientName !== undefined) patch.clientName = clientName;
+  if (clientEmail !== undefined) patch.clientEmail = clientEmail;
+  if (clientPhone !== undefined) patch.clientPhone = clientPhone;
+  if (expiresAt !== undefined) patch.expiresAt = expiresAt;
+  docs[idx] = { ...docs[idx], ...patch, updatedAt: new Date().toISOString() };
+  write('documents.json', docs);
+  res.json(publicDoc(docs[idx]));
+});
+
+router.post('/:id/relink', auth, (req, res) => {
+  const docs = read('documents.json');
+  const idx = docs.findIndex(d => d.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'המסמך לא נמצא' });
+  const doc = docs[idx];
+  const token = generateToken();
+  docs[idx] = {
+    ...doc,
+    tokenHash: hashToken(token),
+    status: 'pending',
+    openedAt: null,
+    revokedAt: null,
+    expiresAt: req.body?.expiresAt !== undefined ? req.body.expiresAt : doc.expiresAt,
+    updatedAt: new Date().toISOString()
+  };
+  write('documents.json', docs);
+  logEvent(doc.id, 'relinked', '', req);
+  res.json({ signUrl: `${APP_URL}/sign/${token}` });
+});
+
+router.post('/:id/revoke', auth, (req, res) => {
+  const docs = read('documents.json');
+  const idx = docs.findIndex(d => d.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'המסמך לא נמצא' });
+  docs[idx] = { ...docs[idx], status: 'revoked', revokedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  write('documents.json', docs);
+  logEvent(docs[idx].id, 'revoked', '', req);
+  res.json(publicDoc(docs[idx]));
+});
+
+router.delete('/:id', auth, (req, res) => {
+  const docs = read('documents.json');
+  const idx = docs.findIndex(d => d.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'המסמך לא נמצא' });
+  const doc = docs[idx];
+
+  if (doc.originalFile) {
+    const p = path.join(ORIGINALS_DIR, doc.originalFile);
+    if (fs.existsSync(p)) fs.unlinkSync(p);
+  }
+
+  const signatures = read('document_signatures.json');
+  signatures.filter(s => s.documentId === doc.id).forEach(s => {
+    if (!s.signedFile) return;
+    const p = path.join(SIGNED_DIR, s.signedFile);
+    if (fs.existsSync(p)) fs.unlinkSync(p);
+  });
+  write('document_signatures.json', signatures.filter(s => s.documentId !== doc.id));
+
+  docs.splice(idx, 1);
+  write('documents.json', docs);
+  write('document_events.json', read('document_events.json').filter(e => e.documentId !== req.params.id));
+  res.json({ ok: true });
+});
+
+// ── downloads (admin only) ──
+
+router.get('/:id/file/original', auth, (req, res) => {
+  const doc = read('documents.json').find(d => d.id === req.params.id);
+  if (!doc) return res.status(404).json({ error: 'המסמך לא נמצא' });
+  const filePath = path.join(ORIGINALS_DIR, doc.originalFile);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'הקובץ לא נמצא' });
+  if (req.query.download) {
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.title)}.pdf"`);
+  }
+  res.setHeader('Content-Type', 'application/pdf');
+  res.sendFile(filePath);
+});
+
+router.get('/:id/signatures/:sigId/file', auth, (req, res) => {
+  const doc = read('documents.json').find(d => d.id === req.params.id);
+  if (!doc) return res.status(404).json({ error: 'המסמך לא נמצא' });
+  const sig = read('document_signatures.json').find(s => s.id === req.params.sigId && s.documentId === doc.id);
+  if (!sig) return res.status(404).json({ error: 'החתימה לא נמצאה' });
+  const filePath = path.join(SIGNED_DIR, sig.signedFile);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'הקובץ לא נמצא' });
+  if (req.query.download) {
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.title)}-${encodeURIComponent(sig.signerName)}.pdf"`);
+  }
+  res.setHeader('Content-Type', 'application/pdf');
+  res.sendFile(filePath);
+});
+
+module.exports = router;
