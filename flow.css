@@ -87,9 +87,7 @@ button,input,select,textarea{font-family:inherit}
   background:rgba(250,246,238,.72);border-bottom:1px solid rgba(199,154,61,.16)}
 .header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;height:84px}
 .logo{display:flex;align-items:center;gap:13px;flex:0 0 auto}
-.logo-mark{width:52px;height:52px;border-radius:50%;background:var(--grad-cool);color:#fff;
-  display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:18px;
-  box-shadow:0 8px 22px rgba(14,58,70,.28)}
+.logo-mark{height:52px;width:auto;display:block}
 .logo-name{font-family:var(--serif);font-size:22px;font-weight:700;line-height:1.12}
 .logo-tag{font-size:12px;color:var(--muted);letter-spacing:.5px}
 .site-nav ul{display:flex;gap:2px}
@@ -273,7 +271,7 @@ button,input,select,textarea{font-family:inherit}
 /* ---------- footer ---------- */
 .site-footer{position:relative;background:linear-gradient(160deg,#0e3a46,#072730);color:rgba(255,255,255,.62);padding:64px 0 28px;margin-top:90px;z-index:2}
 .footer-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:46px;margin-bottom:42px}
-.site-footer .logo-name{color:#fff}.site-footer .logo-mark{background:var(--grad-gold)}
+.site-footer .logo-name{color:#fff}
 .site-footer .fp{font-size:14.5px;font-weight:300;max-width:300px;margin-top:15px}
 .site-footer h5{color:#fff;font-size:13px;letter-spacing:1px;margin-bottom:15px;font-family:var(--serif);font-weight:700}
 .site-footer li{margin-bottom:9px}
@@ -317,7 +315,7 @@ button,input,select,textarea{font-family:inherit}
   /* Header */
   .site-header{position:sticky}
   .header-inner{height:68px;gap:12px;padding:0}
-  .logo-mark{width:44px;height:44px;font-size:15px}
+  .logo-mark{height:44px}
   .logo-name{font-size:18px}
   .logo-tag{display:none}
   .cta-pill{padding:10px 18px;font-size:13.5px}
@@ -400,7 +398,7 @@ button,input,select,textarea{font-family:inherit}
 
   /* Header — hide CTA pill (floating button handles it) */
   .header-inner{height:60px}
-  .logo-mark{width:38px;height:38px;font-size:13px}
+  .logo-mark{height:38px}
   .logo-name{font-size:16px}
   .cta-pill{display:none}
 

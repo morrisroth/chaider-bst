@@ -15,10 +15,7 @@
   text-decoration: none;
 }
 .sidebar-logo .logo-mark {
-  width: 42px; height: 42px; border-radius: 50%;
-  background: var(--grad-gold); color: #3f2c06;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--serif); font-weight: 700; font-size: 14px; flex-shrink: 0;
+  height: 42px; width: auto; flex-shrink: 0;
 }
 .sidebar-logo span { font-family: var(--serif); font-size: 15px; font-weight: 700; color: #fff; line-height: 1.2; }
 .sidebar-logo small { font-size: 11px; color: rgba(255,255,255,.5); }
