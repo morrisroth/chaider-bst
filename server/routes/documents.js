@@ -98,34 +98,55 @@ router.get('/preview/:filename', auth, (req, res) => {
 // people — there is no single "the signer"; each submission is recorded
 // separately in document_signatures.json, each with its own generated PDF.
 
+// Normalizes and bounds-checks a single field spec against the loaded PDF.
+async function validateField(pdfDoc, pageCount, field, label) {
+  const page = Number(field.page), x = Number(field.x), y = Number(field.y),
+    w = Number(field.width), h = Number(field.height);
+  if (![page, x, y, w, h].every(Number.isFinite) || w <= 0 || h <= 0) {
+    throw new Error(`מיקום ${label} אינו תקין`);
+  }
+  if (page < 1 || page > pageCount) throw new Error(`מיקום ${label} חורג מגבולות המסמך`);
+  const { width: pageW, height: pageH } = pdfDoc.getPage(page - 1).getSize();
+  if (x < 0 || y < 0 || x + w > pageW + 0.5 || y + h > pageH + 0.5) {
+    throw new Error(`מיקום ${label} חורג מגבולות העמוד`);
+  }
+  return { page, x, y, width: w, height: h };
+}
+
 router.post('/', auth, async (req, res) => {
   const {
     title, clientName, clientEmail, clientPhone, originalFile,
-    signaturePage, signatureX, signatureY, signatureWidth, signatureHeight,
+    signatureFields, dateField,
     expiresAt
   } = req.body;
 
   if (!title || !originalFile) {
     return res.status(400).json({ error: 'חסרים פרטים: כותרת וקובץ מקור' });
   }
-  const page = Number(signaturePage), x = Number(signatureX), y = Number(signatureY),
-    w = Number(signatureWidth), h = Number(signatureHeight);
-  if (![page, x, y, w, h].every(Number.isFinite) || w <= 0 || h <= 0) {
-    return res.status(400).json({ error: 'מיקום החתימה אינו תקין' });
+  if (!Array.isArray(signatureFields) || !signatureFields.length) {
+    return res.status(400).json({ error: 'יש לסמן לפחות מקום חתימה אחד' });
+  }
+  for (const f of signatureFields) {
+    if (!f || typeof f.key !== 'string' || !f.key.trim() || typeof f.label !== 'string' || !f.label.trim()) {
+      return res.status(400).json({ error: 'מיקום החתימה אינו תקין' });
+    }
   }
 
   const filePath = path.join(ORIGINALS_DIR, path.basename(originalFile));
   if (!fs.existsSync(filePath)) return res.status(400).json({ error: 'קובץ המקור לא נמצא, יש להעלות מחדש' });
 
-  let pageCount;
+  let pageCount, normalizedFields, normalizedDateField;
   try {
     const pdfDoc = await PDFDocument.load(fs.readFileSync(filePath));
     pageCount = pdfDoc.getPageCount();
-    if (page < 1 || page > pageCount) throw new Error('page');
-    const { width: pageW, height: pageH } = pdfDoc.getPage(page - 1).getSize();
-    if (x < 0 || y < 0 || x + w > pageW + 0.5 || y + h > pageH + 0.5) throw new Error('bounds');
-  } catch {
-    return res.status(400).json({ error: 'מיקום החתימה חורג מגבולות העמוד' });
+    normalizedFields = [];
+    for (const f of signatureFields) {
+      const box = await validateField(pdfDoc, pageCount, f, f.label);
+      normalizedFields.push({ key: f.key.trim(), label: f.label.trim(), ...box });
+    }
+    normalizedDateField = dateField ? await validateField(pdfDoc, pageCount, dateField, 'תאריך') : null;
+  } catch (e) {
+    return res.status(400).json({ error: e.message || 'מיקום החתימה חורג מגבולות העמוד' });
   }
 
   const token = generateToken();
@@ -141,7 +162,8 @@ router.post('/', auth, async (req, res) => {
     tokenHash: hashToken(token),
     status: 'pending',
     pageCount,
-    signaturePage: page, signatureX: x, signatureY: y, signatureWidth: w, signatureHeight: h,
+    signatureFields: normalizedFields,
+    dateField: normalizedDateField,
     expiresAt: expiresAt || null,
     openedAt: null, revokedAt: null,
     createdAt: now, updatedAt: now,

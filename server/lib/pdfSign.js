@@ -1,9 +1,11 @@
-const { PDFDocument } = require('pdf-lib');
+const fs = require('fs');
+const path = require('path');
+const { PDFDocument, rgb } = require('pdf-lib');
+const fontkit = require('@pdf-lib/fontkit');
+const { FONTS_DIR } = require('./documentPaths');
 
-// Reusable Hebrew/RTL-safe text-drawing utilities. Not currently used by
-// embedSignature() below (the signed PDF only gets the signature image, no
-// drawn text) — kept because they solve a genuinely hard, easy-to-reintroduce
-// bug (see comment below) and may be needed again if text is ever added back.
+// Reusable Hebrew/RTL-safe text-drawing utilities — used below by
+// embedSignatures() to draw the auto-filled signing date.
 //
 // pdf-lib/fontkit's own font shaping DOES auto-reverse glyphs for Hebrew text
 // — but only as a *blanket* reversal of the entire string passed to a single
@@ -53,14 +55,30 @@ function drawBidiText(page, text, { font, size, y, xRight, color }) {
   }
 }
 
-// Embeds the signer's PNG signature into the document at the configured
-// position — nothing else is drawn onto the page or appended to the PDF.
-async function embedSignature(pdfBytes, { page: pageNum, x, y, width, height, pngBytes }) {
+// Embeds one or more PNG signatures into the document, one per configured
+// field (e.g. father/mother), and optionally stamps the signing date as text
+// into a separate field. Nothing else is drawn onto the page or appended to
+// the PDF.
+async function embedSignatures(pdfBytes, { fields, dateField, dateText }) {
   const pdfDoc = await PDFDocument.load(pdfBytes);
-  const pngImage = await pdfDoc.embedPng(pngBytes);
-  const page = pdfDoc.getPage(pageNum - 1);
-  page.drawImage(pngImage, { x, y, width, height });
+
+  for (const field of fields) {
+    const pngImage = await pdfDoc.embedPng(field.pngBytes);
+    const page = pdfDoc.getPage(field.page - 1);
+    page.drawImage(pngImage, { x: field.x, y: field.y, width: field.width, height: field.height });
+  }
+
+  if (dateField && dateText) {
+    pdfDoc.registerFontkit(fontkit);
+    const fontBytes = fs.readFileSync(path.join(FONTS_DIR, 'Heebo-Regular.ttf'));
+    const font = await pdfDoc.embedFont(fontBytes);
+    const page = pdfDoc.getPage(dateField.page - 1);
+    const size = Math.min(16, dateField.height * 0.6);
+    const y = dateField.y + (dateField.height - size) / 2;
+    drawBidiText(page, dateText, { font, size, y, xRight: dateField.x + dateField.width, color: rgb(0.08, 0.08, 0.08) });
+  }
+
   return pdfDoc.save();
 }
 
-module.exports = { embedSignature, drawBidiText, splitRuns };
+module.exports = { embedSignatures, drawBidiText, splitRuns };

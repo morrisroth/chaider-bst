@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 const { PDFDocument } = require('pdf-lib');
-const { embedSignature, splitRuns } = require('../lib/pdfSign');
+const { embedSignatures, splitRuns } = require('../lib/pdfSign');
 
 // A minimal 1x1 transparent PNG
 const TINY_PNG = Buffer.from(
@@ -14,21 +14,21 @@ async function makeSourcePdf(pageCount = 2) {
   return doc.save();
 }
 
-describe('embedSignature', () => {
-  it('resolves and keeps the original page count — only the signature image is added, nothing else', async () => {
+describe('embedSignatures', () => {
+  it('resolves and keeps the original page count — only the signature image(s) are added, nothing else', async () => {
     const src = await makeSourcePdf(2);
-    const out = await embedSignature(src, {
-      page: 1, x: 50, y: 50, width: 150, height: 60, pngBytes: TINY_PNG
+    const out = await embedSignatures(src, {
+      fields: [{ page: 1, x: 50, y: 50, width: 150, height: 60, pngBytes: TINY_PNG }]
     });
 
     const reloaded = await PDFDocument.load(out);
     expect(reloaded.getPageCount()).toBe(2);
   });
 
-  it('embeds the signature on the requested page, not another one', async () => {
+  it('embeds a signature on the requested page, not another one', async () => {
     const src = await makeSourcePdf(3);
-    const out = await embedSignature(src, {
-      page: 2, x: 20, y: 20, width: 100, height: 40, pngBytes: TINY_PNG
+    const out = await embedSignatures(src, {
+      fields: [{ page: 2, x: 20, y: 20, width: 100, height: 40, pngBytes: TINY_PNG }]
     });
     const reloaded = await PDFDocument.load(out);
     // A page nobody ever drew on has no content stream at all (Contents() is
@@ -39,10 +39,33 @@ describe('embedSignature', () => {
     expect(reloaded.getPage(2).node.Contents()).toBeFalsy();
   });
 
+  it('embeds multiple signatures (e.g. two parents) onto the same page', async () => {
+    const src = await makeSourcePdf(1);
+    const out = await embedSignatures(src, {
+      fields: [
+        { page: 1, x: 20, y: 20, width: 80, height: 30, pngBytes: TINY_PNG },
+        { page: 1, x: 150, y: 20, width: 80, height: 30, pngBytes: TINY_PNG }
+      ]
+    });
+    const reloaded = await PDFDocument.load(out);
+    expect(reloaded.getPage(0).node.Contents()).toBeTruthy();
+  });
+
+  it('draws the auto-filled date text when a dateField is given', async () => {
+    const src = await makeSourcePdf(1);
+    const out = await embedSignatures(src, {
+      fields: [{ page: 1, x: 20, y: 20, width: 80, height: 30, pngBytes: TINY_PNG }],
+      dateField: { page: 1, x: 300, y: 400, width: 100, height: 30 },
+      dateText: '01/08/2026'
+    });
+    const reloaded = await PDFDocument.load(out);
+    expect(reloaded.getPage(0).node.Contents()).toBeTruthy();
+  });
+
   it('does not throw for a minimal single-page document', async () => {
     const src = await makeSourcePdf(1);
-    await expect(embedSignature(src, {
-      page: 1, x: 10, y: 10, width: 80, height: 30, pngBytes: TINY_PNG
+    await expect(embedSignatures(src, {
+      fields: [{ page: 1, x: 10, y: 10, width: 80, height: 30, pngBytes: TINY_PNG }]
     })).resolves.toBeTruthy();
   });
 });

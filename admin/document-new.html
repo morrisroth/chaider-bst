@@ -79,7 +79,6 @@
             <div class="form-group"><label>תיאור / קבוצת יעד (לא חובה)</label><input id="fClientName" placeholder="לדוגמה: כל הורי כיתה ד׳" /></div>
             <div class="form-group"><label>איש קשר — דוא"ל (לא חובה)</label><input id="fClientEmail" type="email" /></div>
             <div class="form-group"><label>איש קשר — טלפון (לא חובה)</label><input id="fClientPhone" /></div>
-            <div class="form-group"><label>תוקף הקישור עד (לא חובה)</label><input id="fExpiresAt" type="date" /></div>
           </div>
           <div class="form-group">
             <label>קובץ PDF *</label>
@@ -298,7 +297,6 @@ function fillSummary() {
     ['כותרת', document.getElementById('fTitle').value],
     ['תיאור', document.getElementById('fClientName').value || '—'],
     ['עמוד חתימה', `${state.signaturePage} מתוך ${state.pageCount}`],
-    ['תוקף', document.getElementById('fExpiresAt').value || 'ללא הגבלה'],
   ];
   document.getElementById('summaryRows').innerHTML = rows.map(([l,v]) =>
     `<div class="summary-row"><span class="label">${l}</span><span class="val">${escHtml(v)}</span></div>`).join('');
@@ -320,15 +318,16 @@ window.createDocument = async function createDocument() {
   const btn = document.getElementById('createBtn');
   btn.disabled = true; btn.textContent = 'יוצר...';
   try {
-    const expiresAtVal = document.getElementById('fExpiresAt').value;
     const res = await api('POST', '/documents', {
       title, clientName,
       clientEmail: document.getElementById('fClientEmail').value.trim(),
       clientPhone: document.getElementById('fClientPhone').value.trim(),
       originalFile: state.uploadedFile,
-      signaturePage: state.signaturePage,
-      signatureX: pdfBox.pdfX, signatureY: pdfBox.pdfY, signatureWidth: pdfBox.pdfW, signatureHeight: pdfBox.pdfH,
-      expiresAt: expiresAtVal ? new Date(expiresAtVal + 'T23:59:59Z').toISOString() : null
+      signatureFields: [{
+        key: 'signature', label: 'חתימה', page: state.signaturePage,
+        x: pdfBox.pdfX, y: pdfBox.pdfY, width: pdfBox.pdfW, height: pdfBox.pdfH
+      }],
+      expiresAt: null
     });
     state.createdSignUrl = res.signUrl;
     document.getElementById('linkBoxText').textContent = res.signUrl;
@@ -348,10 +347,6 @@ window.copyLink = function copyLink() {
     .then(() => showAlert(document.getElementById('alert'), 'הקישור הועתק'))
     .catch(() => showAlert(document.getElementById('alert'), 'שגיאה בהעתקה — יש להעתיק את הקישור ידנית', 'error'));
 };
-
-// default expiry: +14 days
-const d = new Date(); d.setDate(d.getDate() + 14);
-document.getElementById('fExpiresAt').value = d.toISOString().slice(0, 10);
 
 goStep(1);
 </script>

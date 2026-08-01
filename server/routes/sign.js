@@ -8,8 +8,9 @@ const { hashToken } = require('../lib/signToken');
 const { getEffectiveStatus } = require('../lib/documentStatus');
 const { withLock } = require('../lib/lock');
 const { isPngMagicBytes } = require('../lib/pdfValidate');
-const { embedSignature } = require('../lib/pdfSign');
+const { embedSignatures } = require('../lib/pdfSign');
 const { getClientIp } = require('../lib/clientIp');
+const { getSignatureFields } = require('../lib/signatureFields');
 
 // A signing link is shared with (and can be signed by) many different
 // people — there is no single "the signer" and no "already signed" terminal
@@ -22,6 +23,12 @@ const ERROR_MESSAGES = {
   revoked: 'קישור זה בוטל על ידי המנהל',
   expired: 'פג תוקפו של קישור זה',
 };
+
+function formatDateDDMMYYYY(iso) {
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
+}
 
 function logEvent(documentId, type, message, req) {
   const events = read('document_events.json');
@@ -81,11 +88,8 @@ router.get('/:token', (req, res) => {
     pageCount: current.pageCount,
     expiresAt: current.expiresAt,
     signerNameSuggested: current.clientName,
-    signaturePage: current.signaturePage,
-    signatureX: current.signatureX,
-    signatureY: current.signatureY,
-    signatureWidth: current.signatureWidth,
-    signatureHeight: current.signatureHeight,
+    signatureFields: getSignatureFields(current).map(({ key, label, page, x, y, width, height }) =>
+      ({ key, label, page, x, y, width, height })),
     pdfUrl: `/api/sign/${req.params.token}/file`
   });
 });
@@ -119,23 +123,31 @@ router.post('/:token', signSubmitLimiter, async (req, res) => {
       if (eff === 'revoked') return { status: 410, error: ERROR_MESSAGES.revoked };
       if (eff === 'expired') return { status: 410, error: ERROR_MESSAGES.expired };
 
-      const { signerName, signatureImage, consent } = req.body || {};
+      const { signerName, signatures, consent } = req.body || {};
       const name = (signerName || '').trim();
       if (!name) return { status: 400, error: 'נא להזין שם מלא' };
       if (consent !== true) return { status: 400, error: 'יש לאשר את הצהרת ההסכמה' };
 
+      const fields = getSignatureFields(doc);
+      if (!fields.length) return { status: 500, error: 'לא הוגדר מקום חתימה במסמך' };
+
       const prefix = 'data:image/png;base64,';
-      if (typeof signatureImage !== 'string' || !signatureImage.startsWith(prefix)) {
-        return { status: 400, error: 'קובץ החתימה אינו תקין' };
-      }
-      let pngBytes;
-      try {
-        pngBytes = Buffer.from(signatureImage.slice(prefix.length), 'base64');
-      } catch {
-        return { status: 400, error: 'קובץ החתימה אינו תקין' };
-      }
-      if (!pngBytes.length || pngBytes.length > 1.5 * 1024 * 1024 || !isPngMagicBytes(pngBytes)) {
-        return { status: 400, error: 'קובץ החתימה אינו תקין' };
+      const embedFields = [];
+      for (const field of fields) {
+        const dataUrl = signatures && signatures[field.key];
+        if (typeof dataUrl !== 'string' || !dataUrl.startsWith(prefix)) {
+          return { status: 400, error: `חסרה חתימה עבור ${field.label}` };
+        }
+        let pngBytes;
+        try {
+          pngBytes = Buffer.from(dataUrl.slice(prefix.length), 'base64');
+        } catch {
+          return { status: 400, error: `קובץ החתימה עבור ${field.label} אינו תקין` };
+        }
+        if (!pngBytes.length || pngBytes.length > 1.5 * 1024 * 1024 || !isPngMagicBytes(pngBytes)) {
+          return { status: 400, error: `קובץ החתימה עבור ${field.label} אינו תקין` };
+        }
+        embedFields.push({ page: field.page, x: field.x, y: field.y, width: field.width, height: field.height, pngBytes });
       }
 
       const originalPath = path.join(ORIGINALS_DIR, doc.originalFile);
@@ -145,10 +157,10 @@ router.post('/:token', signSubmitLimiter, async (req, res) => {
       const signedAtIso = new Date().toISOString();
       let signedBytes;
       try {
-        signedBytes = await embedSignature(fs.readFileSync(originalPath), {
-          page: doc.signaturePage, x: doc.signatureX, y: doc.signatureY,
-          width: doc.signatureWidth, height: doc.signatureHeight,
-          pngBytes
+        signedBytes = await embedSignatures(fs.readFileSync(originalPath), {
+          fields: embedFields,
+          dateField: doc.dateField || null,
+          dateText: doc.dateField ? formatDateDDMMYYYY(signedAtIso) : null
         });
       } catch (e) {
         console.error('PDF signing failed:', e);
@@ -158,8 +170,8 @@ router.post('/:token', signSubmitLimiter, async (req, res) => {
       const signedFilename = `signed-${doc.id}-${signatureId}.pdf`;
       fs.writeFileSync(path.join(SIGNED_DIR, signedFilename), signedBytes);
 
-      const signatures = read('document_signatures.json');
-      signatures.push({
+      const signatureRecords = read('document_signatures.json');
+      signatureRecords.push({
         id: signatureId,
         documentId: doc.id,
         signerName: name,
@@ -170,7 +182,7 @@ router.post('/:token', signSubmitLimiter, async (req, res) => {
         userAgent: req.headers['user-agent'] || '',
         createdAt: signedAtIso
       });
-      write('document_signatures.json', signatures);
+      write('document_signatures.json', signatureRecords);
 
       logEvent(doc.id, 'signed', name, req);
       logEvent(doc.id, 'pdf_generated', '', req);
