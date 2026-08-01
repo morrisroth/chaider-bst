@@ -9,6 +9,7 @@ function show(id) {
   ['sign-loading', 'sign-error', 'sign-done', 'sign-form'].forEach(s => {
     document.getElementById(s).style.display = s === id ? 'block' : 'none';
   });
+  if (id !== 'sign-form') document.getElementById('jumpToSignBtn').style.display = 'none';
 }
 
 function showFormError(msg) {
@@ -144,6 +145,16 @@ async function init() {
 
   document.getElementById('docTitle').textContent = docData.title;
   show('sign-form');
+
+  const jumpBtn = document.getElementById('jumpToSignBtn');
+  jumpBtn.addEventListener('click', () => {
+    document.getElementById('signForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  // Hide the jump button once the form itself is already on screen — no
+  // need for a shortcut to somewhere the signer can already see.
+  new IntersectionObserver(([entry]) => {
+    jumpBtn.style.display = entry.isIntersecting ? 'none' : 'flex';
+  }).observe(document.getElementById('signForm'));
 
   setupSignaturePads(docData.signatureFields);
 
