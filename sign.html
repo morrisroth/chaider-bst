@@ -110,6 +110,10 @@ body { background: var(--grad-page); min-height: 100vh; }
     <div class="card">
       <h2>תוכן המסמך</h2>
       <div class="pdf-pages" id="pdfPages"></div>
+      <div id="pdfFallback" style="display:none">
+        <p>לא ניתן להציג את תצוגת המסמך בדפדפן זה. ניתן לצפות במסמך המקורי בלחיצה על הקישור, ולחתום למטה כרגיל.</p>
+        <p><a id="pdfFallbackLink" href="#" target="_blank" rel="noopener" class="health-link">פתיחת המסמך המקורי ←</a></p>
+      </div>
     </div>
 
     <form id="signForm">

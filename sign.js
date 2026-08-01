@@ -169,7 +169,25 @@ async function init() {
   show('sign-form');
 
   setupSignaturePads(docData.signatureFields);
-  await renderAllPages();
+
+  // Some mobile browsers (older Samsung Internet, some iOS Safari versions)
+  // fail to load pdf.js's module worker — sometimes throwing, sometimes just
+  // hanging forever without ever resolving. Either way, the signer must
+  // still be able to see and sign the document, so on failure or timeout we
+  // fall back to a plain link that opens the PDF in the browser's own
+  // viewer instead of leaving a blank, unexplained gap.
+  const RENDER_TIMEOUT_MS = 15000;
+  try {
+    await Promise.race([
+      renderAllPages(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), RENDER_TIMEOUT_MS))
+    ]);
+  } catch (err) {
+    console.error('PDF preview rendering failed, falling back to direct link:', err);
+    document.getElementById('pdfPages').style.display = 'none';
+    document.getElementById('pdfFallbackLink').href = docData.pdfUrl;
+    document.getElementById('pdfFallback').style.display = 'block';
+  }
 
   document.getElementById('signForm').addEventListener('submit', onSubmit);
 }
