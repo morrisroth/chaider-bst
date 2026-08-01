@@ -62,6 +62,8 @@ body { background: var(--grad-page); min-height: 100vh; }
 .consent-row input[type=checkbox] { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; accent-color: var(--teal); }
 .consent-row label { font-size: 13.5px; color: var(--soft); line-height: 1.5; }
 
+.health-link { display: inline-block; margin-top: 4px; font-size: 14px; font-weight: 700; color: var(--teal); text-decoration: underline; }
+
 .err-msg { font-size: 13.5px; color: #b91c1c; background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.2);
   border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; display: none; }
 
@@ -95,6 +97,12 @@ body { background: var(--grad-page); min-height: 100vh; }
 
   <div id="sign-form">
     <div class="card">
+      <h2>הצהרת בריאות שנתית</h2>
+      <p>לפני החתימה על המסמך, יש למלא את הצהרת הבריאות השנתית של התלמיד באתר משרד החינוך:</p>
+      <p><a href="https://parents.education.gov.il/prhnet/contact-us/confirmations/annual-health-statement" target="_blank" rel="noopener" class="health-link">מעבר לטופס הצהרת הבריאות השנתית ←</a></p>
+    </div>
+
+    <div class="card">
       <h2 id="docTitle"></h2>
       <p>קראו את המסמך במלואו. המקום המסומן בעמוד הוא היכן שהחתימה תוטבע במסמך הסופי.</p>
     </div>
@@ -119,6 +127,11 @@ body { background: var(--grad-page); min-height: 100vh; }
         <div id="sigFields"></div>
 
         <div class="err-msg" id="formErr"></div>
+
+        <div class="consent-row">
+          <input type="checkbox" id="healthCheck" />
+          <label for="healthCheck">אני מאשר/ת כי מילאתי את הצהרת הבריאות השנתית באתר משרד החינוך בקישור שבתחילת העמוד.</label>
+        </div>
 
         <div class="consent-row">
           <input type="checkbox" id="consentCheck" />

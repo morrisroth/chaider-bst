@@ -178,6 +178,7 @@ async function onSubmit(e) {
   e.preventDefault();
   hideFormError();
   const name = document.getElementById('signerName').value.trim();
+  const health = document.getElementById('healthCheck').checked;
   const consent = document.getElementById('consentCheck').checked;
 
   if (!name) return showFormError('נא להזין שם מלא');
@@ -185,6 +186,7 @@ async function onSubmit(e) {
     const pad = pads.get(field.key);
     if (!pad || pad.isEmpty()) return showFormError(`נא לחתום בשדה "${field.label}" לפני השליחה`);
   }
+  if (!health) return showFormError('יש לאשר כי מולאה הצהרת הבריאות השנתית לפני השליחה');
   if (!consent) return showFormError('יש לאשר את הצהרת ההסכמה כדי להמשיך');
 
   const submitBtn = document.getElementById('submitBtn');
