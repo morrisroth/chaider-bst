@@ -9,6 +9,7 @@ const { ensureDirs } = require('./lib/documentPaths');
 ensureDirs();
 
 const app = express();
+app.set('trust proxy', 1); // exactly one hop: nginx terminates TLS and proxies straight to this app
 
 app.use(cors());
 app.use(require('./middleware/visitors'));
