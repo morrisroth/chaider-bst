@@ -31,11 +31,11 @@ function buildSignedDocumentMail({ to, studentName, documentTitle, pdfBytes, pdf
       <p style="font-size:15px;">תודה רבה על שיתוף הפעולה!</p>
       <p style="font-size:15px; margin-top:24px;">
         בברכה,<br />
-        <strong>צוות חיידר בעל שם טוב</strong>
+        <strong>ההנהלה</strong>
       </p>
     </div>
   `;
-  const text = `שלום,\n\nמצורף בזאת עותק של המסמך "${documentTitle}"${studentName ? ` עבור ${studentName}` : ''}, לאחר השלמת החתימה האלקטרונית עליו.\n\nמומלץ לשמור את הקובץ המצורף לתיעודכם.\n\nתודה רבה על שיתוף הפעולה!\n\nבברכה,\nצוות חיידר בעל שם טוב`;
+  const text = `שלום,\n\nמצורף בזאת עותק של המסמך "${documentTitle}"${studentName ? ` עבור ${studentName}` : ''}, לאחר השלמת החתימה האלקטרונית עליו.\n\nמומלץ לשמור את הקובץ המצורף לתיעודכם.\n\nתודה רבה על שיתוף הפעולה!\n\nבברכה,\nההנהלה`;
 
   return {
     from: `"${FROM_NAME}" <${FROM_ADDRESS}>`,
