@@ -5,7 +5,7 @@ const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
 const { read, write, uuid } = require('../db');
 const auth = require('../middleware/auth');
-const { ORIGINALS_DIR, SIGNED_DIR } = require('../lib/documentPaths');
+const { ORIGINALS_DIR, SIGNED_DIR, RENDERED_DIR } = require('../lib/documentPaths');
 const { generateToken, hashToken } = require('../lib/signToken');
 const { isPdfMagicBytes } = require('../lib/pdfValidate');
 const { getEffectiveStatus } = require('../lib/documentStatus');
@@ -255,6 +255,10 @@ router.delete('/:id', auth, (req, res) => {
   if (doc.originalFile) {
     const p = path.join(ORIGINALS_DIR, doc.originalFile);
     if (fs.existsSync(p)) fs.unlinkSync(p);
+    for (let page = 1; page <= (doc.pageCount || 0); page++) {
+      const rp = path.join(RENDERED_DIR, `${doc.originalFile}-p${page}.png`);
+      if (fs.existsSync(rp)) fs.unlinkSync(rp);
+    }
   }
 
   const signatures = read('document_signatures.json');

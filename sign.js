@@ -1,6 +1,3 @@
-import * as pdfjsLib from '/vendor/pdfjs/pdf.mjs';
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.mjs';
-
 const token = location.pathname.split('/')[2];
 let docData = null;
 const pads = new Map(); // field.key -> SignaturePad instance
@@ -88,37 +85,31 @@ function setupSignaturePads(fields) {
   });
 }
 
+// Pages are rendered to plain PNGs server-side (server/lib/pdfRender.js) and
+// just displayed as <img> tags here — no client-side PDF library needed, so
+// there's no worker-loading compatibility gap for any browser to fall into.
 async function renderAllPages() {
-  const buf = await fetch(docData.pdfUrl).then(r => r.arrayBuffer());
-  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
   const container = document.getElementById('pdfPages');
   container.innerHTML = '';
-  const dpr = window.devicePixelRatio || 1;
 
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const baseViewport = page.getViewport({ scale: 1 });
-    const containerWidth = container.clientWidth || document.documentElement.clientWidth - 32;
-    const cssScale = containerWidth / baseViewport.width;
-    const cssWidth = baseViewport.width * cssScale;
-    const cssHeight = baseViewport.height * cssScale;
-
+  const loads = [];
+  for (let i = 1; i <= docData.pageCount; i++) {
     const pageWrap = document.createElement('div');
     pageWrap.className = 'pdf-page-wrap';
-    pageWrap.style.width = cssWidth + 'px';
 
-    const canvas = document.createElement('canvas');
-    canvas.width = cssWidth * dpr;
-    canvas.height = cssHeight * dpr;
-    canvas.style.width = cssWidth + 'px';
-    canvas.style.height = cssHeight + 'px';
-    const ctx = canvas.getContext('2d');
-    const renderViewport = page.getViewport({ scale: cssScale * dpr });
-    await page.render({ canvasContext: ctx, viewport: renderViewport }).promise;
-    pageWrap.appendChild(canvas);
-
+    const img = document.createElement('img');
+    img.className = 'pdf-page-img';
+    img.src = `/api/sign/${token}/page/${i}`;
+    img.alt = `עמוד ${i}`;
+    pageWrap.appendChild(img);
     container.appendChild(pageWrap);
+
+    loads.push(new Promise((resolve, reject) => {
+      img.addEventListener('load', resolve, { once: true });
+      img.addEventListener('error', () => reject(new Error(`page ${i} failed to load`)), { once: true });
+    }));
   }
+  await Promise.all(loads);
 }
 
 async function init() {
@@ -158,18 +149,11 @@ async function init() {
 
   setupSignaturePads(docData.signatureFields);
 
-  // Some mobile browsers (older Samsung Internet, some iOS Safari versions)
-  // fail to load pdf.js's module worker — sometimes throwing, sometimes just
-  // hanging forever without ever resolving. Either way, the signer must
-  // still be able to see and sign the document, so on failure or timeout we
-  // fall back to a plain link that opens the PDF in the browser's own
-  // viewer instead of leaving a blank, unexplained gap.
-  const RENDER_TIMEOUT_MS = 15000;
+  // A render/network failure here is now rare — plain <img> loading has none
+  // of client-side pdf.js's worker-compatibility failure modes — but still
+  // fall back to a direct link rather than leaving a blank, unexplained gap.
   try {
-    await Promise.race([
-      renderAllPages(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), RENDER_TIMEOUT_MS))
-    ]);
+    await renderAllPages();
   } catch (err) {
     console.error('PDF preview rendering failed, falling back to direct link:', err);
     document.getElementById('pdfPages').style.display = 'none';

@@ -3,7 +3,7 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 const { read, write, uuid } = require('../db');
-const { ORIGINALS_DIR, SIGNED_DIR } = require('../lib/documentPaths');
+const { ORIGINALS_DIR, SIGNED_DIR, RENDERED_DIR } = require('../lib/documentPaths');
 const { hashToken } = require('../lib/signToken');
 const { getEffectiveStatus } = require('../lib/documentStatus');
 const { withLock } = require('../lib/lock');
@@ -12,6 +12,7 @@ const { embedSignatures } = require('../lib/pdfSign');
 const { getClientIp } = require('../lib/clientIp');
 const { getSignatureFields } = require('../lib/signatureFields');
 const { sendSignedDocumentEmail } = require('../lib/mailer');
+const { renderPageToPng } = require('../lib/pdfRender');
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -107,6 +108,39 @@ router.get('/:token/file', (req, res) => {
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'הקובץ אינו זמין' });
   res.setHeader('Content-Type', 'application/pdf');
   res.sendFile(filePath);
+});
+
+// Each page rendered to a PNG server-side — see server/lib/pdfRender.js for
+// why. Cached to disk on first request since the original PDF never
+// changes once uploaded; every subsequent signer (and re-visits) hits the
+// cached file directly instead of re-rendering.
+router.get('/:token/page/:pageNum', async (req, res) => {
+  const tokenHash = hashToken(req.params.token);
+  const doc = read('documents.json').find(d => d.tokenHash === tokenHash);
+  const eff = getEffectiveStatus(doc);
+  if (['not-found', 'revoked', 'expired'].includes(eff)) return res.status(404).json({ error: 'הקובץ אינו זמין' });
+
+  const pageNum = parseInt(req.params.pageNum, 10);
+  if (!Number.isInteger(pageNum) || pageNum < 1 || pageNum > doc.pageCount) {
+    return res.status(400).json({ error: 'מספר עמוד אינו תקין' });
+  }
+
+  const cacheFile = path.join(RENDERED_DIR, `${doc.originalFile}-p${pageNum}.png`);
+  res.setHeader('Content-Type', 'image/png');
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  if (fs.existsSync(cacheFile)) return res.sendFile(cacheFile);
+
+  const originalPath = path.join(ORIGINALS_DIR, doc.originalFile);
+  if (!fs.existsSync(originalPath)) return res.status(404).json({ error: 'הקובץ אינו זמין' });
+
+  try {
+    const pngBuffer = await renderPageToPng(fs.readFileSync(originalPath), pageNum);
+    fs.writeFileSync(cacheFile, pngBuffer);
+    res.send(pngBuffer);
+  } catch (e) {
+    console.error('Page render failed:', e);
+    res.status(500).json({ error: 'שגיאה בעיבוד המסמך' });
+  }
 });
 
 router.post('/:token', signSubmitLimiter, async (req, res) => {

@@ -31,7 +31,7 @@ body { background: var(--grad-page); min-height: 100vh; }
 
 .pdf-pages { display: flex; flex-direction: column; gap: 14px; margin-bottom: 8px; }
 .pdf-page-wrap { position: relative; margin: 0 auto; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 16px rgba(14,58,70,.12); background: #fff; }
-.pdf-page-wrap canvas { display: block; width: 100%; height: auto; }
+.pdf-page-img { display: block; width: 100%; height: auto; }
 
 .sig-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
 .sig-field { margin-bottom: 18px; }
@@ -157,6 +157,6 @@ body { background: var(--grad-page); min-height: 100vh; }
 <button type="button" id="jumpToSignBtn" class="btn btn-grad jump-to-sign-btn">✍️ עברו לחתימה ↓</button>
 
 <script src="/vendor/signature_pad/signature_pad.umd.min.js"></script>
-<script type="module" src="/sign.js"></script>
+<script src="/sign.js"></script>
 </body>
 </html>
