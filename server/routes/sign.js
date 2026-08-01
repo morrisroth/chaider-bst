@@ -11,6 +11,9 @@ const { isPngMagicBytes } = require('../lib/pdfValidate');
 const { embedSignatures } = require('../lib/pdfSign');
 const { getClientIp } = require('../lib/clientIp');
 const { getSignatureFields } = require('../lib/signatureFields');
+const { sendSignedDocumentEmail } = require('../lib/mailer');
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // A signing link is shared with (and can be signed by) many different
 // people — there is no single "the signer" and no "already signed" terminal
@@ -122,9 +125,11 @@ router.post('/:token', signSubmitLimiter, async (req, res) => {
       if (eff === 'revoked') return { status: 410, error: ERROR_MESSAGES.revoked };
       if (eff === 'expired') return { status: 410, error: ERROR_MESSAGES.expired };
 
-      const { signerName, signatures, consent } = req.body || {};
+      const { signerName, signerEmail, signatures, consent } = req.body || {};
       const name = (signerName || '').trim();
+      const email = (signerEmail || '').trim();
       if (!name) return { status: 400, error: 'נא להזין שם מלא' };
+      if (!email || !EMAIL_RE.test(email)) return { status: 400, error: 'נא להזין כתובת מייל תקינה' };
       if (consent !== true) return { status: 400, error: 'יש לאשר את הצהרת ההסכמה' };
 
       const fields = getSignatureFields(doc);
@@ -174,6 +179,7 @@ router.post('/:token', signSubmitLimiter, async (req, res) => {
         id: signatureId,
         documentId: doc.id,
         signerName: name,
+        signerEmail: email,
         signedAt: signedAtIso,
         signedFile: signedFilename,
         consentGiven: true,
@@ -186,10 +192,27 @@ router.post('/:token', signSubmitLimiter, async (req, res) => {
       logEvent(doc.id, 'signed', name, req);
       logEvent(doc.id, 'pdf_generated', '', req);
 
-      return { status: 200 };
+      return { status: 200, documentId: doc.id, title: doc.title, name, email, signedBytes, signedFilename };
     });
 
     if (result.status !== 200) return res.status(result.status).json({ error: result.error });
+
+    // Email delivery is best-effort — the signature itself already succeeded
+    // and is saved regardless of whether the email goes out.
+    try {
+      await sendSignedDocumentEmail({
+        to: result.email,
+        studentName: result.name,
+        documentTitle: result.title,
+        pdfBytes: result.signedBytes,
+        pdfFilename: `${result.title}.pdf`
+      });
+      logEvent(result.documentId, 'email_sent', result.email, req);
+    } catch (e) {
+      console.error('Failed to send signed document email:', e.message);
+      logEvent(result.documentId, 'email_failed', e.message, req);
+    }
+
     res.json({ ok: true });
   } catch (e) {
     console.error('Sign submission failed:', e);

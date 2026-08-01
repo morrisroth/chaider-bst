@@ -178,11 +178,13 @@ async function onSubmit(e) {
   e.preventDefault();
   hideFormError();
   const name = document.getElementById('signerName').value.trim();
+  const email = document.getElementById('signerEmail').value.trim();
   const health = document.getElementById('healthCheck').checked;
   const photo = document.getElementById('photoCheck').checked;
   const consent = document.getElementById('consentCheck').checked;
 
   if (!name) return showFormError('נא להזין שם מלא');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showFormError('נא להזין כתובת מייל תקינה');
   for (const field of docData.signatureFields) {
     const pad = pads.get(field.key);
     if (!pad || pad.isEmpty()) return showFormError(`נא לחתום בשדה "${field.label}" לפני השליחה`);
@@ -206,6 +208,7 @@ async function onSubmit(e) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         signerName: name,
+        signerEmail: email,
         signatures,
         consent: true
       })

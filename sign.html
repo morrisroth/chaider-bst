@@ -54,9 +54,10 @@ body { background: var(--grad-page); min-height: 100vh; }
 
 .form-group { margin-bottom: 16px; }
 .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--teal); margin-bottom: 6px; }
-.form-group input[type=text] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 12px;
+.form-group input[type=text], .form-group input[type=email] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 12px;
   font-size: 16px; font-family: inherit; background: rgba(255,255,255,.9); color: var(--ink); direction: rtl; }
-.form-group input[type=text]:focus { outline: none; border-color: var(--aqua); box-shadow: 0 0 0 3px rgba(111,177,191,.18); }
+.form-group input[type=email] { direction: ltr; text-align: right; }
+.form-group input[type=text]:focus, .form-group input[type=email]:focus { outline: none; border-color: var(--aqua); box-shadow: 0 0 0 3px rgba(111,177,191,.18); }
 
 .consent-row { display: flex; align-items: flex-start; gap: 10px; margin: 16px 0; }
 .consent-row input[type=checkbox] { width: 20px; height: 20px; flex-shrink: 0; margin-top: 2px; accent-color: var(--teal); }
@@ -92,7 +93,7 @@ body { background: var(--grad-page); min-height: 100vh; }
   <div id="sign-done" class="state-box">
     <div class="ic">✅</div>
     <h2>החתימה נקלטה בהצלחה</h2>
-    <p>תודה! החתימה נשלחה ונקלטה במערכת.</p>
+    <p>תודה! החתימה נשלחה ונקלטה במערכת, ועותק של המסמך החתום נשלח לכתובת המייל שהוזנה.</p>
   </div>
 
   <div id="sign-form">
@@ -118,6 +119,10 @@ body { background: var(--grad-page); min-height: 100vh; }
         <div class="form-group">
           <label for="signerName">שם מלא *</label>
           <input type="text" id="signerName" required autocomplete="name" />
+        </div>
+        <div class="form-group">
+          <label for="signerEmail">כתובת מייל לקבלת עותק חתום *</label>
+          <input type="email" id="signerEmail" required autocomplete="email" dir="ltr" placeholder="your@email.com" />
         </div>
       </div>
 
