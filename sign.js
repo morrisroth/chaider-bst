@@ -20,19 +20,6 @@ function hideFormError() {
   document.getElementById('formErr').style.display = 'none';
 }
 
-// A non-interactive highlight on the document page showing where a
-// signature (captured below, in its own card) will be embedded server-side.
-function markSignatureSpot(pageWrap, domBox, label) {
-  const marker = document.createElement('div');
-  marker.className = 'sig-mark';
-  marker.style.left = domBox.domX + 'px';
-  marker.style.top = domBox.domY + 'px';
-  marker.style.width = domBox.domW + 'px';
-  marker.style.height = domBox.domH + 'px';
-  marker.innerHTML = `<span>${label}</span>`;
-  pageWrap.appendChild(marker);
-}
-
 // Builds one signature-pad card per field (below the document, always in
 // the same place in the form) rather than a canvas overlaid on the PDF.
 function setupSignaturePads(fields) {
@@ -130,16 +117,6 @@ async function renderAllPages() {
     pageWrap.appendChild(canvas);
 
     container.appendChild(pageWrap);
-
-    for (const field of docData.signatureFields.filter(f => f.page === i)) {
-      const domBox = PdfCoords.pdfBoxToDomBox({
-        pdfX: field.x, pdfY: field.y,
-        pdfW: field.width, pdfH: field.height,
-        canvasWidthPx: cssWidth, canvasHeightPx: cssHeight,
-        pageWidthPt: baseViewport.width, pageHeightPt: baseViewport.height
-      });
-      markSignatureSpot(pageWrap, domBox, field.label);
-    }
   }
 }
 

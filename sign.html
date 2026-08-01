@@ -33,12 +33,6 @@ body { background: var(--grad-page); min-height: 100vh; }
 .pdf-page-wrap { position: relative; margin: 0 auto; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 16px rgba(14,58,70,.12); background: #fff; }
 .pdf-page-wrap canvas { display: block; width: 100%; height: auto; }
 
-/* Non-interactive marker on the document page showing where the signature will be embedded */
-.sig-mark { position: absolute; border: 2px dashed var(--teal); border-radius: 6px;
-  background: rgba(111,177,191,.08); pointer-events: none; display: flex; align-items: center; justify-content: center; }
-.sig-mark span { font-size: 10.5px; font-weight: 600; color: var(--teal); background: rgba(255,255,255,.85);
-  padding: 2px 6px; border-radius: 6px; }
-
 .sig-hint { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
 .sig-field { margin-bottom: 18px; }
 .sig-field:last-child { margin-bottom: 0; }
@@ -104,7 +98,7 @@ body { background: var(--grad-page); min-height: 100vh; }
 
     <div class="card">
       <h2 id="docTitle"></h2>
-      <p>קראו את המסמך במלואו. המקום המסומן בעמוד הוא היכן שהחתימה תוטבע במסמך הסופי.</p>
+      <p>קראו את המסמך במלואו, ולאחר מכן חתמו למטה.</p>
     </div>
 
     <div class="card">
@@ -157,8 +151,6 @@ body { background: var(--grad-page); min-height: 100vh; }
   </div>
 </div>
 
-<script src="/vendor/signature_pad/signature_pad.umd.min.js"></script>
-<script src="/admin/pdf-coords.js"></script>
-<script type="module" src="/sign.js"></script>
+<script src="/vendor/signature_pad/signature_pad.umd.min.js"></script><script type="module" src="/sign.js"></script>
 </body>
 </html>
