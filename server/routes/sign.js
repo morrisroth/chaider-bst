@@ -87,7 +87,6 @@ router.get('/:token', (req, res) => {
     status: current.status,
     pageCount: current.pageCount,
     expiresAt: current.expiresAt,
-    signerNameSuggested: current.clientName,
     signatureFields: getSignatureFields(current).map(({ key, label, page, x, y, width, height }) =>
       ({ key, label, page, x, y, width, height })),
     pdfUrl: `/api/sign/${req.params.token}/file`

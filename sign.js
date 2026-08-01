@@ -166,7 +166,6 @@ async function init() {
   docData = data;
 
   document.getElementById('docTitle').textContent = docData.title;
-  document.getElementById('signerName').value = docData.signerNameSuggested || '';
   show('sign-form');
 
   setupSignaturePads(docData.signatureFields);
