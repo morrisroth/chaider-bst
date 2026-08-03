@@ -1,12 +1,18 @@
 const token = location.pathname.split('/')[2];
 let docData = null;
 const pads = new Map(); // field.key -> SignaturePad instance
+let jumpBtnObserver = null;
 
 function show(id) {
   ['sign-loading', 'sign-error', 'sign-done', 'sign-form'].forEach(s => {
     document.getElementById(s).style.display = s === id ? 'block' : 'none';
   });
-  if (id !== 'sign-form') document.getElementById('jumpToSignBtn').style.display = 'none';
+  if (id !== 'sign-form') {
+    // Disconnect first — once #signForm is hidden it stops intersecting,
+    // which would otherwise re-fire the observer and undo this.
+    if (jumpBtnObserver) jumpBtnObserver.disconnect();
+    document.getElementById('jumpToSignBtn').style.display = 'none';
+  }
 }
 
 function showFormError(msg) {
@@ -174,9 +180,10 @@ async function init() {
   });
   // Hide the jump button once the form itself is already on screen — no
   // need for a shortcut to somewhere the signer can already see.
-  new IntersectionObserver(([entry]) => {
+  jumpBtnObserver = new IntersectionObserver(([entry]) => {
     jumpBtn.style.display = entry.isIntersecting ? 'none' : 'flex';
-  }).observe(document.getElementById('signForm'));
+  });
+  jumpBtnObserver.observe(document.getElementById('signForm'));
 
   setupSignaturePads(docData.signatureFields);
 
