@@ -65,6 +65,14 @@ body { background: var(--grad-page); min-height: 100vh; }
 
 .jump-to-sign-btn { display: none; position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
   z-index: 50; padding: 13px 24px; font-size: 14.5px; white-space: nowrap; box-shadow: 0 10px 28px rgba(14,58,70,.35); }
+
+.intro-text { white-space: pre-line; }
+.file-drop { border: 2px dashed var(--teal); border-radius: 14px; background: rgba(111,177,191,.06);
+  padding: 18px; text-align: center; cursor: pointer; transition: .2s; }
+.file-drop.has-file { background: rgba(34,197,94,.08); border-color: #22c55e; }
+.file-drop-icon { font-size: 26px; margin-bottom: 6px; }
+.file-drop-text { font-size: 13.5px; color: var(--teal); font-weight: 600; word-break: break-all; }
+.file-drop.has-file .file-drop-text { color: #15803d; }
 </style>
 </head>
 <body>
@@ -93,6 +101,19 @@ body { background: var(--grad-page); min-height: 100vh; }
   </div>
 
   <div id="sign-form">
+    <div class="card" id="introCard" style="display:none">
+      <h2 id="introTitle">הוראות</h2>
+      <p class="intro-text" id="introTextContent"></p>
+      <div class="form-group" id="attachmentGroup" style="display:none;margin-top:14px;margin-bottom:0">
+        <label id="attachmentLabelText" for="attachmentInput"></label>
+        <div class="file-drop" id="attachmentDrop" onclick="document.getElementById('attachmentInput').click()">
+          <input type="file" id="attachmentInput" accept="image/*,application/pdf" style="display:none" />
+          <div class="file-drop-icon">📎</div>
+          <div class="file-drop-text" id="attachmentFileName">לחצו לבחירת קובץ (תמונה או PDF)</div>
+        </div>
+      </div>
+    </div>
+
     <div class="card">
       <h2>הצהרת בריאות שנתית</h2>
       <p>לפני החתימה על המסמך, יש למלא את הצהרת הבריאות השנתית של התלמיד באתר משרד החינוך:</p>

@@ -3,11 +3,12 @@ const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
 const { read, write, uuid } = require('../db');
-const { ORIGINALS_DIR, SIGNED_DIR, RENDERED_DIR } = require('../lib/documentPaths');
+const { ORIGINALS_DIR, SIGNED_DIR, RENDERED_DIR, ATTACHMENTS_DIR } = require('../lib/documentPaths');
 const { hashToken } = require('../lib/signToken');
 const { getEffectiveStatus } = require('../lib/documentStatus');
 const { withLock } = require('../lib/lock');
 const { isPngMagicBytes } = require('../lib/pdfValidate');
+const { decodeAttachment } = require('../lib/attachmentValidate');
 const { embedSignatures } = require('../lib/pdfSign');
 const { getClientIp } = require('../lib/clientIp');
 const { getSignatureFields } = require('../lib/signatureFields');
@@ -91,6 +92,9 @@ router.get('/:token', (req, res) => {
     status: current.status,
     pageCount: current.pageCount,
     expiresAt: current.expiresAt,
+    introText: current.introText || '',
+    attachmentRequired: !!current.attachmentRequired,
+    attachmentLabel: current.attachmentLabel || 'אסמכתא',
     signatureFields: getSignatureFields(current).map(({ key, label, page, x, y, width, height }) =>
       ({ key, label, page, x, y, width, height })),
     pdfUrl: `/api/sign/${req.params.token}/file`
@@ -159,12 +163,19 @@ router.post('/:token', signSubmitLimiter, async (req, res) => {
       if (eff === 'revoked') return { status: 410, error: ERROR_MESSAGES.revoked };
       if (eff === 'expired') return { status: 410, error: ERROR_MESSAGES.expired };
 
-      const { signerName, signerEmail, signatures, consent } = req.body || {};
+      const { signerName, signerEmail, signatures, consent, attachment } = req.body || {};
       const name = (signerName || '').trim();
       const email = (signerEmail || '').trim();
       if (!name) return { status: 400, error: 'נא להזין שם מלא' };
       if (!email || !EMAIL_RE.test(email)) return { status: 400, error: 'נא להזין כתובת מייל תקינה' };
       if (consent !== true) return { status: 400, error: 'יש לאשר את הצהרת ההסכמה' };
+
+      let decodedAttachment = null;
+      if (doc.attachmentRequired) {
+        if (!attachment) return { status: 400, error: `יש לצרף ${doc.attachmentLabel || 'אסמכתא'}` };
+        decodedAttachment = decodeAttachment(attachment);
+        if (decodedAttachment.error) return { status: 400, error: decodedAttachment.error };
+      }
 
       const fields = getSignatureFields(doc);
       if (!fields.length) return { status: 500, error: 'לא הוגדר מקום חתימה במסמך' };
@@ -208,6 +219,12 @@ router.post('/:token', signSubmitLimiter, async (req, res) => {
       const signedFilename = `signed-${doc.id}-${signatureId}.pdf`;
       fs.writeFileSync(path.join(SIGNED_DIR, signedFilename), signedBytes);
 
+      let attachmentFilename = null;
+      if (decodedAttachment) {
+        attachmentFilename = `attachment-${doc.id}-${signatureId}.${decodedAttachment.ext}`;
+        fs.writeFileSync(path.join(ATTACHMENTS_DIR, attachmentFilename), decodedAttachment.bytes);
+      }
+
       const signatureRecords = read('document_signatures.json');
       signatureRecords.push({
         id: signatureId,
@@ -216,6 +233,8 @@ router.post('/:token', signSubmitLimiter, async (req, res) => {
         signerEmail: email,
         signedAt: signedAtIso,
         signedFile: signedFilename,
+        attachmentFile: attachmentFilename,
+        attachmentContentType: decodedAttachment ? decodedAttachment.contentType : null,
         consentGiven: true,
         ip: getClientIp(req),
         userAgent: req.headers['user-agent'] || '',

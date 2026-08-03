@@ -7,4 +7,8 @@ function isPngMagicBytes(buffer) {
   return buffer.length >= sig.length && buffer.slice(0, sig.length).equals(sig);
 }
 
-module.exports = { isPdfMagicBytes, isPngMagicBytes };
+function isJpegMagicBytes(buffer) {
+  return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+}
+
+module.exports = { isPdfMagicBytes, isPngMagicBytes, isJpegMagicBytes };

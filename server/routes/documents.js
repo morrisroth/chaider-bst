@@ -5,7 +5,7 @@ const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
 const { read, write, uuid } = require('../db');
 const auth = require('../middleware/auth');
-const { ORIGINALS_DIR, SIGNED_DIR, RENDERED_DIR } = require('../lib/documentPaths');
+const { ORIGINALS_DIR, SIGNED_DIR, RENDERED_DIR, ATTACHMENTS_DIR } = require('../lib/documentPaths');
 const { generateToken, hashToken } = require('../lib/signToken');
 const { isPdfMagicBytes } = require('../lib/pdfValidate');
 const { getEffectiveStatus } = require('../lib/documentStatus');
@@ -117,6 +117,7 @@ router.post('/', auth, async (req, res) => {
   const {
     title, clientName, clientEmail, clientPhone, originalFile,
     signatureFields, dateField,
+    introText, attachmentRequired, attachmentLabel,
     expiresAt
   } = req.body;
 
@@ -164,6 +165,9 @@ router.post('/', auth, async (req, res) => {
     pageCount,
     signatureFields: normalizedFields,
     dateField: normalizedDateField,
+    introText: introText || '',
+    attachmentRequired: !!attachmentRequired,
+    attachmentLabel: attachmentLabel || 'אסמכתא',
     expiresAt: expiresAt || null,
     openedAt: null, revokedAt: null,
     createdAt: now, updatedAt: now,
@@ -263,9 +267,14 @@ router.delete('/:id', auth, (req, res) => {
 
   const signatures = read('document_signatures.json');
   signatures.filter(s => s.documentId === doc.id).forEach(s => {
-    if (!s.signedFile) return;
-    const p = path.join(SIGNED_DIR, s.signedFile);
-    if (fs.existsSync(p)) fs.unlinkSync(p);
+    if (s.signedFile) {
+      const p = path.join(SIGNED_DIR, s.signedFile);
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+    }
+    if (s.attachmentFile) {
+      const ap = path.join(ATTACHMENTS_DIR, s.attachmentFile);
+      if (fs.existsSync(ap)) fs.unlinkSync(ap);
+    }
   });
   write('document_signatures.json', signatures.filter(s => s.documentId !== doc.id));
 
@@ -300,6 +309,21 @@ router.get('/:id/signatures/:sigId/file', auth, (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.title)}-${encodeURIComponent(sig.signerName)}.pdf"`);
   }
   res.setHeader('Content-Type', 'application/pdf');
+  res.sendFile(filePath);
+});
+
+router.get('/:id/signatures/:sigId/attachment', auth, (req, res) => {
+  const doc = read('documents.json').find(d => d.id === req.params.id);
+  if (!doc) return res.status(404).json({ error: 'המסמך לא נמצא' });
+  const sig = read('document_signatures.json').find(s => s.id === req.params.sigId && s.documentId === doc.id);
+  if (!sig || !sig.attachmentFile) return res.status(404).json({ error: 'לא צורפה אסמכתא לחתימה זו' });
+  const filePath = path.join(ATTACHMENTS_DIR, sig.attachmentFile);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'הקובץ לא נמצא' });
+  const ext = path.extname(sig.attachmentFile).slice(1);
+  if (req.query.download) {
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.title)}-${encodeURIComponent(sig.signerName)}-אסמכתא.${ext}"`);
+  }
+  res.setHeader('Content-Type', sig.attachmentContentType || 'application/octet-stream');
   res.sendFile(filePath);
 });
 

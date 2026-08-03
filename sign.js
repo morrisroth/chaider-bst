@@ -18,6 +18,15 @@ function hideFormError() {
   document.getElementById('formErr').style.display = 'none';
 }
 
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('שגיאה בקריאת הקובץ המצורף'));
+    reader.readAsDataURL(file);
+  });
+}
+
 // Builds one signature-pad card per field (below the document, always in
 // the same place in the form) rather than a canvas overlaid on the PDF.
 function setupSignaturePads(fields) {
@@ -137,6 +146,28 @@ async function init() {
   document.getElementById('docTitle').textContent = docData.title;
   show('sign-form');
 
+  if (docData.introText) {
+    document.getElementById('introTextContent').textContent = docData.introText;
+    document.getElementById('introCard').style.display = 'block';
+  }
+  if (docData.attachmentRequired) {
+    document.getElementById('attachmentLabelText').textContent = `העלאת ${docData.attachmentLabel} *`;
+    document.getElementById('attachmentGroup').style.display = 'block';
+    document.getElementById('introCard').style.display = 'block';
+  }
+  document.getElementById('attachmentInput').addEventListener('change', () => {
+    const file = document.getElementById('attachmentInput').files[0];
+    const drop = document.getElementById('attachmentDrop');
+    const label = document.getElementById('attachmentFileName');
+    if (file) {
+      drop.classList.add('has-file');
+      label.textContent = `✓ ${file.name}`;
+    } else {
+      drop.classList.remove('has-file');
+      label.textContent = 'לחצו לבחירת קובץ (תמונה או PDF)';
+    }
+  });
+
   const jumpBtn = document.getElementById('jumpToSignBtn');
   jumpBtn.addEventListener('click', () => {
     document.getElementById('signForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -175,6 +206,12 @@ async function onSubmit(e) {
 
   if (!name) return showFormError('נא להזין שם מלא');
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showFormError('נא להזין כתובת מייל תקינה');
+  let attachmentFile = null;
+  if (docData.attachmentRequired) {
+    attachmentFile = document.getElementById('attachmentInput').files[0];
+    if (!attachmentFile) return showFormError(`יש לצרף ${docData.attachmentLabel || 'אסמכתא'}`);
+    if (attachmentFile.size > 8 * 1024 * 1024) return showFormError('הקובץ המצורף גדול מדי (מקסימום 8MB)');
+  }
   for (const field of docData.signatureFields) {
     const pad = pads.get(field.key);
     if (!pad || pad.isEmpty()) return showFormError(`נא לחתום בשדה "${field.label}" לפני השליחה`);
@@ -192,6 +229,7 @@ async function onSubmit(e) {
     for (const field of docData.signatureFields) {
       signatures[field.key] = pads.get(field.key).toDataURL('image/png');
     }
+    const attachment = attachmentFile ? await fileToDataUrl(attachmentFile) : null;
 
     const res = await fetch(`/api/sign/${token}`, {
       method: 'POST',
@@ -200,6 +238,7 @@ async function onSubmit(e) {
         signerName: name,
         signerEmail: email,
         signatures,
+        attachment,
         consent: true
       })
     });

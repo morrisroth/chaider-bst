@@ -178,7 +178,7 @@ details[open] .events-toggle svg { transform:rotate(180deg); }
     </div>
     <div class="sig-table-wrap">
       <table>
-        <thead><tr><th>שם החותם</th><th>אימייל</th><th>נחתם בתאריך</th><th>כתובת IP</th><th></th></tr></thead>
+        <thead><tr><th>שם החותם</th><th>אימייל</th><th>נחתם בתאריך</th><th>כתובת IP</th><th>אסמכתא</th><th></th></tr></thead>
         <tbody id="sigModalTbl"></tbody>
       </table>
     </div>
@@ -370,13 +370,20 @@ function renderSignaturesModal() {
       <td>${formatDate(s.signedAt)}</td>
       <td class="sig-ip-cell">${escHtml(s.ip) || '—'}</td>
       <td>
+        ${s.attachmentFile ? `
+        <div style="display:flex;gap:4px">
+          <button class="btn-icon view" onclick="viewAttachment('${s.id}')" title="צפייה באסמכתא"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+          <button class="btn-icon edit" onclick="downloadAttachment('${s.id}')" title="הורדת אסמכתא"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        </div>` : '—'}
+      </td>
+      <td>
         <div style="display:flex;gap:4px">
           <button class="btn-icon view" onclick="viewSignature('${s.id}')" title="צפייה במסמך החתום"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
           <button class="btn-icon edit" onclick="downloadSignature('${s.id}')" title="הורדת PDF חתום"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
         </div>
       </td>
     </tr>
-  `).join('') || `<tr><td colspan="5"><div class="sig-empty-state">${q ? 'לא נמצאו חתימות התואמות את החיפוש' : 'טרם התקבלו חתימות'}</div></td></tr>`;
+  `).join('') || `<tr><td colspan="6"><div class="sig-empty-state">${q ? 'לא נמצאו חתימות התואמות את החיפוש' : 'טרם התקבלו חתימות'}</div></td></tr>`;
 }
 
 async function fetchPdfBlobUrl(url) {
@@ -418,6 +425,23 @@ function viewSignature(sigId) {
   if (!selected) return;
   const sig = (selected.signatures || []).find(s => s.id === sigId);
   openPdfViewer(`${API}/documents/${selected.id}/signatures/${sigId}/file`, `${selected.title} — ${sig ? sig.signerName : ''}`);
+}
+
+async function viewAttachment(sigId) {
+  if (!selected) return;
+  try {
+    const objUrl = await fetchPdfBlobUrl(`${API}/documents/${selected.id}/signatures/${sigId}/attachment`);
+    window.open(objUrl, '_blank');
+  } catch (e) {
+    showAlert(document.getElementById('alert'), e.message, 'error');
+  }
+}
+
+function downloadAttachment(sigId) {
+  if (!selected) return;
+  const sig = (selected.signatures || []).find(s => s.id === sigId);
+  const ext = sig && sig.attachmentFile ? sig.attachmentFile.split('.').pop() : 'bin';
+  downloadViaUrl(`${API}/documents/${selected.id}/signatures/${sigId}/attachment?download=1`, `${selected.title}-${sig ? sig.signerName : sigId}-אסמכתא.${ext}`);
 }
 
 async function revokeDoc() {
