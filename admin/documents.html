@@ -52,6 +52,16 @@ details[open] .events-toggle svg { transform:rotate(180deg); }
 .sig-email-cell { direction:ltr; text-align:right; color:var(--soft); font-size:13px; }
 .sig-ip-cell { direction:ltr; text-align:right; color:var(--muted); font-size:12px; }
 .sig-empty-state { text-align:center; padding:40px 20px; color:var(--muted); font-size:14px; }
+
+.confirm-card { max-width:380px; }
+.confirm-card .ic { width:48px; height:48px; border-radius:50%; background:rgba(239,68,68,.1); color:#dc2626;
+  display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+.confirm-card .ic svg { width:24px; height:24px; }
+.confirm-card p { font-size:14px; color:var(--soft); line-height:1.6; margin-bottom:22px; }
+.confirm-card .btns { display:flex; gap:8px; }
+.confirm-card .btns button { flex:1; justify-content:center; }
+.btn-danger { background:linear-gradient(135deg,#ef4444,#b91c1c); color:#fff; border-color:transparent; }
+.btn-danger:hover { filter:brightness(1.08); }
 </style>
 </head>
 <body>
@@ -185,6 +195,19 @@ details[open] .events-toggle svg { transform:rotate(180deg); }
   </div>
 </div>
 
+<!-- Confirm dialog -->
+<div id="confirmModal" class="modal-overlay" style="display:none">
+  <div class="modal-card confirm-card">
+    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg></div>
+    <h3 id="confirmTitle">אישור פעולה</h3>
+    <p id="confirmMessage"></p>
+    <div class="btns">
+      <button class="btn btn-line btn-sm" id="confirmCancelBtn">ביטול</button>
+      <button class="btn btn-sm btn-danger" id="confirmOkBtn">אישור</button>
+    </div>
+  </div>
+</div>
+
 <!-- PDF viewer modal -->
 <div id="pdfViewerModal" class="modal-overlay" style="display:none" onclick="if(event.target===this) closePdfViewer()">
   <div class="modal-card pdf-viewer-card">
@@ -199,7 +222,7 @@ details[open] .events-toggle svg { transform:rotate(180deg); }
 import * as pdfjsLib from '/vendor/pdfjs/pdf.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc = '/vendor/pdfjs/pdf.worker.mjs';
 
-window.openPdfViewer = async function openPdfViewer(url, title) {
+window.openPdfViewer = async function openPdfViewer(url, title, mimeType) {
   const modal = document.getElementById('pdfViewerModal');
   const pagesEl = document.getElementById('pdfViewerPages');
   document.getElementById('pdfViewerTitle').textContent = title || 'מסמך';
@@ -209,6 +232,19 @@ window.openPdfViewer = async function openPdfViewer(url, title) {
   try {
     const res = await fetch(url, { headers: { Authorization: `Bearer ${getToken()}` } });
     if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'שגיאה בטעינת הקובץ'); }
+
+    if (mimeType && mimeType.startsWith('image/')) {
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
+      pagesEl.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = objUrl;
+      img.className = 'pdf-viewer-canvas';
+      img.style.maxWidth = '100%';
+      pagesEl.appendChild(img);
+      return;
+    }
+
     const buf = await res.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
     pagesEl.innerHTML = '';
@@ -246,6 +282,26 @@ window.closePdfViewer = function closePdfViewer() {
 requireAuth();
 const STATUS_LABELS = { pending:'ממתין', opened:'נפתח', expired:'פג תוקף', revoked:'בוטל' };
 let docs = [], filter = 'all', selected = null, currentSignUrl = '';
+
+function showConfirm(message, title = 'אישור פעולה') {
+  return new Promise(resolve => {
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmModal').style.display = 'flex';
+    const okBtn = document.getElementById('confirmOkBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+    function cleanup(result) {
+      document.getElementById('confirmModal').style.display = 'none';
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    }
+    function onOk() { cleanup(true); }
+    function onCancel() { cleanup(false); }
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
 
 async function load() {
   docs = await api('GET', '/documents');
@@ -324,7 +380,7 @@ function showLink() {
 // Explicitly issues a fresh token, invalidating the previous link.
 async function regenerateLink() {
   if (!selected) return;
-  if (!confirm('להנפיק קישור חדש? הקישור הנוכחי יפסיק לעבוד עבור כל מי שכבר קיבל אותו.')) return;
+  if (!(await showConfirm('הקישור הנוכחי יפסיק לעבוד עבור כל מי שכבר קיבל אותו.', 'להנפיק קישור חדש?'))) return;
   try {
     selected = await api('POST', `/documents/${selected.id}/relink`);
     docs = docs.map(d => d.id === selected.id ? { ...d, ...selected } : d);
@@ -428,14 +484,14 @@ function viewSignature(sigId) {
   openPdfViewer(`${API}/documents/${selected.id}/signatures/${sigId}/file`, `${selected.title} — ${sig ? sig.signerName : ''}`);
 }
 
-async function viewAttachment(sigId) {
+function viewAttachment(sigId) {
   if (!selected) return;
-  try {
-    const objUrl = await fetchPdfBlobUrl(`${API}/documents/${selected.id}/signatures/${sigId}/attachment`);
-    window.open(objUrl, '_blank');
-  } catch (e) {
-    showAlert(document.getElementById('alert'), e.message, 'error');
-  }
+  const sig = (selected.signatures || []).find(s => s.id === sigId);
+  openPdfViewer(
+    `${API}/documents/${selected.id}/signatures/${sigId}/attachment`,
+    `${selected.title} — ${sig ? sig.signerName : ''} (אסמכתא)`,
+    sig ? sig.attachmentContentType : null
+  );
 }
 
 function downloadAttachment(sigId) {
@@ -448,7 +504,7 @@ function downloadAttachment(sigId) {
 async function deleteSignature(sigId) {
   if (!selected) return;
   const sig = (selected.signatures || []).find(s => s.id === sigId);
-  if (!confirm(`למחוק את החתימה של "${sig ? sig.signerName : ''}"? הפעולה אינה הפיכה.`)) return;
+  if (!(await showConfirm('הפעולה אינה הפיכה.', `למחוק את החתימה של "${sig ? sig.signerName : ''}"?`))) return;
   try {
     await api('DELETE', `/documents/${selected.id}/signatures/${sigId}`);
     await select(selected.id);
@@ -464,7 +520,8 @@ async function deleteSignature(sigId) {
 }
 
 async function revokeDoc() {
-  if (!selected || !confirm('לבטל את קישור החתימה למסמך זה?')) return;
+  if (!selected) return;
+  if (!(await showConfirm('מי שכבר קיבל את הקישור לא יוכל להשתמש בו יותר.', 'לבטל את קישור החתימה למסמך זה?'))) return;
   selected = await api('POST', `/documents/${selected.id}/revoke`);
   docs = docs.map(d => d.id === selected.id ? selected : d);
   select(selected.id);
@@ -472,7 +529,8 @@ async function revokeDoc() {
 }
 
 async function deleteDoc() {
-  if (!selected || !confirm('למחוק מסמך זה לצמיתות? הפעולה אינה הפיכה.')) return;
+  if (!selected) return;
+  if (!(await showConfirm('הפעולה אינה הפיכה.', 'למחוק מסמך זה לצמיתות?'))) return;
   await api('DELETE', `/documents/${selected.id}`);
   docs = docs.filter(d => d.id !== selected.id);
   selected = null;
