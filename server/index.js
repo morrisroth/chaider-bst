@@ -23,8 +23,10 @@ app.use('/vendor/signature_pad', express.static(path.join(__dirname, '../node_mo
 // Webhook: capture raw Buffer for HMAC verification, before express.json()
 app.use('/webhook', express.raw({ type: '*/*' }), require('./routes/webhook'));
 
-// Everything else uses JSON
-app.use(express.json());
+// Everything else uses JSON. Raised from Express's 100kb default — signing
+// submissions carry base64 signature images (per field) and an optional
+// base64 attachment (up to 8MB decoded) in the same JSON body.
+app.use(express.json({ limit: '20mb' }));
 
 // API routes
 app.use('/api/auth',     require('./routes/auth'));
