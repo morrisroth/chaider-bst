@@ -10,6 +10,7 @@ const { generateToken, hashToken } = require('../lib/signToken');
 const { isPdfMagicBytes } = require('../lib/pdfValidate');
 const { getEffectiveStatus } = require('../lib/documentStatus');
 const { getClientIp } = require('../lib/clientIp');
+const { contentDispositionAttachment } = require('../lib/contentDisposition');
 
 const APP_URL = process.env.APP_URL || 'http://localhost:4000';
 
@@ -292,7 +293,7 @@ router.get('/:id/file/original', auth, (req, res) => {
   const filePath = path.join(ORIGINALS_DIR, doc.originalFile);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'הקובץ לא נמצא' });
   if (req.query.download) {
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.title)}.pdf"`);
+    res.setHeader('Content-Disposition', contentDispositionAttachment(`${doc.title}.pdf`));
   }
   res.setHeader('Content-Type', 'application/pdf');
   res.sendFile(filePath);
@@ -306,7 +307,7 @@ router.get('/:id/signatures/:sigId/file', auth, (req, res) => {
   const filePath = path.join(SIGNED_DIR, sig.signedFile);
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'הקובץ לא נמצא' });
   if (req.query.download) {
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.title)}-${encodeURIComponent(sig.signerName)}.pdf"`);
+    res.setHeader('Content-Disposition', contentDispositionAttachment(`${doc.title}-${sig.signerName}.pdf`));
   }
   res.setHeader('Content-Type', 'application/pdf');
   res.sendFile(filePath);
@@ -321,10 +322,33 @@ router.get('/:id/signatures/:sigId/attachment', auth, (req, res) => {
   if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'הקובץ לא נמצא' });
   const ext = path.extname(sig.attachmentFile).slice(1);
   if (req.query.download) {
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.title)}-${encodeURIComponent(sig.signerName)}-אסמכתא.${ext}"`);
+    res.setHeader('Content-Disposition', contentDispositionAttachment(`${doc.title}-${sig.signerName}-אסמכתא.${ext}`));
   }
   res.setHeader('Content-Type', sig.attachmentContentType || 'application/octet-stream');
   res.sendFile(filePath);
+});
+
+// Removes a single signature (e.g. a test/mistaken submission) without
+// touching the document or its other signatures.
+router.delete('/:id/signatures/:sigId', auth, (req, res) => {
+  const doc = read('documents.json').find(d => d.id === req.params.id);
+  if (!doc) return res.status(404).json({ error: 'המסמך לא נמצא' });
+  const signatures = read('document_signatures.json');
+  const sig = signatures.find(s => s.id === req.params.sigId && s.documentId === doc.id);
+  if (!sig) return res.status(404).json({ error: 'החתימה לא נמצאה' });
+
+  if (sig.signedFile) {
+    const p = path.join(SIGNED_DIR, sig.signedFile);
+    if (fs.existsSync(p)) fs.unlinkSync(p);
+  }
+  if (sig.attachmentFile) {
+    const ap = path.join(ATTACHMENTS_DIR, sig.attachmentFile);
+    if (fs.existsSync(ap)) fs.unlinkSync(ap);
+  }
+
+  write('document_signatures.json', signatures.filter(s => s.id !== sig.id));
+  logEvent(doc.id, 'signature_deleted', sig.signerName, req);
+  res.json({ ok: true });
 });
 
 module.exports = router;
