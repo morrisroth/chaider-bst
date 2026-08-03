@@ -322,15 +322,27 @@ function render() {
   if (q) list = list.filter(d => (d.title || '').toLowerCase().includes(q) || (d.clientName || '').toLowerCase().includes(q));
 
   document.getElementById('docsTbl').innerHTML = list.map(d => `
-    <tr style="cursor:pointer${selected?.id===d.id?';background:rgba(250,246,238,.8)':''}" onclick="select('${d.id}')">
+    <tr style="cursor:pointer${selected?.id===d.id?';background:rgba(250,246,238,.8)':''}" onclick="toggleSelect('${d.id}')">
       <td style="font-weight:600;color:var(--ink)">${escHtml(d.title)}</td>
       <td>${escHtml(d.clientName) || '—'}</td>
       <td>${formatDate(d.createdAt)}</td>
       <td>${d.expiresAt ? formatDate(d.expiresAt) : '—'}</td>
       <td><span class="sig-count-badge">${d.signatureCount || 0}</span></td>
       <td><span class="status status-${d.status}">${STATUS_LABELS[d.status] || d.status}</span></td>
-      <td><button class="btn-icon view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
+      <td><button class="btn-icon view" onclick="event.stopPropagation(); toggleSelect('${d.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
     </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">אין מסמכים</td></tr>';
+}
+
+// Clicking the row/eye of the already-open document closes the detail
+// panel again instead of just re-fetching the same data.
+function toggleSelect(id) {
+  if (selected && selected.id === id) {
+    selected = null;
+    document.getElementById('detailWrap').style.display = 'none';
+    render();
+    return;
+  }
+  select(id);
 }
 
 async function select(id) {
