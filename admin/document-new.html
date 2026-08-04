@@ -75,7 +75,8 @@
         <div class="form-panel">
           <h2>פרטי המסמך</h2>
           <div class="form-2col">
-            <div class="form-group"><label>כותרת המסמך *</label><input id="fTitle" placeholder="לדוגמה: אישור טיול שנתי כיתה ד׳" /></div>
+            <div class="form-group"><label>כותרת הקישור *</label><input id="fTitle" placeholder="לדוגמה: השלמת רישום חיידר בעל שם טוב" /></div>
+            <div class="form-group"><label>שם המסמך (יוצג בעמוד החתימה, לא חובה)</label><input id="fDocumentLabel" placeholder="לדוגמה: תקנון החיידר — אם ריק, יוצג שם הקישור" /></div>
             <div class="form-group"><label>תיאור / קבוצת יעד (לא חובה)</label><input id="fClientName" placeholder="לדוגמה: כל הורי כיתה ד׳" /></div>
             <div class="form-group"><label>איש קשר — דוא"ל (לא חובה)</label><input id="fClientEmail" type="email" /></div>
             <div class="form-group"><label>איש קשר — טלפון (לא חובה)</label><input id="fClientPhone" /></div>
@@ -319,7 +320,7 @@ window.createDocument = async function createDocument() {
   btn.disabled = true; btn.textContent = 'יוצר...';
   try {
     const res = await api('POST', '/documents', {
-      title, clientName,
+      title, documentLabel: document.getElementById('fDocumentLabel').value.trim(), clientName,
       clientEmail: document.getElementById('fClientEmail').value.trim(),
       clientPhone: document.getElementById('fClientPhone').value.trim(),
       originalFile: state.uploadedFile,

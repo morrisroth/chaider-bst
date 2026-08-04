@@ -116,7 +116,7 @@ async function validateField(pdfDoc, pageCount, field, label) {
 
 router.post('/', auth, async (req, res) => {
   const {
-    title, clientName, clientEmail, clientPhone, originalFile,
+    title, documentLabel, clientName, clientEmail, clientPhone, originalFile,
     signatureFields, dateField,
     introText, attachmentRequired, attachmentLabel,
     expiresAt
@@ -156,6 +156,7 @@ router.post('/', auth, async (req, res) => {
   const doc = {
     id: uuid(),
     title,
+    documentLabel: (documentLabel || '').trim() || title,
     clientName: clientName || '',
     clientEmail: clientEmail || '',
     clientPhone: clientPhone || '',
@@ -208,9 +209,10 @@ router.patch('/:id', auth, (req, res) => {
   const docs = read('documents.json');
   const idx = docs.findIndex(d => d.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'המסמך לא נמצא' });
-  const { title, clientName, clientEmail, clientPhone, expiresAt } = req.body;
+  const { title, documentLabel, clientName, clientEmail, clientPhone, expiresAt } = req.body;
   const patch = {};
   if (title !== undefined) patch.title = title;
+  if (documentLabel !== undefined) patch.documentLabel = documentLabel;
   if (clientName !== undefined) patch.clientName = clientName;
   if (clientEmail !== undefined) patch.clientEmail = clientEmail;
   if (clientPhone !== undefined) patch.clientPhone = clientPhone;

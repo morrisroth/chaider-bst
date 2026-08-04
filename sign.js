@@ -151,7 +151,7 @@ async function init() {
 
   document.getElementById('pageTitle').textContent = docData.title;
   document.title = docData.title.includes('חיידר בעל שם טוב') ? docData.title : `${docData.title} — חיידר בעל שם טוב`;
-  document.getElementById('docTitle').textContent = docData.title;
+  document.getElementById('docTitle').textContent = docData.documentLabel;
   show('sign-form');
 
   if (docData.introText) {

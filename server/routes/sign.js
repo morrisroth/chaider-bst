@@ -89,6 +89,7 @@ router.get('/:token', (req, res) => {
   res.json({
     id: current.id,
     title: current.title,
+    documentLabel: current.documentLabel || current.title,
     status: current.status,
     pageCount: current.pageCount,
     expiresAt: current.expiresAt,
