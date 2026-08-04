@@ -5,6 +5,7 @@ const path    = require('path');
 const fs      = require('fs');
 const { read } = require('./db');
 const { ensureDirs } = require('./lib/documentPaths');
+const { hashToken } = require('./lib/signToken');
 
 ensureDirs();
 
@@ -84,9 +85,25 @@ app.get(/^\/admin\/[a-zA-Z0-9\-_]+$/, (req, res, next) => {
 });
 
 // Public signing page — same static shell for both URL shapes, state is
-// derived client-side from GET /api/sign/:token
+// derived client-side from GET /api/sign/:token. The title/OG tags are
+// injected server-side (rather than left to sign.js) so link-preview
+// crawlers — which never run JS — show the real document title.
 app.get(['/sign/:token', '/sign/:token/completed'], (req, res) => {
-  res.sendFile(path.join(__dirname, '../sign.html'));
+  let html = fs.readFileSync(path.join(__dirname, '../sign.html'), 'utf8');
+  try {
+    const tokenHash = hashToken(req.params.token);
+    const doc = read('documents.json').find(d => d.tokenHash === tokenHash);
+    if (doc && doc.title) {
+      const pageTitle = `${doc.title} — חיידר בעל שם טוב`.replace(/"/g, '&quot;');
+      html = html
+        .replace(/<title>.*?<\/title>/, `<title>${pageTitle}</title>`)
+        .replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${pageTitle}$2`);
+    }
+  } catch (e) {
+    console.error('Failed to inject document title into sign page:', e);
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(html);
 });
 
 // Serve everything else (CSS, JS, images, admin pages)
