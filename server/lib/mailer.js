@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 
 const FROM_ADDRESS = process.env.SMTP_FROM || 'Chaiderbs@netzach.org.il';
 const FROM_NAME = 'חיידר בעל שם טוב';
+const APP_URL = process.env.APP_URL || 'http://localhost:4000';
 
 let cachedTransporter = null;
 function getTransporter() {
@@ -22,6 +23,9 @@ function buildSignedDocumentMail({ to, studentName, documentTitle, pdfBytes, pdf
   const subject = `המסמך החתום שלכם — ${documentTitle}`;
   const html = `
     <div dir="rtl" style="font-family: Arial, Heebo, sans-serif; color:#15282d; line-height:1.7; max-width:520px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:20px;">
+        <img src="${APP_URL}/assets/logo.png" alt="חיידר בעל שם טוב" style="height:56px; width:auto;" />
+      </div>
       <p style="font-size:16px;">שלום${studentName ? ` וברכה,` : ','}</p>
       <p style="font-size:15px;">
         מצורף בזאת עותק של המסמך <strong>"${documentTitle}"</strong>${studentName ? ` עבור <strong>${studentName}</strong>` : ''},
