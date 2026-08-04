@@ -94,7 +94,8 @@ app.get(['/sign/:token', '/sign/:token/completed'], (req, res) => {
     const tokenHash = hashToken(req.params.token);
     const doc = read('documents.json').find(d => d.tokenHash === tokenHash);
     if (doc && doc.title) {
-      const pageTitle = `${doc.title} — חיידר בעל שם טוב`.replace(/"/g, '&quot;');
+      const suffix = doc.title.includes('חיידר בעל שם טוב') ? '' : ' — חיידר בעל שם טוב';
+      const pageTitle = `${doc.title}${suffix}`.replace(/"/g, '&quot;');
       html = html
         .replace(/<title>.*?<\/title>/, `<title>${pageTitle}</title>`)
         .replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${pageTitle}$2`);
