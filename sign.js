@@ -149,6 +149,8 @@ async function init() {
 
   docData = data;
 
+  document.getElementById('pageTitle').textContent = docData.title;
+  document.title = `${docData.title} — חיידר בעל שם טוב`;
   document.getElementById('docTitle').textContent = docData.title;
   show('sign-form');
 
