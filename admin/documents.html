@@ -323,7 +323,7 @@ function render() {
 
   document.getElementById('docsTbl').innerHTML = list.map(d => `
     <tr style="cursor:pointer${selected?.id===d.id?';background:rgba(250,246,238,.8)':''}" onclick="toggleSelect('${d.id}')">
-      <td style="font-weight:600;color:var(--ink)">${escHtml(d.title)}</td>
+      <td style="font-weight:600;color:var(--ink)">${escHtml(d.title)}${d.attachmentRequired ? ' <span style="font-weight:600;color:var(--teal);font-size:12px">(עם אסמכתא)</span>' : ''}</td>
       <td>${escHtml(d.clientName) || '—'}</td>
       <td>${formatDate(d.createdAt)}</td>
       <td>${d.expiresAt ? formatDate(d.expiresAt) : '—'}</td>
@@ -348,7 +348,7 @@ function toggleSelect(id) {
 async function select(id) {
   selected = await api('GET', `/documents/${id}`);
   document.getElementById('detailWrap').style.display = 'block';
-  document.getElementById('dTitle').textContent = selected.title;
+  document.getElementById('dTitle').innerHTML = escHtml(selected.title) + (selected.attachmentRequired ? ' <span style="font-weight:600;color:var(--teal);font-size:13px">(עם אסמכתא)</span>' : '');
   document.getElementById('dStatus').innerHTML = `<span class="status status-${selected.status}">${STATUS_LABELS[selected.status] || selected.status}</span>`;
   document.getElementById('dRows').innerHTML = [
     ['תיאור', selected.clientName],

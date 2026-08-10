@@ -209,7 +209,7 @@ router.patch('/:id', auth, (req, res) => {
   const docs = read('documents.json');
   const idx = docs.findIndex(d => d.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'המסמך לא נמצא' });
-  const { title, documentLabel, clientName, clientEmail, clientPhone, expiresAt } = req.body;
+  const { title, documentLabel, clientName, clientEmail, clientPhone, expiresAt, introText } = req.body;
   const patch = {};
   if (title !== undefined) patch.title = title;
   if (documentLabel !== undefined) patch.documentLabel = documentLabel;
@@ -217,6 +217,7 @@ router.patch('/:id', auth, (req, res) => {
   if (clientEmail !== undefined) patch.clientEmail = clientEmail;
   if (clientPhone !== undefined) patch.clientPhone = clientPhone;
   if (expiresAt !== undefined) patch.expiresAt = expiresAt;
+  if (introText !== undefined) patch.introText = introText;
   docs[idx] = { ...docs[idx], ...patch, updatedAt: new Date().toISOString() };
   write('documents.json', docs);
   res.json(publicDoc(docs[idx]));
