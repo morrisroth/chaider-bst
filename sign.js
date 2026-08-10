@@ -163,6 +163,10 @@ async function init() {
     document.getElementById('attachmentGroup').style.display = 'block';
     document.getElementById('introCard').style.display = 'block';
   }
+  if (docData.noteAfterAttachment) {
+    document.getElementById('noteAfterAttachmentContent').textContent = docData.noteAfterAttachment;
+    document.getElementById('noteAfterAttachmentContent').style.display = 'block';
+  }
   document.getElementById('attachmentInput').addEventListener('change', () => {
     const file = document.getElementById('attachmentInput').files[0];
     const drop = document.getElementById('attachmentDrop');

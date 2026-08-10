@@ -94,6 +94,7 @@ router.get('/:token', (req, res) => {
     pageCount: current.pageCount,
     expiresAt: current.expiresAt,
     introText: current.introText || '',
+    noteAfterAttachment: current.noteAfterAttachment || '',
     attachmentRequired: !!current.attachmentRequired,
     attachmentLabel: current.attachmentLabel || 'אסמכתא',
     signatureFields: getSignatureFields(current).map(({ key, label, page, x, y, width, height }) =>

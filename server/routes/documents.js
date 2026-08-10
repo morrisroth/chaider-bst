@@ -118,7 +118,7 @@ router.post('/', auth, async (req, res) => {
   const {
     title, documentLabel, clientName, clientEmail, clientPhone, originalFile,
     signatureFields, dateField,
-    introText, attachmentRequired, attachmentLabel,
+    introText, noteAfterAttachment, attachmentRequired, attachmentLabel,
     expiresAt
   } = req.body;
 
@@ -168,6 +168,7 @@ router.post('/', auth, async (req, res) => {
     signatureFields: normalizedFields,
     dateField: normalizedDateField,
     introText: introText || '',
+    noteAfterAttachment: noteAfterAttachment || '',
     attachmentRequired: !!attachmentRequired,
     attachmentLabel: attachmentLabel || 'אסמכתא',
     expiresAt: expiresAt || null,
@@ -209,7 +210,7 @@ router.patch('/:id', auth, (req, res) => {
   const docs = read('documents.json');
   const idx = docs.findIndex(d => d.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'המסמך לא נמצא' });
-  const { title, documentLabel, clientName, clientEmail, clientPhone, expiresAt, introText } = req.body;
+  const { title, documentLabel, clientName, clientEmail, clientPhone, expiresAt, introText, noteAfterAttachment } = req.body;
   const patch = {};
   if (title !== undefined) patch.title = title;
   if (documentLabel !== undefined) patch.documentLabel = documentLabel;
@@ -218,6 +219,7 @@ router.patch('/:id', auth, (req, res) => {
   if (clientPhone !== undefined) patch.clientPhone = clientPhone;
   if (expiresAt !== undefined) patch.expiresAt = expiresAt;
   if (introText !== undefined) patch.introText = introText;
+  if (noteAfterAttachment !== undefined) patch.noteAfterAttachment = noteAfterAttachment;
   docs[idx] = { ...docs[idx], ...patch, updatedAt: new Date().toISOString() };
   write('documents.json', docs);
   res.json(publicDoc(docs[idx]));
