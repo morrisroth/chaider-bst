@@ -51,11 +51,25 @@ function buildSignedDocumentMail({ to, studentName, documentTitle, pdfBytes, pdf
   };
 }
 
+// SMTP 4xx codes are transient (e.g. a receiving server rate-limiting a
+// burst of sends) — a permanent 5xx rejection (bad address, etc.) won't
+// succeed on retry, so only 4xx is worth a second attempt.
+function isTransientSmtpError(err) {
+  const code = err && err.responseCode;
+  return typeof code === 'number' && code >= 400 && code < 500;
+}
+
 async function sendSignedDocumentEmail(params) {
   const transporter = getTransporter();
   if (!transporter) throw new Error('SMTP not configured (missing SMTP_HOST/SMTP_USER/SMTP_PASS)');
   const mailOptions = buildSignedDocumentMail(params);
-  await transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (err) {
+    if (!isTransientSmtpError(err)) throw err;
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    await transporter.sendMail(mailOptions);
+  }
 }
 
 module.exports = { buildSignedDocumentMail, sendSignedDocumentEmail };
