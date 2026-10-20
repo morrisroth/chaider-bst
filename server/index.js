@@ -52,6 +52,8 @@ app.get(/\.html$/, (req, res) => {
 });
 
 app.get('/admin', (req, res) => res.redirect(302, '/admin/dashboard'));
+// The approach page was removed — send old links/bookmarks to the about page
+app.get(['/approach', '/approach.html'], (req, res) => res.redirect(301, '/about'));
 
 // Public pages, served at extensionless URLs — settings/gallery/posts are
 // injected so everything loads instantly with no client-side flash.

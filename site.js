@@ -66,7 +66,7 @@
     // About image — about section on homepage AND about.html page
     if (s.about_image) injectBlobImg(document.querySelector('.blob-soft'), s.about_image);
 
-    // Approach image — approach.html page (blob-soft.cool)
+    // Contact page image (blob-soft.cool) — setting kept its old approach_image name
     if (s.approach_image) injectBlobImg(document.querySelector('.blob-soft.cool'), s.approach_image);
 
     // Phone links
