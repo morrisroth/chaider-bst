@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { read, write, uuid } = require('../db');
 const auth = require('../middleware/auth');
+const { sendContactConfirmationEmail } = require('../lib/mailer');
 
 // public submit
 router.post('/', (req, res) => {
@@ -18,6 +19,12 @@ router.post('/', (req, res) => {
   msgs.push(msg);
   write('contacts.json', msgs);
   res.status(201).json({ ok: true });
+
+  // Email is optional on the contact form — confirm only when one was given
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(msg.email.trim())) {
+    sendContactConfirmationEmail({ to: msg.email.trim(), name: msg.name, message: msg.message })
+      .catch(e => console.error('Failed to send contact confirmation email:', e.message));
+  }
 });
 
 // admin

@@ -355,6 +355,8 @@
         form.style.display = 'none';
         const s = document.getElementById('csuccess');
         if (s) s.style.display = 'block';
+        const m = document.getElementById('csuccessMail');
+        if (m && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim())) m.style.display = 'block';
       }
     } catch {}
     return false;

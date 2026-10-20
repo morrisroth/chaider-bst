@@ -48,3 +48,38 @@ describe('buildSignedDocumentMail', () => {
     expect(mail.to).toBe('a@b.com');
   });
 });
+
+const { buildRegistrationConfirmationMail, buildContactConfirmationMail } = require('../lib/mailer');
+
+describe('buildRegistrationConfirmationMail', () => {
+  it('confirms receipt to the parents and names the child', () => {
+    const mail = buildRegistrationConfirmationMail({ to: 'a@b.com, c@d.com', childName: 'משה כהן', grade: "כיתה ג'" });
+    expect(mail.to).toBe('a@b.com, c@d.com');
+    expect(mail.subject).toContain('משה כהן');
+    expect(mail.html).toContain('התקבל בהצלחה');
+    expect(mail.from.toLowerCase()).toContain('chaiderbs@netzach.org.il');
+  });
+
+  it('adds the municipality registration link for gan and first grade only', () => {
+    const first = buildRegistrationConfirmationMail({ to: 'a@b.com', childName: 'x', grade: "כיתה א'" });
+    const gan = buildRegistrationConfirmationMail({ to: 'a@b.com', childName: 'x', grade: 'גן חובה' });
+    const third = buildRegistrationConfirmationMail({ to: 'a@b.com', childName: 'x', grade: "כיתה ג'" });
+    expect(first.html).toContain('edu.onecity.co.il');
+    expect(gan.text).toContain('edu.onecity.co.il');
+    expect(third.html).not.toContain('edu.onecity.co.il');
+  });
+
+  it('escapes HTML typed into the form', () => {
+    const mail = buildRegistrationConfirmationMail({ to: 'a@b.com', childName: '<script>x</script>', grade: '' });
+    expect(mail.html).not.toContain('<script>');
+  });
+});
+
+describe('buildContactConfirmationMail', () => {
+  it('greets by name and quotes the message, escaped', () => {
+    const mail = buildContactConfirmationMail({ to: 'a@b.com', name: 'יוסי', message: 'שלום <b>' });
+    expect(mail.to).toBe('a@b.com');
+    expect(mail.html).toContain('יוסי');
+    expect(mail.html).toContain('שלום &lt;b&gt;');
+  });
+});

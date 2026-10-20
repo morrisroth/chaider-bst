@@ -7,6 +7,7 @@ const { read, write, uuid } = require('../db');
 const auth = require('../middleware/auth');
 const { isPdfMagicBytes, isPngMagicBytes, isJpegMagicBytes } = require('../lib/pdfValidate');
 const { contentDispositionAttachment } = require('../lib/contentDisposition');
+const { sendRegistrationConfirmationEmail } = require('../lib/mailer');
 
 // ID scans are sensitive — kept outside the public /uploads folder and only
 // served to a logged-in admin through GET /:id/files/:idx.
@@ -108,6 +109,12 @@ router.post('/', submitLimiter, (req, res, next) => {
   regs.push(reg);
   write('registrations.json', regs);
   res.status(201).json({ ok: true });
+
+  // Confirmation email to both parents — best-effort, after responding so a
+  // slow SMTP server never holds up the form. One mail if both share an address.
+  const to = [...new Set([reg.fatherEmail, reg.motherEmail].map(e => e.toLowerCase()))].join(', ');
+  sendRegistrationConfirmationEmail({ to, childName: `${reg.firstName} ${reg.lastName}`, grade: reg.grade })
+    .catch(e => console.error('Failed to send registration confirmation email:', e.message));
 });
 
 // admin
