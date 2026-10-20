@@ -57,8 +57,8 @@
     // Hero image (right blob in hero section)
     if (s.hero_image) injectBlobImg(document.querySelector('.blob-img'), s.hero_image);
 
-    // About text
-    if (s.about_text) {
+    // About text — homepage "מי אנחנו" section only (about.html has its own copy)
+    if (s.about_text && document.querySelector('.hero')) {
       const prosePs = document.querySelectorAll('.prose p');
       if (prosePs.length) prosePs[0].textContent = s.about_text;
     }
@@ -71,7 +71,8 @@
 
     // Phone links
     if (s.phone) {
-      document.querySelectorAll('a[href^="tel:"]').forEach(a => {
+      // data-fixed marks numbers that aren't the main phone (e.g. the office landline)
+      document.querySelectorAll('a[href^="tel:"]:not([data-fixed])').forEach(a => {
         a.href = `tel:${s.phone}`;
         if (a.textContent.match(/^0[5-9]/)) a.textContent = s.phone;
       });
@@ -354,24 +355,6 @@
         form.style.display = 'none';
         const s = document.getElementById('csuccess');
         if (s) s.style.display = 'block';
-      }
-    } catch {}
-    return false;
-  };
-
-  // ── Register form → POST to API (override inline handler) ──
-  window.submitReg = async function(e) {
-    e.preventDefault();
-    const form = document.getElementById('rform');
-    if (!form) return false;
-    const fd = new FormData(form);
-    try {
-      const r = await fetch('/api/register', { method: 'POST', body: fd });
-      if (r.ok) {
-        form.style.display = 'none';
-        const s = document.getElementById('rsuccess');
-        if (s) s.style.display = 'block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch {}
     return false;

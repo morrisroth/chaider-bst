@@ -12,7 +12,10 @@
 .detail-row { display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid rgba(230,221,205,.4); font-size:14px; }
 .detail-row:last-child { border-bottom:0; }
 .detail-row .label { color:var(--muted); font-weight:500; }
-.detail-row .val { color:var(--ink); font-weight:600; text-align:left; }
+.detail-row .val { color:var(--ink); font-weight:600; text-align:left; white-space:pre-wrap; }
+.detail-row { gap:12px; }
+.detail-group { font-family:var(--serif); font-size:15px; font-weight:700; color:var(--teal); margin:18px 0 4px; }
+.detail-group:first-child { margin-top:0; }
 </style>
 </head>
 <body>
@@ -136,16 +139,72 @@ function select(id) {
     document.getElementById('dPhotoPlaceholder').style.display = 'flex';
     document.getElementById('dPhotoPlaceholder').textContent = (selected.firstName||'?')[0];
   }
+  const row = ([l, v]) => v ? `<div class="detail-row"><span class="label">${l}</span><span class="val">${escHtml(v)}</span></div>` : '';
+  const group = (title, rows) => {
+    const html = rows.map(row).join('');
+    return html ? `<div class="detail-group">${title}</div>${html}` : '';
+  };
+  const r = selected;
+  const files = (r.files || []).map((f, i) => {
+    const who = f.parent === 'father' ? 'אב' : 'אם';
+    return `<div class="detail-row"><span class="label">ת.ז. + ספח ${who}</span><span class="val">
+      <a href="#" onclick="viewRegFile(${i});return false">צפייה</a> · <a href="#" onclick="downloadRegFile(${i});return false">הורדה</a></span></div>`;
+  }).join('');
   document.getElementById('dRows').innerHTML = [
-    ['כיתה', selected.grade],
-    ['כתובת', selected.address],
-    ['שם האב', selected.fatherName],
-    ['שם האם', selected.motherName],
-    ['דוא"ל', selected.email],
-    ['מוסד קודם', selected.currentSchool],
-    ['ת.ל. עברי', selected.hebrewDob],
-  ].map(([l,v]) => v ? `<div class="detail-row"><span class="label">${l}</span><span class="val">${escHtml(v)}</span></div>` : '').join('');
+    group('התלמיד', [
+      ['ת.ז.', r.idNumber], ['עולה לכיתה', r.grade],
+      ['תאריך לידה לועזי', r.gregorianDob], ['תאריך לידה עברי', r.hebrewDob],
+      ['ארץ לידה', r.birthCountry], ['עולה חדש / תושב חוזר', r.immigrantStatus],
+      ['קופ"ח', r.healthFund], ['כתובת', r.address],
+      ['מוסד קודם', r.previousSchool || r.currentSchool],
+      ['מנהל/מחנך/גננת קודם', r.previousStaffName], ['נייד מוסד קודם', r.previousStaffPhone],
+    ]),
+    group('האב', [
+      ['שם', r.fatherName], ['ת.ז.', r.fatherId], ['נייד', r.fatherPhone], ['דוא"ל', r.fatherEmail],
+      ['חסידות / קהילה', r.fatherCommunity], ['בית כנסת', r.fatherSynagogue],
+      ['מצב משפחתי', r.fatherMaritalStatus], ['עיסוק', r.fatherOccupation],
+      ['ת"ת', r.fatherStudiesTT], ['ישיבה קטנה', r.fatherStudiesYK], ['ישיבה גדולה', r.fatherStudiesYG],
+      ['כתובת', r.fatherAddress],
+    ]),
+    group('האם', [
+      ['שם', r.motherName], ['ת.ז.', r.motherId], ['נייד', r.motherPhone], ['דוא"ל', r.motherEmail],
+      ['חסידות / קהילה מהבית', r.motherCommunity], ['מצב משפחתי', r.motherMaritalStatus],
+      ['עיסוק', r.motherOccupation], ['שם משפחה קודם', r.motherMaidenName],
+      ['יסודי', r.motherStudiesElementary], ['סמינר', r.motherStudiesSeminary],
+      ['כתובת', r.motherAddress],
+    ]),
+    group('כללי', [
+      ['המלצות / מכרים', r.recommendations], ['הודעה מההורים', r.message],
+      ['דוא"ל', r.fatherEmail ? '' : r.email],
+    ]),
+  ].join('') + (files ? `<div class="detail-group">מסמכים</div>${files}` : '');
   render();
+}
+
+async function fetchRegFile(i, download) {
+  const res = await fetch(`${API}/register/${selected.id}/files/${i}${download ? '?download=1' : ''}`, { headers: { Authorization: `Bearer ${getToken()}` } });
+  if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'שגיאה בטעינת הקובץ'); }
+  return res;
+}
+
+async function viewRegFile(i) {
+  const w = window.open('', '_blank');
+  try {
+    const url = URL.createObjectURL(await (await fetchRegFile(i)).blob());
+    if (w) w.location = url; else window.location = url;
+  } catch (e) { if (w) w.close(); showAlert(document.getElementById('alert'), e.message, 'error'); }
+}
+
+async function downloadRegFile(i) {
+  try {
+    const f = selected.files[i];
+    const url = URL.createObjectURL(await (await fetchRegFile(i, true)).blob());
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${selected.firstName} ${selected.lastName} - ת.ז. ${f.parent === 'father' ? 'אב' : 'אם'} ${i + 1}.${f.file.split('.').pop()}`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (e) { showAlert(document.getElementById('alert'), e.message, 'error'); }
 }
 
 async function setStatus(status) {

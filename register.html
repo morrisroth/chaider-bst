@@ -48,51 +48,126 @@
 <section class="sec" style="padding-top:30px">
   <div class="wrap" style="max-width:840px">
     <div class="card-panel">
-      <form id="rform" onsubmit="return submitReg(event)" novalidate>
-        <!-- child -->
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:22px">
+      <form id="rform" novalidate>
+        <div class="reg-steps" aria-hidden="true"><span class="on">1. פרטים בסיסיים</span><span>2. פרטים נוספים</span></div>
+        <fieldset class="reg-step" id="regStep1">
+          <legend class="sr-only">שלב 1 מתוך 2 — פרטים בסיסיים</legend>
+        <div style="display:flex;align-items:center;gap:12px;margin:0 0 22px">
           <span class="vi" style="width:46px;height:46px;margin:0" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></svg></span>
           <h2 class="serif" style="font-size:24px">פרטי התלמיד</h2>
         </div>
         <div class="form-row">
-          <div class="form-group"><label for="r-firstName">שם פרטי <span aria-hidden="true">*</span></label><input type="text" id="r-firstName" name="firstName" required aria-required="true" autocomplete="given-name" /></div>
-          <div class="form-group"><label for="r-lastName">שם משפחה <span aria-hidden="true">*</span></label><input type="text" id="r-lastName" name="lastName" required aria-required="true" autocomplete="family-name" /></div>
+          <div class="form-group"><label for="r-firstName">שם פרטי <span aria-hidden="true">*</span></label><input type="text" id="r-firstName" name="firstName" required aria-required="true" autocomplete="off" /></div>
+          <div class="form-group"><label for="r-lastName">שם משפחה <span aria-hidden="true">*</span></label><input type="text" id="r-lastName" name="lastName" required aria-required="true" autocomplete="off" /></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label for="r-birthDate">תאריך לידה <span aria-hidden="true">*</span></label><input type="date" id="r-birthDate" name="birthDate" required aria-required="true" /></div>
-          <div class="form-group"><label for="r-grade">כיתה לשנה"ל תשפ"ז <span aria-hidden="true">*</span></label>
-            <select id="r-grade" name="grade" required aria-required="true">
-              <option value="">בחרו כיתה...</option>
-              <option>גן חובה</option><option>כיתה א'</option><option>כיתה ב'</option>
-              <option>כיתה ג'</option><option>כיתה ד'</option><option>כיתה ה'</option>
-              <option>כיתה ו'</option><option>כיתה ז'</option><option>כיתה ח'</option>
-            </select>
-          </div>
+          <div class="form-group"><label for="r-idNumber">ת.ז. של הילד <span aria-hidden="true">*</span></label><input type="text" id="r-idNumber" name="idNumber" required aria-required="true" inputmode="numeric" pattern="[0-9]{5,9}" maxlength="9" /></div>
+          <div class="form-group"><label for="r-grade">עולה לכיתה <span aria-hidden="true">*</span></label><select id="r-grade" name="grade" required aria-required="true"><option value="">בחרו...</option><option>גן חובה</option><option>כיתה א'</option><option>כיתה ב'</option><option>כיתה ג'</option><option>כיתה ד'</option><option>כיתה ה'</option><option>כיתה ו'</option><option>כיתה ז'</option><option>כיתה ח'</option></select></div>
         </div>
-        <div class="form-group"><label for="r-currentSchool">מוסד לימודים נוכחי</label><input type="text" id="r-currentSchool" name="currentSchool" placeholder="שם המוסד הקודם (אם קיים)" /></div>
-
-        <!-- parents -->
+        <div class="form-row">
+          <div class="form-group"><label for="r-gregorianDob">תאריך לידה לועזי <span aria-hidden="true">*</span></label><input type="date" id="r-gregorianDob" name="gregorianDob" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-hebrewDob">תאריך לידה עברי <span aria-hidden="true">*</span></label><input type="text" id="r-hebrewDob" name="hebrewDob" required aria-required="true" placeholder="לדוגמה: ה' אדר תשע&quot;ט" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="r-birthCountry">ארץ לידה <span aria-hidden="true">*</span></label><input type="text" id="r-birthCountry" name="birthCountry" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-immigrantStatus">עולה חדש / תושב חוזר <span aria-hidden="true">*</span></label><select id="r-immigrantStatus" name="immigrantStatus" required aria-required="true"><option value="">בחרו...</option><option>לא</option><option>עולה חדש</option><option>תושב חוזר</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="r-healthFund">קופת חולים <span aria-hidden="true">*</span></label><select id="r-healthFund" name="healthFund" required aria-required="true"><option value="">בחרו...</option><option>כללית</option><option>מכבי</option><option>מאוחדת</option><option>לאומית</option></select></div>
+          <div class="form-group"><label for="r-address">כתובת מגורים <span aria-hidden="true">*</span></label><input type="text" id="r-address" name="address" required aria-required="true" placeholder="רחוב, מספר, עיר" /></div>
+        </div>
         <div style="display:flex;align-items:center;gap:12px;margin:34px 0 22px">
           <span class="vi" style="width:46px;height:46px;margin:0" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg></span>
           <h2 class="serif" style="font-size:24px">פרטי ההורים</h2>
         </div>
         <div class="form-row">
           <div class="form-group"><label for="r-fatherName">שם האב <span aria-hidden="true">*</span></label><input type="text" id="r-fatherName" name="fatherName" required aria-required="true" /></div>
-          <div class="form-group"><label for="r-motherName">שם האם <span aria-hidden="true">*</span></label><input type="text" id="r-motherName" name="motherName" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-fatherId">ת.ז. אב <span aria-hidden="true">*</span></label><input type="text" id="r-fatherId" name="fatherId" required aria-required="true" inputmode="numeric" pattern="[0-9]{5,9}" maxlength="9" /></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label for="r-phone">טלפון <span aria-hidden="true">*</span></label><input type="tel" id="r-phone" name="phone" required aria-required="true" placeholder="050-0000000" autocomplete="tel" /></div>
-          <div class="form-group"><label for="r-email">דוא"ל <span aria-hidden="true">*</span></label><input type="email" id="r-email" name="email" required aria-required="true" placeholder="name@email.com" autocomplete="email" /></div>
+          <div class="form-group"><label for="r-fatherPhone">נייד אב <span aria-hidden="true">*</span></label><input type="tel" id="r-fatherPhone" name="fatherPhone" required aria-required="true" placeholder="050-0000000" dir="ltr" /></div>
+          <div class="form-group"><label for="r-fatherEmail">דוא"ל אב <span aria-hidden="true">*</span></label><input type="email" id="r-fatherEmail" name="fatherEmail" required aria-required="true" placeholder="name@email.com" dir="ltr" /></div>
         </div>
-        <div class="form-group"><label for="r-address">כתובת מגורים</label><input type="text" id="r-address" name="address" placeholder="רחוב, מספר, עיר" autocomplete="street-address" /></div>
-        <div class="form-group"><label for="r-notes">הערות נוספות</label><textarea id="r-notes" name="notes" placeholder="כל מידע שתרצו לשתף איתנו..."></textarea></div>
-
-        <button type="submit" class="btn btn-grad" style="width:100%;justify-content:center;margin-top:8px">שליחת טופס הרשמה <span aria-hidden="true">←</span></button>
-        <p class="form-note" style="text-align:center;margin-top:14px">לאחר השליחה ניצור עמכם קשר לתיאום פגישת היכרות.</p>
+        <div class="form-row">
+          <div class="form-group"><label for="r-motherName">שם האם <span aria-hidden="true">*</span></label><input type="text" id="r-motherName" name="motherName" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-motherId">ת.ז. אם <span aria-hidden="true">*</span></label><input type="text" id="r-motherId" name="motherId" required aria-required="true" inputmode="numeric" pattern="[0-9]{5,9}" maxlength="9" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="r-motherPhone">נייד אם <span aria-hidden="true">*</span></label><input type="tel" id="r-motherPhone" name="motherPhone" required aria-required="true" placeholder="050-0000000" dir="ltr" /></div>
+          <div class="form-group"><label for="r-motherEmail">דוא"ל אם <span aria-hidden="true">*</span></label><input type="email" id="r-motherEmail" name="motherEmail" required aria-required="true" placeholder="name@email.com" dir="ltr" /></div>
+        </div>
+          <button type="button" class="btn btn-grad" id="regNext" style="width:100%;justify-content:center;margin-top:8px">המשך לשלב הבא <span aria-hidden="true">←</span></button>
+        </fieldset>
+        <fieldset class="reg-step" id="regStep2" hidden>
+          <legend class="sr-only">שלב 2 מתוך 2 — פרטים נוספים</legend>
+        <div style="display:flex;align-items:center;gap:12px;margin:0 0 22px">
+          <span class="vi" style="width:46px;height:46px;margin:0" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><path d="M8 13h8M8 17h5" /></svg></span>
+          <h2 class="serif" style="font-size:24px">פרטים נוספים</h2>
+        </div>
+        <h3 class="reg-sub">האב</h3>
+        <div class="form-row">
+          <div class="form-group"><label for="r-fatherCommunity">חסידות / קהילה של האב <span aria-hidden="true">*</span></label><input type="text" id="r-fatherCommunity" name="fatherCommunity" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-fatherSynagogue">בית הכנסת / קהילה בהם האב מתפלל כיום <span aria-hidden="true">*</span></label><input type="text" id="r-fatherSynagogue" name="fatherSynagogue" required aria-required="true" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="r-fatherMaritalStatus">מצב משפחתי האב <span aria-hidden="true">*</span></label><select id="r-fatherMaritalStatus" name="fatherMaritalStatus" required aria-required="true"><option value="">בחרו...</option><option>נשוי</option><option>גרוש</option><option>אלמן</option></select></div>
+          <div class="form-group"><label for="r-fatherOccupation">עיסוק האב <span aria-hidden="true">*</span></label><input type="text" id="r-fatherOccupation" name="fatherOccupation" required aria-required="true" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="r-fatherStudiesTT">לימודי האב — ת"ת <span aria-hidden="true">*</span></label><input type="text" id="r-fatherStudiesTT" name="fatherStudiesTT" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-fatherStudiesYK">לימודי האב — ישיבה קטנה <span aria-hidden="true">*</span></label><input type="text" id="r-fatherStudiesYK" name="fatherStudiesYK" required aria-required="true" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="r-fatherStudiesYG">לימודי האב — ישיבה גדולה <span aria-hidden="true">*</span></label><input type="text" id="r-fatherStudiesYG" name="fatherStudiesYG" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-fatherAddress">כתובת מגורי האב <span aria-hidden="true">*</span></label><input type="text" id="r-fatherAddress" name="fatherAddress" required aria-required="true" /></div>
+        </div>
+        <div class="form-group"><label for="r-fatherIdFiles">צילום ת.ז. של האב + ספח <span aria-hidden="true">*</span></label><input type="file" id="r-fatherIdFiles" name="fatherIdFiles" accept="image/jpeg,image/png,application/pdf" multiple required aria-required="true" aria-describedby="r-fatherIdFiles-hint" /><p class="form-note" id="r-fatherIdFiles-hint">תמונה (JPG/PNG) או PDF · עד 4 קבצים · עד 8MB לקובץ</p></div>
+        <h3 class="reg-sub">האם</h3>
+        <div class="form-row">
+          <div class="form-group"><label for="r-motherCommunity">חסידות / קהילה של האם מהבית <span aria-hidden="true">*</span></label><input type="text" id="r-motherCommunity" name="motherCommunity" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-motherMaritalStatus">מצב משפחתי האם <span aria-hidden="true">*</span></label><select id="r-motherMaritalStatus" name="motherMaritalStatus" required aria-required="true"><option value="">בחרו...</option><option>נשואה</option><option>גרושה</option><option>אלמנה</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="r-motherOccupation">עיסוק האם <span aria-hidden="true">*</span></label><input type="text" id="r-motherOccupation" name="motherOccupation" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-motherMaidenName">שם משפחה קודם של האם <span aria-hidden="true">*</span></label><input type="text" id="r-motherMaidenName" name="motherMaidenName" required aria-required="true" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label for="r-motherStudiesElementary">לימודי האם — יסודי <span aria-hidden="true">*</span></label><input type="text" id="r-motherStudiesElementary" name="motherStudiesElementary" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-motherStudiesSeminary">לימודי האם — סמינר <span aria-hidden="true">*</span></label><input type="text" id="r-motherStudiesSeminary" name="motherStudiesSeminary" required aria-required="true" /></div>
+        </div>
+        <div class="form-group"><label for="r-motherAddress">כתובת מגורי האם <span aria-hidden="true">*</span></label><input type="text" id="r-motherAddress" name="motherAddress" required aria-required="true" /></div>
+        <div class="form-group"><label for="r-motherIdFiles">צילום ת.ז. של האם + ספח <span aria-hidden="true">*</span></label><input type="file" id="r-motherIdFiles" name="motherIdFiles" accept="image/jpeg,image/png,application/pdf" multiple required aria-required="true" aria-describedby="r-motherIdFiles-hint" /><p class="form-note" id="r-motherIdFiles-hint">תמונה (JPG/PNG) או PDF · עד 4 קבצים · עד 8MB לקובץ</p></div>
+        <h3 class="reg-sub">הילד</h3>
+        <div class="form-group"><label for="r-previousSchool">מוסד קודם של הילד <span aria-hidden="true">*</span></label><input type="text" id="r-previousSchool" name="previousSchool" required aria-required="true" /></div>
+        <div class="form-row">
+          <div class="form-group"><label for="r-previousStaffName">שם מנהל/מחנך/גננת במוסד הקודם <span aria-hidden="true">*</span></label><input type="text" id="r-previousStaffName" name="previousStaffName" required aria-required="true" /></div>
+          <div class="form-group"><label for="r-previousStaffPhone">נייד מנהל/מחנך/גננת במוסד הקודם <span aria-hidden="true">*</span></label><input type="tel" id="r-previousStaffPhone" name="previousStaffPhone" required aria-required="true" placeholder="050-0000000" dir="ltr" /></div>
+        </div>
+        <h3 class="reg-sub">כללי</h3>
+        <div class="form-group"><label for="r-recommendations">המלצות / מכרים <span aria-hidden="true">*</span></label><input type="text" id="r-recommendations" name="recommendations" required aria-required="true" /></div>
+        <div class="form-group"><label for="r-message">תרצו לשאול / לכתוב לנו משהו? <span aria-hidden="true">*</span></label><textarea id="r-message" name="message" required aria-required="true"></textarea></div>
+        <div class="city-note" role="note">
+          <h3>הערה</h3>
+          <p>אם הנכם רושמים לגנים או לכיתה א' חובה להמשיך את תהליך הרישום באתר העירייה:</p>
+          <a class="btn btn-gold" href="https://edu.onecity.co.il/edu-registration-site/intro?customerId=526100" target="_blank" rel="noopener">לחצו כאן להמשך רישום באתר העירייה <span aria-hidden="true">←</span></a>
+          <p class="city-warn"><b>שימו לב!</b> הרישום לגנים וכיתה א' אינו תקף ללא הרישום באתר העירייה!</p>
+        </div>
+          <div class="reg-actions">
+            <button type="button" class="btn btn-line" id="regBack"><span aria-hidden="true">→</span> חזרה</button>
+            <button type="submit" class="btn btn-grad" id="regSubmit" style="flex:1;justify-content:center">שליחת טופס הרשמה <span aria-hidden="true">←</span></button>
+          </div>
+        </fieldset>
+        <p class="reg-error" id="regError" role="alert" aria-live="assertive"></p>
       </form>
       <div id="rsuccess" class="success" role="alert" aria-live="assertive" style="display:none;padding:30px 0">
         <div class="ic" aria-hidden="true">✓</div><h3>הטופס נשלח בהצלחה!</h3>
-        <p>תודה שבחרתם בחיידר בעל שם טוב. ניצור עמכם קשר בימים הקרובים לתיאום פגישה.</p>
+        <p>תודה שבחרתם בחיידר בעל שם טוב. ניצור עמכם קשר בימים הקרובים.</p>
+        <div id="rsuccessCity" style="display:none;text-align:right;margin-top:22px"><div class="city-note" role="note">
+          <h3>הערה</h3>
+          <p>אם הנכם רושמים לגנים או לכיתה א' חובה להמשיך את תהליך הרישום באתר העירייה:</p>
+          <a class="btn btn-gold" href="https://edu.onecity.co.il/edu-registration-site/intro?customerId=526100" target="_blank" rel="noopener">לחצו כאן להמשך רישום באתר העירייה <span aria-hidden="true">←</span></a>
+          <p class="city-warn"><b>שימו לב!</b> הרישום לגנים וכיתה א' אינו תקף ללא הרישום באתר העירייה!</p>
+        </div></div>
         <a class="btn btn-line" href="/" style="margin-top:22px">חזרה לדף הבית</a>
       </div>
     </div>
@@ -127,13 +202,80 @@
 </a>
 
 <script>
-function submitReg(e){
-  e.preventDefault();
-  document.getElementById('rform').style.display='none';
-  document.getElementById('rsuccess').style.display='block';
-  window.scrollTo({top:0,behavior:'smooth'});
-  return false;
-}
+(function () {
+  const form = document.getElementById('rform');
+  const step1 = document.getElementById('regStep1');
+  const step2 = document.getElementById('regStep2');
+  const steps = document.querySelectorAll('.reg-steps span');
+  const errEl = document.getElementById('regError');
+  const submitBtn = document.getElementById('regSubmit');
+
+  function showError(msg) { errEl.textContent = msg || ''; }
+
+  // Every field in the step must be filled (and valid) before moving on
+  function validateStep(step) {
+    for (const el of step.querySelectorAll('input, select, textarea')) {
+      if (el.type === 'file') {
+        if (!el.files.length) return fail(el, 'יש לצרף צילום ת.ז. + ספח');
+        if (el.files.length > 4) return fail(el, 'ניתן לצרף עד 4 קבצים');
+        for (const file of el.files) {
+          if (file.size > 8 * 1024 * 1024) return fail(el, 'כל קובץ מוגבל ל-8MB');
+          if (!/^(image\/(jpeg|png)|application\/pdf)$/.test(file.type)) return fail(el, 'ניתן לצרף רק תמונות (JPG/PNG) או PDF');
+        }
+        continue;
+      }
+      if (!el.value.trim()) return fail(el, 'יש למלא את כל השדות');
+      if (!el.checkValidity()) {
+        const msg = el.type === 'email' ? 'כתובת הדוא"ל אינה תקינה'
+          : el.pattern ? 'מספר ת.ז. אינו תקין' : 'אחד השדות אינו תקין';
+        return fail(el, msg);
+      }
+    }
+    showError('');
+    return true;
+  }
+  function fail(el, msg) {
+    const label = form.querySelector(`label[for="${el.id}"]`);
+    const name = label ? label.textContent.replace('*', '').trim() : '';
+    showError(name ? `${msg} — ${name}` : msg);
+    el.setAttribute('aria-invalid', 'true');
+    el.focus();
+    el.addEventListener('input', () => el.removeAttribute('aria-invalid'), { once: true });
+    return false;
+  }
+
+  function goTo(n) {
+    step1.hidden = n !== 1;
+    step2.hidden = n !== 2;
+    steps.forEach((s, i) => s.classList.toggle('on', i === n - 1));
+    showError('');
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  document.getElementById('regNext').addEventListener('click', () => { if (validateStep(step1)) goTo(2); });
+  document.getElementById('regBack').addEventListener('click', () => goTo(1));
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!validateStep(step1)) { goTo(1); validateStep(step1); return; }
+    if (!validateStep(step2)) return;
+    submitBtn.disabled = true;
+    try {
+      const r = await fetch('/api/register', { method: 'POST', body: new FormData(form) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(data.error || 'שגיאה בשליחת הטופס, נסו שוב');
+      const grade = form.querySelector('[name=grade]').value;
+      document.getElementById('rsuccessCity').style.display = /גן|א'/.test(grade) ? 'block' : 'none';
+      form.style.display = 'none';
+      document.getElementById('rsuccess').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      showError(err.message || 'שגיאה בשליחת הטופס, נסו שוב');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+})();
 </script>
 <script src="/site.js"></script>
 </body>

@@ -182,6 +182,7 @@ button,input,select,textarea{font-family:inherit}
 .prose p{color:var(--soft);font-size:17px;font-weight:300;margin-bottom:15px;line-height:1.75}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:24px 0 30px}
 .chk{display:flex;align-items:center;gap:11px;font-size:15.5px;font-weight:500}
+.chk small{display:block;font-size:13.5px;font-weight:300;color:var(--soft);line-height:1.45;margin-top:2px}
 .chk .c{width:30px;height:30px;border-radius:50%;background:var(--grad-gold);color:#3f2c06;
   display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto;font-weight:700;
   box-shadow:0 6px 16px rgba(199,154,61,.3)}
@@ -241,6 +242,9 @@ button,input,select,textarea{font-family:inherit}
   align-items:center;justify-content:center;flex:0 0 auto;box-shadow:0 8px 20px rgba(14,58,70,.2)}
 .info-card h4{font-family:var(--serif);font-size:18px;margin-bottom:3px}
 .info-card p,.info-card a{color:var(--soft);font-size:15px;font-weight:300;line-height:1.5}
+.phone-lines a{display:flex;align-items:center;gap:8px;margin:2px 0}
+.phone-lines .pl-ic{width:17px;height:17px;flex:0 0 auto;color:var(--teal)}
+.phone-lines .wa-ic{color:#25d366}
 
 /* ---------- gallery ---------- */
 .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;grid-auto-rows:230px}
@@ -491,3 +495,21 @@ button,input,select,textarea{font-family:inherit}
   .site-nav a{font-size:15px}
   .gallery{grid-auto-rows:180px}
 }
+
+/* ---------- registration wizard ---------- */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.reg-step{border:0;margin:0;padding:0;min-width:0}
+.reg-step[hidden]{display:none}
+.reg-steps{display:flex;gap:10px;margin-bottom:28px}
+.reg-steps span{flex:1;text-align:center;padding:9px 12px;border-radius:999px;font-size:14px;font-weight:600;
+  color:var(--muted);background:rgba(14,58,70,.06)}
+.reg-steps span.on{background:var(--grad-cool);color:#fff}
+.reg-sub{font-family:var(--serif);font-size:19px;color:var(--teal);margin:26px 0 14px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.form-group input[type=file]{padding:10px;background:#fff;cursor:pointer}
+.form-group [aria-invalid=true]{border-color:#dc2626}
+.city-note{margin:30px 0 8px;padding:22px 24px;border-radius:var(--r-lg);background:rgba(199,154,61,.1);border:1px solid rgba(199,154,61,.35)}
+.city-note h3{font-family:var(--serif);font-size:20px;margin-bottom:6px}
+.city-note p{color:var(--soft);margin-bottom:14px}
+.city-note .city-warn{margin:14px 0 0;color:var(--ink)}
+.reg-actions{display:flex;gap:12px;margin-top:22px;flex-wrap:wrap}
+.reg-error{color:#b91c1c;font-weight:600;text-align:center;margin-top:14px;min-height:1em}
