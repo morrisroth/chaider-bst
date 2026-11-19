@@ -111,6 +111,27 @@
         </div>
       </div>
 
+      <!-- ══ HOMEPAGE VIDEO ══ -->
+      <div style="margin-bottom:28px">
+        <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:6px">סרטון תדמית — רקע דף הבית</div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:16px">הסרטון מתנגן ברקע של החלק העליון בדף הבית, על כל רוחב העמוד, ללא קול ובלולאה. נשמר אוטומטית.</div>
+        <div class="img-card" style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+          <div class="img-drop" id="videoDrop" style="width:360px;max-width:100%;aspect-ratio:16/9" onclick="document.getElementById('videoFile').click()">
+            <video id="videoPreview" muted loop playsinline style="display:none;width:100%;height:100%;object-fit:cover"></video>
+            <div class="img-drop-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="5" width="15" height="14" rx="2"/><path d="M17 10l5-3v10l-5-3z"/></svg>
+              לחצו להעלאת סרטון
+            </div>
+            <input type="file" id="videoFile" accept="video/mp4,video/webm,video/quicktime" onchange="uploadVideo(this)" />
+          </div>
+          <div style="flex:1;min-width:220px">
+            <div style="font-size:13px;color:var(--soft);margin-bottom:10px;line-height:1.7">מומלץ: MP4, לרוחב (16:9), עד דקה, עד 30MB — קובץ קטן נטען מהר יותר.<br>אם אין סרטון, מוצגת תמונת הגיבור במקומו.</div>
+            <button class="btn btn-line btn-sm" onclick="clearVideo()">הסרת סרטון</button>
+            <span id="videoStatus" style="font-size:12px;color:var(--teal);margin-right:12px"></span>
+          </div>
+        </div>
+      </div>
+
       <!-- ══ HOMEPAGE IMAGES — PRIMARY SECTION ══ -->
       <div style="margin-bottom:28px">
         <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:6px">תמונות דף הבית</div>
@@ -122,7 +143,7 @@
           <div class="img-card">
             <div class="page-diagram">
               <div class="dot" style="background:var(--teal)"></div>
-              תמונה 1 — מופיעה בצד שמאל של הגיבור (Hero), מעוצבת בצורה אורגנית
+              תמונה 1 — רקע החלק העליון בדף הבית (מוצגת עד שהסרטון נטען, או אם אין סרטון)
             </div>
             <h3>תמונת הגיבור</h3>
             <div class="sub">ילד לומד, כיתה, או רגע מחיי החיידר</div>
@@ -232,7 +253,37 @@
 requireAuth();
 
 // Current values from API
-let heroUrl = '', aboutUrl = '', approachUrl = '', logoUrl = '';
+let heroUrl = '', aboutUrl = '', approachUrl = '', logoUrl = '', videoUrl = '';
+
+function setVideoPreview(url) {
+  videoUrl = url;
+  const v = document.getElementById('videoPreview');
+  const drop = document.getElementById('videoDrop');
+  if (url) { v.src = url; v.style.display = 'block'; v.play().catch(() => {}); drop.classList.add('has-img'); }
+  else { v.removeAttribute('src'); v.load(); v.style.display = 'none'; drop.classList.remove('has-img'); }
+}
+async function uploadVideo(input) {
+  const file = input.files[0]; if (!file) return;
+  const st = document.getElementById('videoStatus');
+  st.style.color = 'var(--teal)';
+  st.textContent = `מעלה... (${(file.size / 1048576).toFixed(0)}MB, זה עשוי לקחת כמה דקות)`;
+  try {
+    const url = await uploadFile(file, true);
+    await api('PUT', '/settings', { hero_video: url });
+    setVideoPreview(url);
+    st.textContent = '✓ נשמר';
+    setTimeout(() => st.textContent = '', 3000);
+  } catch (e) { st.style.color = '#dc2626'; st.textContent = e.message; }
+  input.value = '';
+}
+async function clearVideo() {
+  if (!videoUrl || !confirm('להסיר את הסרטון מדף הבית?')) return;
+  try {
+    await api('PUT', '/settings', { hero_video: '' });
+    setVideoPreview('');
+    document.getElementById('videoStatus').textContent = '✓ הוסר';
+  } catch (e) { document.getElementById('videoStatus').textContent = e.message; }
+}
 
 function setLogoPreview(url) {
   logoUrl = url;
@@ -267,6 +318,7 @@ async function load() {
     const el = document.getElementById(k); if (el) el.value = s[k] || '';
   });
   if (s.logo_url)       { setLogoPreview(s.logo_url); }
+  if (s.hero_video)     { setVideoPreview(s.hero_video); }
   if (s.hero_image)     { heroUrl     = s.hero_image;     setPreview('hero',     s.hero_image); }
   if (s.about_image)    { aboutUrl    = s.about_image;    setPreview('about',    s.about_image); }
   if (s.approach_image) { approachUrl = s.approach_image; setPreview('approach', s.approach_image); }

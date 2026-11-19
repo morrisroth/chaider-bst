@@ -54,8 +54,24 @@
     const lead = document.querySelector('.hero-lead');
     if (lead && s.hero_subtitle) lead.textContent = s.hero_subtitle;
 
-    // Hero image (right blob in hero section)
-    if (s.hero_image) injectBlobImg(document.querySelector('.blob-img'), s.hero_image);
+    // Hero background — the promo video, with the hero image as poster/fallback
+    const heroMedia = document.querySelector('.hero-media');
+    if (heroMedia) {
+      if (s.hero_image) heroMedia.style.backgroundImage = `url("${s.hero_image}")`;
+      const v = heroMedia.querySelector('video');
+      if (v && s.hero_video && v.dataset.src !== s.hero_video) {
+        v.dataset.src = s.hero_video;
+        if (s.hero_image) v.poster = s.hero_image;
+        v.src = s.hero_video;
+        // Respect reduced-motion: show the poster frame, don't loop the video
+        if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          v.autoplay = true;
+          v.play().catch(() => {});
+        }
+      } else if (v && !s.hero_video && v.dataset.src) {
+        v.removeAttribute('src'); delete v.dataset.src; v.load();
+      }
+    }
 
     // About text — homepage "מי אנחנו" section only (about.html has its own copy)
     if (s.about_text && document.querySelector('.hero')) {
@@ -258,6 +274,24 @@
     initGalleryLightbox();
   }
 
+  // ── About page: photo collage beside the curriculum, taken from the gallery ──
+  async function loadCurriculumPhotos() {
+    const box = document.getElementById('currPhotos');
+    if (!box) return;
+    const items = (window.__BST_GALLERY__ || await get('/gallery') || []).filter(i => i.type !== 'video' && i.image);
+    // Prefer learning/activity photos, then fill from the rest of the gallery
+    const preferred = ['לימוד בחברותות', 'פעילות להחדרת אהבת התורה', 'פעילות חברתית'];
+    const picks = [];
+    for (const cap of preferred) {
+      const hit = items.find(i => i.caption === cap && !picks.includes(i));
+      if (hit) picks.push(hit);
+    }
+    for (const i of items) { if (picks.length >= 3) break; if (!picks.includes(i)) picks.push(i); }
+    const tiles = box.querySelectorAll('.cp');
+    if (picks.length < tiles.length) { box.style.display = 'none'; return; }
+    tiles.forEach((t, n) => { t.style.backgroundImage = `url("${picks[n].image}")`; });
+  }
+
   // Shared gallery items — updated when grid refreshes
   let _galleryItems = [];
 
@@ -410,6 +444,7 @@
     loadFeaturedPosts();
     loadAllPosts();
     loadGallery();
+    loadCurriculumPhotos();
     initMobileNav();
     injectMobileRegBtn();
 
