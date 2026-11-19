@@ -1,14 +1,35 @@
 const router = require('express').Router();
 const { read, write, uuid } = require('../db');
 const auth = require('../middleware/auth');
+const fs = require('fs');
+const path = require('path');
 
 router.get('/', (_, res) => {
   const items = read('gallery.json').sort((a, b) => (a.order || 0) - (b.order || 0));
   res.json(items);
 });
 
+// The gallery is capped (keeps the public page light). Same numbers in admin/gallery.html.
+const MAX_IMAGES = 100;
+const MAX_VIDEOS = 10;
+
 router.post('/', auth, (req, res) => {
   const items = read('gallery.json');
+  const isVideo = req.body.type === 'video';
+  const count = items.filter(i => (i.type === 'video') === isVideo).length;
+  if (count >= (isVideo ? MAX_VIDEOS : MAX_IMAGES)) {
+    // The file was already uploaded on its own — don't leave it orphaned
+    const url = isVideo ? req.body.video : req.body.image;
+    if (/^\/uploads\/[\w.-]+$/.test(url || '')) {
+      const p = path.join(__dirname, '../uploads', path.basename(url));
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+    }
+    return res.status(409).json({
+      error: isVideo
+        ? `הגלריה מוגבלת ל-${MAX_VIDEOS} סרטונים — מחקו סרטון ישן כדי להוסיף חדש`
+        : `הגלריה מוגבלת ל-${MAX_IMAGES} תמונות — מחקו תמונות ישנות כדי להוסיף חדשות`
+    });
+  }
   const item = {
     id: uuid(),
     type: req.body.type || 'image',   // 'image' | 'video'

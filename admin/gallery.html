@@ -231,7 +231,7 @@
         <div class="drop-icon">🖼️</div>
         <div class="drop-title">גררו תמונות או סרטונים לכאן</div>
         <div class="drop-sub">תמונות: JPG, PNG, WebP · סרטונים: MP4, MOV, WebM</div>
-        <div class="drop-hint">ניתן לבחור או לגרור הרבה קבצים בבת אחת · 3 קבצים עולים במקביל</div>
+        <div class="drop-hint">ניתן לבחור או לגרור הרבה קבצים בבת אחת · עד 100 תמונות ו-10 סרטונים בגלריה</div>
       </div>
       <div class="upload-queue" id="uploadQueue"></div>
       <div class="upload-summary" id="uploadSummary" aria-live="polite"></div>
@@ -300,9 +300,12 @@ async function load() {
   renderGrid(); updateCount();
 }
 
+// Same numbers as MAX_IMAGES / MAX_VIDEOS in server/routes/gallery.js
+const MAX_IMAGES = 100, MAX_VIDEOS = 10;
+
 function updateCount() {
   document.getElementById('photoCount').textContent =
-    `${items.filter(i=>i.type!=='video').length} תמונות · ${items.filter(i=>i.type==='video').length} סרטונים`;
+    `${items.filter(i=>i.type!=='video').length} / ${MAX_IMAGES} תמונות · ${items.filter(i=>i.type==='video').length} / ${MAX_VIDEOS} סרטונים`;
   document.getElementById('countAll').textContent = items.length;
 }
 
@@ -451,9 +454,28 @@ let uploadSeq = 0, uploadsRunning = 0;
 async function handleFiles(files) {
   const queue = document.getElementById('uploadQueue');
   const summary = document.getElementById('uploadSummary');
-  const arr = Array.from(files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+  let arr = Array.from(files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
   document.getElementById('fileInput').value = '';
   if (!arr.length) { showToast('ניתן להעלות רק תמונות וסרטונים', true); return; }
+
+  // Gallery cap — check before uploading so nobody waits for files the server will refuse
+  const imgFree = MAX_IMAGES - items.filter(i => i.type !== 'video').length;
+  const vidFree = MAX_VIDEOS - items.filter(i => i.type === 'video').length;
+  const imgs = arr.filter(f => !isVideoFile(f)), vids = arr.filter(isVideoFile);
+  if (imgs.length > imgFree || vids.length > vidFree) {
+    const skipped = Math.max(0, imgs.length - imgFree) + Math.max(0, vids.length - vidFree);
+    arr = [...imgs.slice(0, Math.max(0, imgFree)), ...vids.slice(0, Math.max(0, vidFree))];
+    const go = await confirmDialog({
+      title: 'הגלריה כמעט מלאה',
+      message: `הגלריה מוגבלת ל-${MAX_IMAGES} תמונות ו-${MAX_VIDEOS} סרטונים. ` +
+        (arr.length ? `ניתן להעלות עכשיו רק ${arr.length} מהקבצים; ${skipped} לא יועלו. ` : 'אין מקום לקבצים נוספים. ') +
+        'כדי לפנות מקום, מחקו פריטים ישנים (אפשר לסמן כמה ולמחוק בבת אחת).',
+      okText: arr.length ? `העלאת ${arr.length} קבצים` : 'הבנתי',
+      cancelText: 'ביטול',
+      danger: false
+    });
+    if (!go || !arr.length) return;
+  }
 
   // Each tile gets a unique id, so a second batch never collides with the first
   const jobs = arr.map(file => {
