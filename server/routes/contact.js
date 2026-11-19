@@ -2,17 +2,30 @@ const router = require('express').Router();
 const { read, write, uuid } = require('../db');
 const auth = require('../middleware/auth');
 const { sendContactConfirmationEmail } = require('../lib/mailer');
+const rateLimit = require('express-rate-limit');
+
+// Stop the form being used to flood the inbox / send confirmation-email spam
+const submitLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'יותר מדי הודעות נשלחו. נסו שוב מאוחר יותר.' }
+});
+const clip = (v, n) => String(v || '').trim().slice(0, n);
 
 // public submit
-router.post('/', (req, res) => {
+router.post('/', submitLimiter, (req, res) => {
+  const body = req.body || {};
+  if (!clip(body.name, 1) || !clip(body.message, 1)) return res.status(400).json({ error: 'יש למלא שם והודעה' });
   const msgs = read('contacts.json');
   const msg = {
     id: uuid(),
-    name: req.body.name || '',
-    email: req.body.email || '',
-    phone: req.body.phone || '',
-    subject: req.body.subject || '',
-    message: req.body.message || '',
+    name: clip(body.name, 120),
+    email: clip(body.email, 200),
+    phone: clip(body.phone, 40),
+    subject: clip(body.subject, 120),
+    message: clip(body.message, 5000),
     read: false,
     submittedAt: new Date().toISOString()
   };

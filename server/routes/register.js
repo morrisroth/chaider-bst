@@ -39,6 +39,8 @@ const FIELDS = [
   'previousSchool', 'previousStaffName', 'previousStaffPhone',
   // step 2 — general
   'recommendations', 'message',
+  // privacy notice accepted (checkbox)
+  'privacyConsent',
 ];
 const FILE_FIELDS = { fatherIdFiles: 'father', motherIdFiles: 'mother' };
 

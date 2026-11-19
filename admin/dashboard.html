@@ -49,6 +49,11 @@
     </div>
 
     <div class="admin-body">
+      <div id="weakPwBanner" role="alert" style="display:none;margin-bottom:22px;padding:16px 20px;border-radius:16px;background:#fef2f2;border:1.5px solid #fca5a5;color:#991b1b">
+        <strong style="font-size:15px">⚠ הסיסמה של חשבון הניהול היא עדיין סיסמת ברירת המחדל.</strong>
+        <div style="font-size:14px;margin-top:4px">כל מי שמכיר אותה יכול להיכנס ולראות את פרטי ההרשמות ותעודות הזהות. החליפו אותה עכשיו בסיסמה חזקה (לפחות 10 תווים).</div>
+        <a class="btn btn-sm" href="settings#curPass" style="margin-top:10px;background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;border-color:transparent">החלפת סיסמה ←</a>
+      </div>
       <div class="stat-cards" id="statCards">
         <div class="stat-card"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg></div><div><div class="stat-num" id="s-posts">—</div><div class="stat-label">פוסטים פורסמו</div></div></div>
         <div class="stat-card"><div class="stat-icon gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div><div><div class="stat-num" id="s-gallery">—</div><div class="stat-label">תמונות בגלריה</div></div></div>
@@ -86,6 +91,9 @@
 <script src="admin.js"></script>
 <script>
 requireAuth();
+api('GET', '/auth/me').then(me => {
+  if (me && me.weakPassword) document.getElementById('weakPwBanner').style.display = 'block';
+}).catch(() => {});
 
 async function load() {
   const [posts, gallery, regs, msgs] = await Promise.all([

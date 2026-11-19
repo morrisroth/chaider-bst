@@ -8,11 +8,25 @@ const DATA = path.join(__dirname, 'data');
 function read(file) {
   const p = path.join(DATA, file);
   if (!fs.existsSync(p)) return file === 'settings.json' ? {} : [];
-  try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return file === 'settings.json' ? {} : []; }
+  const raw = fs.readFileSync(p, 'utf8');
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    // Never fall back to an empty list here: the next write() would replace
+    // every record in the file with just the new one. Fail loudly instead —
+    // the nightly backup (scripts/backup.sh) has the last good copy.
+    console.error(`[db] ${file} is not valid JSON (${raw.length} bytes) — refusing to treat it as empty`);
+    throw new Error(`Data file ${file} is corrupt`);
+  }
 }
 
+// Write to a temp file and rename over the original, so a crash or a full disk
+// mid-write can never leave a truncated file behind (rename is atomic).
 function write(file, data) {
-  fs.writeFileSync(path.join(DATA, file), JSON.stringify(data, null, 2));
+  const p = path.join(DATA, file);
+  const tmp = `${p}.tmp-${process.pid}`;
+  fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
+  fs.renameSync(tmp, p);
 }
 
 // ── seed default admin ──

@@ -4,10 +4,20 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>הרשמה — חיידר בעל שם טוב</title>
+<meta name="description" content="טופס הרשמה לתלמוד תורה בעל שם טוב, רמה ד' בית שמש.">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta name="theme-color" content="#1b6273">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;500;700;900&family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="flow.css">
+<style>
+.form-group .consent-label{display:flex;align-items:flex-start;gap:10px;font-weight:500;color:var(--ink);font-size:14.5px;line-height:1.6;cursor:pointer}
+.form-group .consent-label input{width:20px;height:20px;margin-top:3px;flex:0 0 auto;accent-color:var(--teal)}
+.form-group .consent-label a{color:var(--teal);text-decoration:underline}
+</style>
 </head>
 <body>
 <a class="skip-link" href="#main-content">דלג לתוכן הראשי</a>
@@ -146,6 +156,10 @@
         <h3 class="reg-sub">כללי</h3>
         <div class="form-group"><label for="r-recommendations">המלצות / מכרים <span aria-hidden="true">*</span></label><input type="text" id="r-recommendations" name="recommendations" required aria-required="true" /></div>
         <div class="form-group"><label for="r-message">תרצו לשאול / לכתוב לנו משהו? <span aria-hidden="true">*</span></label><textarea id="r-message" name="message" required aria-required="true"></textarea></div>
+        <div class="form-group consent">
+          <label class="consent-label"><input type="checkbox" id="r-privacyConsent" name="privacyConsent" value="yes" required aria-required="true" />
+            <span>קראתי את <a href="privacy" target="_blank" rel="noopener">מדיניות הפרטיות</a> ואני מאשר/ת שהמידע שמסרתי ישמש לטיפול בהרשמה <span aria-hidden="true">*</span></span></label>
+        </div>
         <div class="city-note" role="note">
           <h3>הערה</h3>
           <p>אם הנכם רושמים לגנים או לכיתה א' חובה להמשיך את תהליך הרישום באתר העירייה:</p>
@@ -192,7 +206,7 @@
         <li><a href="contact">רחוב המנונא 12, בית שמש</a></li>
         <li><a href="tel:0522433693">052-2433693</a></li>
         <li><a href="register">הרשמה</a></li>
-        <li><a href="accessibility">הצהרת נגישות</a></li></ul></div>
+        <li><a href="accessibility">הצהרת נגישות</a></li><li><a href="privacy">מדיניות פרטיות</a></li></ul></div>
     </div>
     <div class="fbot"><span>© 2026 חיידר בעל שם טוב. כל הזכויות שמורות.</span><span><a href="accessibility" style="color:inherit;text-decoration:underline">נגישות</a></span></div>
   </div>
@@ -250,6 +264,7 @@
         }
         continue;
       }
+      if (el.type === 'checkbox') { if (el.required && !el.checked) return fail(el, 'יש לאשר את מדיניות הפרטיות'); continue; }
       if (!el.value.trim()) return fail(el, 'שדה חובה');
       if (!el.checkValidity()) {
         const msg = el.type === 'email' ? 'כתובת הדוא"ל אינה תקינה'
@@ -316,6 +331,7 @@
     const fd = new FormData();
     for (const el of form.elements) {
       if (!el.name || el.disabled) continue;
+      if (el.type === 'checkbox') { if (el.checked) fd.append(el.name, el.value); continue; }
       if (el.type !== 'file') { fd.append(el.name, el.value); continue; }
       for (const file of el.files) {
         const kind = kindOf(file);
