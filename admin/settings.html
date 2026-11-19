@@ -262,20 +262,65 @@ function setVideoPreview(url) {
   if (url) { v.src = url; v.style.display = 'block'; v.play().catch(() => {}); drop.classList.add('has-img'); }
   else { v.removeAttribute('src'); v.load(); v.style.display = 'none'; drop.classList.remove('has-img'); }
 }
+let videoUploading = false;
+window.addEventListener('beforeunload', e => { if (videoUploading) { e.preventDefault(); e.returnValue = ''; } });
+
+function setVideoStatus(text, color = 'var(--teal)') {
+  const st = document.getElementById('videoStatus');
+  st.style.color = color;
+  st.textContent = text;
+}
+
+// XHR (not fetch) so the upload shows real progress — big promo videos take minutes
 async function uploadVideo(input) {
   const file = input.files[0]; if (!file) return;
-  const st = document.getElementById('videoStatus');
-  st.style.color = 'var(--teal)';
-  st.textContent = `מעלה... (${(file.size / 1048576).toFixed(0)}MB, זה עשוי לקחת כמה דקות)`;
-  try {
-    const url = await uploadFile(file, true);
-    await api('PUT', '/settings', { hero_video: url });
-    setVideoPreview(url);
-    st.textContent = '✓ נשמר';
-    setTimeout(() => st.textContent = '', 3000);
-  } catch (e) { st.style.color = '#dc2626'; st.textContent = e.message; }
   input.value = '';
+  const mb = n => (n / 1048576).toFixed(0);
+  videoUploading = true;
+  setVideoStatus(`מעלה... 0% (0 מתוך ${mb(file.size)}MB) — נא לא לסגור את הדף`);
+  try {
+    await new Promise((resolve, reject) => {
+      const fd = new FormData();
+      fd.append('file', file);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', API + '/upload/hero-video');
+      xhr.setRequestHeader('Authorization', `Bearer ${getToken()}`);
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) setVideoStatus(`מעלה... ${Math.round(e.loaded / e.total * 100)}% (${mb(e.loaded)} מתוך ${mb(e.total)}MB) — נא לא לסגור את הדף`);
+      };
+      xhr.onload = () => {
+        let data = {};
+        try { data = JSON.parse(xhr.responseText); } catch {}
+        if (xhr.status === 401) { logout(); return reject(new Error('פג תוקף ההתחברות')); }
+        if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+        else reject(new Error(data.error || (xhr.status === 413 ? 'הקובץ גדול מדי (עד 500MB)' : `שגיאת העלאה (${xhr.status})`)));
+      };
+      xhr.onerror = () => reject(new Error('החיבור נקטע — נסו שוב'));
+      xhr.send(fd);
+    });
+    videoUploading = false;
+    watchVideoProcessing();
+  } catch (e) {
+    videoUploading = false;
+    setVideoStatus(e.message, '#dc2626');
+  }
 }
+
+// After upload the server compresses the video to a light web copy; poll until done
+async function watchVideoProcessing() {
+  setVideoStatus('✓ הועלה. מכווץ את הסרטון לגרסה קלה לאתר — זה לוקח כמה דקות, אפשר לסגור את הדף.');
+  for (let i = 0; i < 240; i++) { // up to ~20 minutes
+    await new Promise(r => setTimeout(r, 5000));
+    let s;
+    try { s = await api('GET', '/settings'); } catch { continue; }
+    if (s.hero_video_status === 'processing') continue;
+    if (s.hero_video) setVideoPreview(s.hero_video);
+    if (s.hero_video_status === 'failed') setVideoStatus('הכיווץ נכשל — הסרטון המקורי הוצב באתר (עלול להיטען לאט).', '#b45309');
+    else setVideoStatus('✓ הסרטון מוכן ומוצג בדף הבית');
+    return;
+  }
+}
+
 async function clearVideo() {
   if (!videoUrl || !(await confirmDialog({ title: 'להסיר את הסרטון מדף הבית?', okText: 'הסרה' }))) return;
   try {
@@ -319,6 +364,7 @@ async function load() {
   });
   if (s.logo_url)       { setLogoPreview(s.logo_url); }
   if (s.hero_video)     { setVideoPreview(s.hero_video); }
+  if (s.hero_video_status === 'processing') watchVideoProcessing();
   if (s.hero_image)     { heroUrl     = s.hero_image;     setPreview('hero',     s.hero_image); }
   if (s.about_image)    { aboutUrl    = s.about_image;    setPreview('about',    s.about_image); }
   if (s.approach_image) { approachUrl = s.approach_image; setPreview('approach', s.approach_image); }
