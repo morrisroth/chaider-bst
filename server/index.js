@@ -109,8 +109,17 @@ app.get(['/sign/:token', '/sign/:token/completed'], (req, res) => {
   res.send(html);
 });
 
-// Serve everything else (CSS, JS, images, admin pages)
-app.use(express.static(path.join(__dirname, '..')));
+// Serve everything else (CSS, JS, images, admin pages) — but the project root
+// also holds the server code, its data (registrations, ID scans, signed PDFs),
+// .git and package files, none of which may ever be served.
+const PRIVATE_PATH = /^\/(server|node_modules|\.git)(\/|$)|^\/[^/]*\.(json|md|sh|lock|log|env)$|\/\./i;
+app.use((req, res, next) => {
+  let p;
+  try { p = decodeURIComponent(req.path).replace(/[\\/]+/g, '/'); } catch { return res.status(400).end(); }
+  if (PRIVATE_PATH.test(p)) return res.status(404).send('Not found');
+  next();
+});
+app.use(express.static(path.join(__dirname, '..'), { dotfiles: 'deny', index: false }));
 
 // Never leak stack traces, storage paths, or internal error details to clients
 app.use((err, req, res, next) => {
