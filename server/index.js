@@ -13,7 +13,6 @@ const app = express();
 app.set('trust proxy', 1); // exactly one hop: nginx terminates TLS and proxies straight to this app
 
 app.use(cors());
-app.use(require('./middleware/visitors'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Client-side libraries served straight from node_modules — no CDN, no build step
@@ -38,7 +37,6 @@ app.use('/api/settings', require('./routes/settings'));
 app.use('/api/contact',  require('./routes/contact'));
 app.use('/api/register', require('./routes/register'));
 app.use('/api/upload',   require('./routes/upload'));
-app.use('/api/stats',    require('./routes/stats'));
 app.use('/api/documents', require('./routes/documents'));
 app.use('/api/sign',      require('./routes/sign'));
 
