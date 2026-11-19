@@ -75,6 +75,16 @@ router.post('/', submitLimiter, (req, res, next) => {
   const body = req.body || {};
   const missing = FIELDS.filter(k => !String(body[k] || '').trim());
   if (missing.length) return res.status(400).json({ error: 'יש למלא את כל השדות', missing });
+  const tooLong = FIELDS.filter(k => String(body[k]).length > (k === 'message' ? 3000 : 300));
+  if (tooLong.length) return res.status(400).json({ error: 'אחד השדות ארוך מדי', fields: tooLong });
+  // The two emails become the recipients of the confirmation mail — one plain address each
+  const EMAIL = /^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/;
+  for (const k of ['fatherEmail', 'motherEmail']) {
+    if (!EMAIL.test(String(body[k]).trim())) return res.status(400).json({ error: 'כתובת הדוא"ל אינה תקינה', fields: [k] });
+  }
+  for (const k of ['idNumber', 'fatherId', 'motherId']) {
+    if (!/^\d{5,9}$/.test(String(body[k]).trim())) return res.status(400).json({ error: 'מספר ת.ז. אינו תקין', fields: [k] });
+  }
 
   const incoming = [];
   for (const [field, parent] of Object.entries(FILE_FIELDS)) {

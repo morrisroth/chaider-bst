@@ -7,7 +7,8 @@ const SECRET = process.env.WEBHOOK_SECRET || '';
 const DEPLOY = path.join(__dirname, '../../deploy.sh');
 
 function verify(rawBody, sig) {
-  if (!SECRET) return true;
+  // No secret configured = refuse everything (otherwise anyone could trigger deploys)
+  if (!SECRET) return false;
   const expected = 'sha256=' + crypto.createHmac('sha256', SECRET).update(rawBody).digest('hex');
   try { return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected)); } catch { return false; }
 }

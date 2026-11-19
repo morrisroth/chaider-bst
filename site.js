@@ -17,7 +17,15 @@
   }
 
   function esc(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // URLs that end up in CSS url(...) or element properties: only plain site
+  // paths or http(s) addresses, never anything that could close the url(...)
+  // or the style attribute (quotes, parentheses, backslashes, whitespace).
+  function safeUrl(u) {
+    u = String(u || '');
+    return /^(\/(?!\/)|https?:\/\/)[^"'()\\\s<>]*$/.test(u) ? u : '';
   }
 
   // Inject an image into a blob shape div (keeps overflow:hidden clip)
@@ -30,7 +38,7 @@
     blob.querySelector('img.blob-injected')?.remove();
     // Insert absolutely-positioned img — clipped by the blob's overflow:hidden
     const img = document.createElement('img');
-    img.src = url;
+    img.src = safeUrl(url);
     img.className = 'blob-injected';
     img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;border-radius:inherit;';
     blob.style.position = 'relative';
@@ -43,9 +51,9 @@
     if (!s) return;
 
     // Logo
-    if (s.logo_url) {
+    if (safeUrl(s.logo_url)) {
       document.querySelectorAll('.logo-mark').forEach(mark => {
-        mark.innerHTML = `<img src="${s.logo_url}" alt="לוגו" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;padding:4px" />`;
+        mark.innerHTML = `<img src="${esc(safeUrl(s.logo_url))}" alt="לוגו" style="width:100%;height:100%;object-fit:contain;border-radius:inherit;padding:4px" />`;
         mark.style.background = '#fff';
         mark.style.boxShadow = '0 4px 14px rgba(14,58,70,.15)';
       });
@@ -62,12 +70,12 @@
     // Hero background — the promo video, with the hero image as poster/fallback
     const heroMedia = document.querySelector('.hero-media');
     if (heroMedia) {
-      if (s.hero_image) heroMedia.style.backgroundImage = `url("${s.hero_image}")`;
+      if (safeUrl(s.hero_image)) heroMedia.style.backgroundImage = `url("${safeUrl(s.hero_image)}")`;
       const v = heroMedia.querySelector('video');
       if (v && s.hero_video && v.dataset.src !== s.hero_video) {
         v.dataset.src = s.hero_video;
-        if (s.hero_image) v.poster = s.hero_image;
-        v.src = s.hero_video;
+        if (safeUrl(s.hero_image)) v.poster = safeUrl(s.hero_image);
+        v.src = safeUrl(s.hero_video);
         // Respect reduced-motion: show the poster frame, don't loop the video
         if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
           v.autoplay = true;
@@ -145,7 +153,7 @@
 
     grid.innerHTML = toShow.map(p => `
       <article class="post">
-        <div class="post-img${p.image ? '' : ''}" style="${p.image ? `background-image:url(${p.image});background-size:cover;background-position:center;min-height:180px` : ''}">
+        <div class="post-img${p.image ? '' : ''}" style="${safeUrl(p.image) ? `background-image:url('${safeUrl(p.image)}');background-size:cover;background-position:center;min-height:180px` : ''}">
           ${!p.image ? `<span class="glabel">// ${esc(p.category)}</span>` : ''}
         </div>
         <div class="post-body">
@@ -182,7 +190,7 @@
       }
       grid.innerHTML = list.map(p => `
         <article class="post" style="cursor:pointer" tabindex="0" role="button" aria-label="קרא את הכתבה: ${esc(p.title)}" data-post-id="${esc(p.id)}">
-          <div class="post-img" style="${p.image ? `background-image:url(${p.image});background-size:cover;background-position:center;min-height:180px` : ''}">
+          <div class="post-img" style="${safeUrl(p.image) ? `background-image:url('${safeUrl(p.image)}');background-size:cover;background-position:center;min-height:180px` : ''}">
             ${!p.image ? `<span class="glabel">// ${esc(p.category)}</span>` : ''}
           </div>
           <div class="post-body">
@@ -299,7 +307,7 @@
     for (const i of items) { if (!picks.includes(null)) break; fill(i); }
     const tiles = box.querySelectorAll('.cp');
     if (picks.includes(null)) { box.style.display = 'none'; return; }
-    tiles.forEach((t, n) => { t.style.backgroundImage = `url("${thumbOf(picks[n].image)}")`; });
+    tiles.forEach((t, n) => { const u = safeUrl(thumbOf(picks[n].image)); if (u) t.style.backgroundImage = `url("${u}")`; });
   }
 
   // Shared gallery items — updated when grid refreshes

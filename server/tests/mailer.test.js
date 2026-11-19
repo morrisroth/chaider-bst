@@ -76,10 +76,16 @@ describe('buildRegistrationConfirmationMail', () => {
 });
 
 describe('buildContactConfirmationMail', () => {
-  it('greets by name and quotes the message, escaped', () => {
-    const mail = buildContactConfirmationMail({ to: 'a@b.com', name: 'יוסי', message: 'שלום <b>' });
+  it('greets by name (escaped) but never echoes the visitor\'s message', () => {
+    const mail = buildContactConfirmationMail({ to: 'a@b.com', name: 'יוסי <b>', message: 'click http://evil.example' });
     expect(mail.to).toBe('a@b.com');
-    expect(mail.html).toContain('יוסי');
-    expect(mail.html).toContain('שלום &lt;b&gt;');
+    expect(mail.html).toContain('יוסי &lt;b&gt;');
+    expect(mail.html).not.toContain('evil.example');
+    expect(mail.text).not.toContain('evil.example');
+  });
+
+  it('cuts a very long name so it cannot carry a message', () => {
+    const mail = buildContactConfirmationMail({ to: 'a@b.com', name: 'x'.repeat(500) });
+    expect(mail.text).not.toContain('x'.repeat(41));
   });
 });

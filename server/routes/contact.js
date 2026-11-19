@@ -34,8 +34,9 @@ router.post('/', submitLimiter, (req, res) => {
   res.status(201).json({ ok: true });
 
   // Email is optional on the contact form — confirm only when one was given
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(msg.email.trim())) {
-    sendContactConfirmationEmail({ to: msg.email.trim(), name: msg.name, message: msg.message })
+  // One plain address only — no lists, display names or header tricks
+  if (/^[^\s@,;<>"]+@[^\s@,;<>"]+\.[^\s@,;<>"]+$/.test(msg.email)) {
+    sendContactConfirmationEmail({ to: msg.email, name: msg.name })
       .catch(e => console.error('Failed to send contact confirmation email:', e.message));
   }
 });

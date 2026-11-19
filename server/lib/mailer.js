@@ -99,7 +99,10 @@ function wrapHtml(inner) {
 }
 
 // Sent to the parents after the registration form is submitted.
-function buildRegistrationConfirmationMail({ to, childName, grade }) {
+function buildRegistrationConfirmationMail({ to, childName: rawChild, grade: rawGrade }) {
+  // Short, so the public form's fields can't be used to carry a message
+  const childName = String(rawChild || '').trim().slice(0, 60);
+  const grade = String(rawGrade || '').trim().slice(0, 30);
   const needsCity = /גן|א'/.test(grade || '');
   const subject = `קיבלנו את טופס ההרשמה${childName ? ` של ${childName}` : ''}`;
   const html = wrapHtml(`
@@ -122,15 +125,18 @@ function buildRegistrationConfirmationMail({ to, childName, grade }) {
 }
 
 // Sent to whoever used the contact form, when they left an email.
-function buildContactConfirmationMail({ to, name, message }) {
+// Deliberately does NOT quote the visitor's message (or a long name): the
+// form is public and the address is whatever they typed, so echoing their
+// text would let anyone send arbitrary content from the school's mailbox.
+function buildContactConfirmationMail({ to, name }) {
   const subject = 'קיבלנו את פנייתכם — תלמוד תורה בעל שם טוב';
+  const shortName = String(name || '').trim().slice(0, 40);
   const html = wrapHtml(`
-      <p style="font-size:16px;">שלום${name ? ` ${escHtml(name)}` : ''},</p>
+      <p style="font-size:16px;">שלום${shortName ? ` ${escHtml(shortName)}` : ''},</p>
       <p style="font-size:15px;">פנייתכם התקבלה, ונחזור אליכם בהקדם האפשרי.</p>
-      ${message ? `<p style="font-size:14px; color:#5b6b70; border-right:3px solid #e6ddcd; padding-right:12px; white-space:pre-wrap;">${escHtml(message)}</p>` : ''}
   `);
-  const text = `שלום${name ? ` ${name}` : ''},\n\nפנייתכם התקבלה, ונחזור אליכם בהקדם האפשרי.\n` +
-    (message ? `\nתוכן הפנייה:\n${message}\n` : '') + `\nבברכה,\nהנהלת תלמוד תורה בעל שם טוב\n073-3458288`;
+  const text = `שלום${shortName ? ` ${shortName}` : ''},\n\nפנייתכם התקבלה, ונחזור אליכם בהקדם האפשרי.\n` +
+    `\nבברכה,\nהנהלת תלמוד תורה בעל שם טוב\n073-3458288`;
   return { from: `"${FROM_NAME}" <${FROM_ADDRESS}>`, to, subject, html, text };
 }
 

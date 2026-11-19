@@ -279,7 +279,7 @@
         <div class="form-panel">
           <h2>שינוי סיסמה</h2>
           <div class="form-group"><label>סיסמה נוכחית</label><input type="password" id="curPass" /></div>
-          <div class="form-group"><label>סיסמה חדשה</label><input type="password" id="newPass" /></div>
+          <div class="form-group"><label>סיסמה חדשה</label><input type="password" id="newPass" minlength="10" placeholder="לפחות 10 תווים" autocomplete="new-password" /></div>
           <button class="btn btn-line btn-sm" onclick="changePass()">עדכן סיסמה</button>
         </div>
 
@@ -547,10 +547,12 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closePicker(
 
 async function changePass() {
   try {
-    await api('POST', '/auth/change-password', {
+    const r = await api('POST', '/auth/change-password', {
       current: document.getElementById('curPass').value,
       newPass:  document.getElementById('newPass').value
     });
+    // Changing the password logs out other sessions; keep this one with the new token
+    if (r && r.token) localStorage.setItem('bst_token', r.token);
     document.getElementById('curPass').value = '';
     document.getElementById('newPass').value = '';
     showAlert(document.getElementById('alert'), 'הסיסמה עודכנה ✓');

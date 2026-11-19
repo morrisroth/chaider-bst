@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const { v4: uuid } = require('uuid');
+const { randomUUID: uuid } = require('crypto');
 
 const DATA = path.join(__dirname, 'data');
 

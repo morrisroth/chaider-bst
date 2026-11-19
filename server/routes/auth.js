@@ -2,10 +2,12 @@ const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
-const { read, write, uuid } = require('../db');
+const { read, write } = require('../db');
 const auth = require('../middleware/auth');
+const { SECRET, passwordVersion } = require('../lib/jwtSecret');
 
-const SECRET = process.env.JWT_SECRET || 'chaider-bst-secret-2026';
+const issueToken = admin =>
+  jwt.sign({ id: admin.id, username: admin.username, pv: passwordVersion(admin) }, SECRET, { expiresIn: '8h' });
 
 // The seeded admin password (see db.js) — flagged until it's changed
 const DEFAULT_PASSWORD = 'admin123';
@@ -27,8 +29,7 @@ router.post('/login', loginLimiter, (req, res) => {
   const admin = admins.find(a => a.username === username || a.email === username);
   if (!admin || typeof password !== 'string' || !bcrypt.compareSync(password, admin.password_hash))
     return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' });
-  const token = jwt.sign({ id: admin.id, username: admin.username }, SECRET, { expiresIn: '8h' });
-  res.json({ token, username: admin.username });
+  res.json({ token: issueToken(admin), username: admin.username });
 });
 
 // Lets the admin panel warn while the default password is still in use
@@ -51,7 +52,8 @@ router.post('/change-password', auth, (req, res) => {
     return res.status(401).json({ error: 'הסיסמה הנוכחית שגויה' });
   admins[idx].password_hash = bcrypt.hashSync(newPass, 10);
   write('admins.json', admins);
-  res.json({ ok: true });
+  // Older tokens (other browsers/devices) stop working; this session gets a fresh one
+  res.json({ ok: true, token: issueToken(admins[idx]) });
 });
 
 module.exports = router;

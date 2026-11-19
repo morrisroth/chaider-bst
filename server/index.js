@@ -1,6 +1,5 @@
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
-const cors    = require('cors');
 const path    = require('path');
 const fs      = require('fs');
 const { read } = require('./db');
@@ -12,7 +11,8 @@ ensureDirs();
 const app = express();
 app.set('trust proxy', 1); // exactly one hop: nginx terminates TLS and proxies straight to this app
 
-app.use(cors());
+// No CORS: the admin panel and the site are same-origin, so no other website
+// needs to call this API from a browser.
 app.disable('x-powered-by');
 // Basic hardening headers on every response
 app.use((req, res, next) => {

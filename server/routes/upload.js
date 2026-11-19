@@ -20,7 +20,7 @@ const imageUpload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_, file, cb) => {
-    const ok = /jpeg|jpg|png|gif|webp/.test(path.extname(file.originalname).slice(1).toLowerCase());
+    const ok = /^(jpe?g|png|gif|webp)$/.test(path.extname(file.originalname).slice(1).toLowerCase());
     cb(ok ? null : new Error('סוג קובץ לא מורשה'), ok);
   }
 });
@@ -29,7 +29,7 @@ const videoUpload = multer({
   storage,
   limits: { fileSize: 500 * 1024 * 1024 },
   fileFilter: (_, file, cb) => {
-    const ok = /mp4|mov|avi|mkv|webm/.test(path.extname(file.originalname).slice(1).toLowerCase());
+    const ok = /^(mp4|mov|m4v|avi|mkv|webm)$/.test(path.extname(file.originalname).slice(1).toLowerCase());
     cb(ok ? null : new Error('סוג קובץ לא מורשה'), ok);
   }
 });
