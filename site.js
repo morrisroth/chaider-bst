@@ -284,16 +284,21 @@
     const box = document.getElementById('currPhotos');
     if (!box) return;
     const items = (window.__BST_GALLERY__ || await get('/gallery') || []).filter(i => i.type !== 'video' && i.image);
-    // Prefer learning/activity photos, then fill from the rest of the gallery
+    // Photos chosen in admin → הגדרות האתר → תמונות תוכנית הלימודים fill their
+    // slots; any empty slot falls back to learning/activity photos, then the rest of the gallery
+    const settings = window.__BST__ || await get('/settings') || {};
+    const chosen = Array.isArray(settings.curriculum_images) ? settings.curriculum_images : [];
+    const picks = [0, 1, 2].map(n => (chosen[n] ? { image: chosen[n] } : null));
+    const used = new Set(picks.filter(Boolean).map(p => p.image));
+    const fill = item => {
+      const n = picks.indexOf(null);
+      if (n !== -1 && !used.has(item.image)) { picks[n] = item; used.add(item.image); }
+    };
     const preferred = ['לימוד בחברותות', 'פעילות להחדרת אהבת התורה', 'פעילות חברתית'];
-    const picks = [];
-    for (const cap of preferred) {
-      const hit = items.find(i => i.caption === cap && !picks.includes(i));
-      if (hit) picks.push(hit);
-    }
-    for (const i of items) { if (picks.length >= 3) break; if (!picks.includes(i)) picks.push(i); }
+    for (const cap of preferred) { const hit = items.find(i => i.caption === cap && !used.has(i.image)); if (hit) fill(hit); }
+    for (const i of items) { if (!picks.includes(null)) break; fill(i); }
     const tiles = box.querySelectorAll('.cp');
-    if (picks.length < tiles.length) { box.style.display = 'none'; return; }
+    if (picks.includes(null)) { box.style.display = 'none'; return; }
     tiles.forEach((t, n) => { t.style.backgroundImage = `url("${thumbOf(picks[n].image)}")`; });
   }
 

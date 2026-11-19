@@ -55,6 +55,22 @@
   margin-bottom: 14px;
 }
 .page-diagram .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+/* Curriculum photos: same layout as the about page (one wide on top, two below) */
+.curr-slots { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 170px 170px; gap: 12px; max-width: 560px; }
+.curr-slot { position: relative; border-radius: 16px; overflow: hidden; background: repeating-linear-gradient(135deg,#cfe2e5 0 2px,#e6f1f2 2px 16px) center/cover; }
+.curr-slot.wide { grid-column: 1 / -1; }
+.curr-slot .slot-actions { position: absolute; inset: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.55); transition: .2s; padding: 10px; }
+.curr-slot.has-img .slot-actions { background: rgba(14,58,70,.5); opacity: 0; }
+.curr-slot.has-img:hover .slot-actions, .curr-slot.has-img:focus-within .slot-actions { opacity: 1; }
+.curr-slot .auto-tag { position: absolute; top: 8px; right: 8px; font-size: 11px; background: rgba(255,255,255,.9); color: var(--muted);
+  border-radius: 999px; padding: 2px 10px; }
+.pick-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; max-height: 65vh; overflow-y: auto; }
+.pick-grid button { border: 0; padding: 0; border-radius: 12px; overflow: hidden; aspect-ratio: 4/3; cursor: pointer; background: #e6f1f2; }
+.pick-grid button img { width: 100%; height: 100%; object-fit: cover; display: block; transition: .2s; }
+.pick-grid button:hover img, .pick-grid button:focus-visible img { transform: scale(1.06); }
+@media (max-width: 600px) { .curr-slots { grid-template-rows: 150px 120px; } }
 </style>
 </head>
 <body>
@@ -214,6 +230,30 @@
         </div>
       </div>
 
+      <!-- ══ CURRICULUM PHOTOS (about page) ══ -->
+      <div style="margin-bottom:28px">
+        <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:6px">תמונות תוכנית הלימודים</div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:16px">שלוש התמונות שליד "תוכנית הלימודים" בדף אודות. העלו תמונה או בחרו מהגלריה — נשמר אוטומטית. מקום ריק מתמלא אוטומטית מהגלריה.</div>
+        <div class="img-card">
+          <div class="curr-slots">
+            <div class="curr-slot wide" data-slot="0"></div>
+            <div class="curr-slot" data-slot="1"></div>
+            <div class="curr-slot" data-slot="2"></div>
+          </div>
+          <span id="currStatus" style="font-size:12px;color:var(--teal);display:inline-block;margin-top:12px"></span>
+        </div>
+        <input type="file" id="currFile" accept="image/*" style="display:none" onchange="uploadCurr(this)" />
+      </div>
+
+      <!-- Gallery picker for curriculum photos -->
+      <div class="modal-overlay" id="pickModal" style="display:none" onclick="if(event.target===this)closePicker()">
+        <div class="modal-card" style="max-width:860px">
+          <button class="modal-close" onclick="closePicker()" aria-label="סגירה">✕</button>
+          <h3>בחירת תמונה מהגלריה</h3>
+          <div class="pick-grid" id="pickGrid"></div>
+        </div>
+      </div>
+
       <!-- ══ REST OF SETTINGS ══ -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
 
@@ -368,6 +408,9 @@ async function load() {
   if (s.hero_image)     { heroUrl     = s.hero_image;     setPreview('hero',     s.hero_image); }
   if (s.about_image)    { aboutUrl    = s.about_image;    setPreview('about',    s.about_image); }
   if (s.approach_image) { approachUrl = s.approach_image; setPreview('approach', s.approach_image); }
+  const ci = Array.isArray(s.curriculum_images) ? s.curriculum_images : [];
+  currImgs = [0, 1, 2].map(i => typeof ci[i] === 'string' ? ci[i] : '');
+  renderCurr();
 }
 
 function setPreview(which, url) {
@@ -437,6 +480,70 @@ async function saveAll() {
     setTimeout(() => chip.classList.remove('show'), 2500);
   } catch(e) { showAlert(document.getElementById('alert'), e.message, 'error'); }
 }
+
+// ── Curriculum photos (about page): 3 slots, '' = filled automatically from the gallery ──
+let currImgs = ['', '', ''];
+let currSlot = 0;
+
+function renderCurr() {
+  document.querySelectorAll('.curr-slot').forEach(el => {
+    const i = +el.dataset.slot;
+    const url = currImgs[i];
+    el.classList.toggle('has-img', !!url);
+    el.style.backgroundImage = url ? `url("${thumbOf(url)}")` : '';
+    el.innerHTML = `
+      ${url ? '' : '<span class="auto-tag">ריק — ימולא אוטומטית</span>'}
+      <div class="slot-actions">
+        <button class="btn btn-line btn-sm" style="background:#fff" onclick="pickUpload(${i})">העלאה</button>
+        <button class="btn btn-line btn-sm" style="background:#fff" onclick="openPicker(${i})">בחירה מהגלריה</button>
+        ${url ? `<button class="btn btn-line btn-sm" style="background:#fff" onclick="setCurr(${i}, '')">הסרה</button>` : ''}
+      </div>`;
+  });
+}
+
+async function setCurr(i, url) {
+  const prev = currImgs.slice();
+  currImgs[i] = url;
+  renderCurr();
+  try {
+    await api('PUT', '/settings', { curriculum_images: currImgs });
+    setStatus('curr', '✓ נשמר');
+  } catch (e) {
+    currImgs = prev; renderCurr();
+    setStatus('curr', e.message, false);
+  }
+}
+
+function pickUpload(i) { currSlot = i; document.getElementById('currFile').click(); }
+
+async function uploadCurr(input) {
+  const file = input.files[0]; input.value = '';
+  if (!file) return;
+  setStatus('curr', 'מעלה...');
+  try { await setCurr(currSlot, await uploadFile(file)); }
+  catch (e) { setStatus('curr', e.message, false); }
+}
+
+async function openPicker(i) {
+  currSlot = i;
+  const grid = document.getElementById('pickGrid');
+  grid.innerHTML = '<div style="color:var(--muted);padding:20px">טוען...</div>';
+  document.getElementById('pickModal').style.display = 'flex';
+  try {
+    const photos = (await api('GET', '/gallery')).filter(g => g.type !== 'video' && g.image);
+    grid.innerHTML = photos.length
+      ? photos.map(g => `<button type="button" data-url="${escHtml(g.image)}" title="${escHtml(g.caption)}"><img src="${escHtml(thumbOf(g.image))}" alt="${escHtml(g.caption)}" loading="lazy" /></button>`).join('')
+      : '<div style="color:var(--muted);padding:20px">אין תמונות בגלריה</div>';
+  } catch (e) { grid.innerHTML = `<div style="color:#dc2626;padding:20px">${escHtml(e.message)}</div>`; }
+}
+document.getElementById('pickGrid').addEventListener('click', e => {
+  const b = e.target.closest('button[data-url]');
+  if (!b) return;
+  closePicker();
+  setCurr(currSlot, b.dataset.url);
+});
+function closePicker() { document.getElementById('pickModal').style.display = 'none'; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePicker(); });
 
 async function changePass() {
   try {
