@@ -360,8 +360,8 @@ button,input,select,textarea{font-family:inherit}
 
   /* About split */
   .split,.split.rev{grid-template-columns:1fr;gap:36px}
-  .vis{max-width:380px;margin:0 auto}
-  .blob-soft{max-width:340px;margin:0 auto}
+  .vis{width:100%;max-width:380px;margin:0 auto}
+  .blob-soft{width:100%;max-width:340px;margin:0 auto}
   .checks{grid-template-columns:1fr}
   .prose h2{font-size:32px}
 

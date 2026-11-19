@@ -55,6 +55,8 @@ cd "$APP_DIR"   # node resolves dotenv/nodemailer from the app's node_modules
 [ -s "$PASSFILE" ] || fail "missing passphrase file $PASSFILE"
 
 echo "[$(date '+%F %T')] backup start"
+# Retention below lists these folders — make sure they exist on the first run
+for d in daily monthly uploads uploads-deleted; do rclone mkdir "$REMOTE/$d"; done
 
 # 1. Private data — encrypted before it leaves the server
 tar -C "$APP_DIR/server" -czf - data documents .env \
