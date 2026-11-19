@@ -54,7 +54,7 @@
         <button class="btn btn-line btn-sm" onclick="setFilter('rejected')" id="f-rejected">נדחו</button>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start">
+      <div id="regsGrid" style="display:grid;grid-template-columns:1fr;gap:24px;align-items:start">
         <div class="data-card">
           <table>
             <thead><tr><th>שם</th><th>טלפון</th><th>תאריך הגשה</th><th>סטטוס</th><th></th></tr></thead>
@@ -67,7 +67,8 @@
             <div style="display:flex;gap:14px;align-items:center;margin-bottom:20px">
               <img id="dPhoto" style="width:60px;height:60px;border-radius:50%;object-fit:cover;display:none;border:2px solid var(--line)" />
               <div id="dPhotoPlaceholder" style="width:60px;height:60px;border-radius:50%;background:var(--grad-cool);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-family:var(--serif);font-weight:700">?</div>
-              <div><div id="dName" style="font-family:var(--serif);font-size:18px;font-weight:700;color:var(--ink)"></div><div id="dDate" style="font-size:12px;color:var(--muted)"></div></div>
+              <div style="flex:1;min-width:0"><div id="dName" style="font-family:var(--serif);font-size:18px;font-weight:700;color:var(--ink)"></div><div id="dDate" style="font-size:12px;color:var(--muted)"></div></div>
+              <button class="btn-icon view" onclick="closeReg()" title="סגירה (Esc)" aria-label="סגירה" style="flex-shrink:0;align-self:flex-start"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
             </div>
             <div id="dRows"></div>
             <!-- Status -->
@@ -114,19 +115,26 @@ function render() {
   let list = regs;
   if (filter !== 'all') list = list.filter(r => r.status === filter);
   document.getElementById('regsTbl').innerHTML = list.map(r => `
-    <tr style="cursor:pointer${selected?.id===r.id?';background:rgba(250,246,238,.8)':''}" onclick="select('${r.id}')">
+    <tr style="cursor:pointer${selected?.id===r.id?';background:rgba(250,246,238,.8)':''}" onclick="toggleReg('${r.id}')">
       <td style="font-weight:600;color:var(--ink)">${escHtml(r.firstName)} ${escHtml(r.lastName)}</td>
       <td>${escHtml(r.homePhone)}</td>
       <td>${formatDate(r.submittedAt)}</td>
       <td><span class="status status-${r.status}">${{pending:'ממתין',accepted:'התקבל',rejected:'נדחה'}[r.status]||r.status}</span></td>
-      <td><button class="btn-icon view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
+      <td><button class="btn-icon view" title="${selected?.id===r.id ? 'סגירת הפרטים' : 'הצגת הפרטים'}" style="${selected?.id===r.id ? 'background:var(--teal);color:#fff' : ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button></td>
     </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--muted)">אין הרשמות</td></tr>';
+}
+
+// Row / eye click: opens a registration's details, or closes them if it's the one already open
+function toggleReg(id) {
+  if (selected?.id === id && document.getElementById('detailWrap').style.display !== 'none') return closeReg();
+  select(id);
 }
 
 function select(id) {
   selected = regs.find(r => r.id === id);
   if (!selected) return;
   document.getElementById('detailWrap').style.display = 'block';
+  document.getElementById('regsGrid').style.gridTemplateColumns = window.innerWidth > 900 ? '1fr 360px' : '1fr';
   document.getElementById('dName').textContent = `${selected.firstName} ${selected.lastName}`;
   document.getElementById('dDate').textContent = formatDate(selected.submittedAt);
   document.getElementById('dNotes').value = selected.notes || '';
@@ -226,10 +234,19 @@ async function delReg() {
   if (!selected || !(await confirmDialog({ title: 'למחוק הרשמה זו?', message: 'כל פרטי ההרשמה והמסמכים המצורפים יימחקו. לא ניתן לבטל את הפעולה.', okText: 'כן, למחוק' }))) return;
   await api('DELETE', `/register/${selected.id}`);
   regs = regs.filter(r => r.id !== selected.id);
+  closeReg();
+}
+
+function closeReg() {
   selected = null;
   document.getElementById('detailWrap').style.display = 'none';
+  document.getElementById('regsGrid').style.gridTemplateColumns = '1fr';
   render();
 }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && selected && !document.querySelector('.bst-cfm')) closeReg();
+});
 
 setFilter('all');
 load();
