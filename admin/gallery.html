@@ -339,9 +339,9 @@ function renderGrid() {
   grid.innerHTML = vis.map((item, i) => {
     const isVideo = item.type === 'video';
     const mediaHtml = isVideo
-      ? `<video src="${escHtml(item.video)}" preload="metadata" muted playsinline style="width:100%;height:100%;object-fit:cover;display:block"></video>
+      ? `<img src="${escHtml(thumbOf(item.video))}" alt="${escHtml(item.caption)}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block" />
          <div class="play-badge"><svg viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="30" fill="rgba(255,255,255,.22)"/><polygon points="23,18 47,30 23,42" fill="#fff"/></svg></div>`
-      : `<img src="${escHtml(item.image)}" alt="${escHtml(item.caption)}" loading="lazy" />`;
+      : `<img src="${escHtml(thumbOf(item.image))}" alt="${escHtml(item.caption)}" loading="lazy" decoding="async" />`;
     return `
     <div class="photo-card${selected.has(item.id) ? ' selected' : ''}" id="card-${item.id}">
       <button class="sel-box" onclick="event.stopPropagation();toggleSelect('${item.id}')" aria-pressed="${selected.has(item.id)}" title="בחירה">

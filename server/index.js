@@ -14,6 +14,8 @@ app.set('trust proxy', 1); // exactly one hop: nginx terminates TLS and proxies 
 
 app.use(cors());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Small previews of uploads for gallery tiles, created on first request
+app.get('/thumbs/:name', require('./lib/thumbs').serveThumb);
 
 // Client-side libraries served straight from node_modules — no CDN, no build step
 app.use('/vendor/pdfjs', express.static(path.join(__dirname, '../node_modules/pdfjs-dist/build')));

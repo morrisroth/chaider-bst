@@ -97,6 +97,11 @@ function formatDate(iso) {
   return d.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+// Small preview of an uploaded photo/video (see server/lib/thumbs.js)
+function thumbOf(url) {
+  return /^\/uploads\/[\w-]+\.\w+$/.test(url || '') ? '/thumbs/' + url.slice(9) + '.jpg' : url;
+}
+
 function escHtml(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }

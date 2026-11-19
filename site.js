@@ -11,6 +11,11 @@
     return new Date(iso).toLocaleDateString('he-IL', { day:'2-digit', month:'2-digit', year:'numeric' });
   }
 
+  // Small preview of an uploaded photo/video: /uploads/x.jpg -> /thumbs/x.jpg.jpg
+  function thumbOf(url) {
+    return /^\/uploads\/[\w-]+\.\w+$/.test(url || '') ? '/thumbs/' + url.slice(9) + '.jpg' : url;
+  }
+
   function esc(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
@@ -289,7 +294,7 @@
     for (const i of items) { if (picks.length >= 3) break; if (!picks.includes(i)) picks.push(i); }
     const tiles = box.querySelectorAll('.cp');
     if (picks.length < tiles.length) { box.style.display = 'none'; return; }
-    tiles.forEach((t, n) => { t.style.backgroundImage = `url("${picks[n].image}")`; });
+    tiles.forEach((t, n) => { t.style.backgroundImage = `url("${thumbOf(picks[n].image)}")`; });
   }
 
   // Shared gallery items — updated when grid refreshes
@@ -301,17 +306,19 @@
       const cls = ['gtile', item.layout === 'wide' ? 'wide' : '', item.layout === 'tall' ? 'tall' : '']
         .filter(Boolean).join(' ');
       const isVideo = item.type === 'video';
+      // Tiles show a small preview (see server/lib/thumbs.js); the full photo
+      // or video only loads when the tile is opened in the lightbox.
       const thumb = isVideo
-        ? `<video src="${esc(item.video)}#t=0.1" preload="metadata" muted playsinline
-             style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></video>
+        ? `<img src="${esc(thumbOf(item.video))}" alt="${esc(item.caption)}" loading="lazy" decoding="async"
+             style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" />
            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
              <svg width="56" height="56" viewBox="0 0 60 60" fill="none">
                <circle cx="30" cy="30" r="30" fill="rgba(255,255,255,.22)"/>
                <polygon points="23,18 47,30 23,42" fill="#fff"/>
              </svg>
            </div>`
-        : `<img src="${esc(item.image)}" alt="${esc(item.caption)}"
-              style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" loading="lazy" />`;
+        : `<img src="${esc(thumbOf(item.image))}" alt="${esc(item.caption)}"
+              style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" loading="lazy" decoding="async" />`;
       return `<div class="${cls}" style="position:relative;cursor:pointer" onclick="glbOpen(${i})">
         ${thumb}
         ${item.caption ? `<span class="glabel">${esc(item.caption)}</span>` : ''}

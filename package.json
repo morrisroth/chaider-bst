@@ -21,6 +21,7 @@
     "nodemailer": "^6.9.13",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^6.1.200",
+    "sharp": "^0.34.5",
     "signature_pad": "^5.1.3",
     "uuid": "^9.0.1"
   },
