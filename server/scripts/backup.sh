@@ -4,6 +4,8 @@
 #   1. data/ + documents/ + .env  -> one tar.gz, encrypted with gpg (AES256)
 #      -> <remote>/daily/          kept 30 days
 #      -> <remote>/monthly/        on the 1st, kept 1 year
+#      -> ~/chaider-backups/       on the server too, last 7 kept (quick restores;
+#                                    also the only copy until Google Drive is linked)
 #   2. uploads/ (public photos/videos) -> <remote>/uploads, synced; files that
 #      were deleted or replaced on the site are moved to uploads-deleted/<date>
 #      and kept 30 days, so a mistaken delete can still be recovered.
@@ -11,7 +13,8 @@
 # Setup (one-time, outside the repo):
 #   ~/.config/chaider-backup/passphrase   random passphrase, chmod 600 — keep a copy off the server!
 #   ~/.config/chaider-backup/config       optional: REMOTE=..., ALERT_TO=...
-#   rclone remote "gdrive" (rclone config, Google Drive, scope drive.file)
+#   rclone remote "gdrive" (rclone config, Google Drive, scope drive.file) —
+#     until it exists the off-site steps are skipped and only the local copy is kept
 #
 # Restore: rclone copy gdrive:chaider-backups/daily/<file> . &&
 #          gpg --decrypt <file> | tar xz   (asks for the passphrase)
@@ -22,6 +25,8 @@ APP_DIR="${APP_DIR:-/var/www/chaider-bst}"
 CONF_DIR="$HOME/.config/chaider-backup"
 PASSFILE="$CONF_DIR/passphrase"
 REMOTE="gdrive:chaider-backups"
+LOCAL_DIR="$HOME/chaider-backups"
+LOCAL_KEEP=7
 ALERT_TO=""
 [ -f "$CONF_DIR/config" ] && . "$CONF_DIR/config"
 
@@ -55,18 +60,33 @@ cd "$APP_DIR"   # node resolves dotenv/nodemailer from the app's node_modules
 [ -s "$PASSFILE" ] || fail "missing passphrase file $PASSFILE"
 
 echo "[$(date '+%F %T')] backup start"
-# Retention below lists these folders — make sure they exist on the first run
-for d in daily monthly uploads uploads-deleted; do rclone mkdir "$REMOTE/$d"; done
 
 # 1. Private data — encrypted before it leaves the server
 tar -C "$APP_DIR/server" -czf - data documents .env \
   | gpg --batch --yes --pinentry-mode loopback --passphrase-file "$PASSFILE" \
         --symmetric --cipher-algo AES256 -o "$ARCHIVE"
+echo "  data archive: $(du -h "$ARCHIVE" | cut -f1)"
+
+# Local copy on the server, newest $LOCAL_KEEP kept
+mkdir -p "$LOCAL_DIR" && chmod 700 "$LOCAL_DIR"
+cp "$ARCHIVE" "$LOCAL_DIR/"
+ls -1t "$LOCAL_DIR"/chaider-*.tar.gz.gpg | tail -n +$((LOCAL_KEEP + 1)) | xargs -r rm -f
+
+# Off-site — skipped (not an error) until the Google Drive remote is linked
+case "$REMOTE" in
+  *:*) if ! rclone listremotes 2>/dev/null | grep -qx "${REMOTE%%:*}:"; then
+         echo "  off-site skipped: rclone remote '${REMOTE%%:*}' not set up yet (local copy only)"
+         echo "[$(date '+%F %T')] backup done (local only)"
+         exit 0
+       fi ;;
+esac
+
+# Retention below lists these folders — make sure they exist on the first run
+for d in daily monthly uploads uploads-deleted; do rclone mkdir "$REMOTE/$d"; done
 rclone copy "$ARCHIVE" "$REMOTE/daily/"
 if [ "$(date +%d)" = "01" ]; then
   rclone copy "$ARCHIVE" "$REMOTE/monthly/"
 fi
-echo "  data archive: $(du -h "$ARCHIVE" | cut -f1)"
 
 # 2. Public photos/videos — sync only what changed (thumbnails are regenerated on demand)
 rclone sync "$APP_DIR/server/uploads" "$REMOTE/uploads" \
