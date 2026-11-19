@@ -135,10 +135,37 @@ async function loadAdminLogo() {
   } catch {}
 }
 
+// Phones/tablets: the sidebar slides in from the side — add a menu button to
+// the top bar and a backdrop that closes it (see .menu-toggle in admin.css)
+function initMobileMenu() {
+  const sidebar = document.querySelector('.sidebar');
+  const topbar = document.querySelector('.admin-topbar');
+  if (!sidebar || !topbar || topbar.querySelector('.menu-toggle')) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'menu-toggle';
+  btn.setAttribute('aria-label', 'תפריט');
+  btn.setAttribute('aria-expanded', 'false');
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
+  topbar.prepend(btn);
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sidebar-backdrop';
+  document.body.appendChild(backdrop);
+  const set = open => {
+    sidebar.classList.toggle('open', open);
+    backdrop.classList.toggle('show', open);
+    btn.setAttribute('aria-expanded', String(open));
+  };
+  btn.addEventListener('click', () => set(!sidebar.classList.contains('open')));
+  backdrop.addEventListener('click', () => set(false));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sidebar.classList.contains('open')) set(false); });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   markActive();
   renderUser();
   loadAdminLogo();
+  initMobileMenu();
 });
 
 // ── Styled confirm dialog (replaces the browser's confirm()) ──
