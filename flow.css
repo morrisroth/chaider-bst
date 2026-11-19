@@ -529,7 +529,9 @@ button,input,select,textarea{font-family:inherit}
 .hero-inner{position:relative;z-index:2;padding-block:90px 100px}
 .hero-video h1{color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.25)}
 .hero-video h1 .grad-txt{background:var(--grad-gold);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero-video .hero-lead{color:rgba(255,255,255,.9);max-width:560px;font-weight:400}
+.hero-video .hero-lead{color:rgba(255,255,255,.9);max-width:560px;font-weight:400;margin-bottom:0}
+/* Text sits near the right edge of the screen instead of inside the 1140px column */
+.hero-video .hero-inner{max-width:none;width:100%;padding-inline:clamp(18px,7vw,120px)}
 @media (max-width:760px){
   .hero-video{min-height:auto}
   .hero-inner{padding-block:70px 76px}
@@ -539,7 +541,17 @@ button,input,select,textarea{font-family:inherit}
 /* ---------- five-up pillars ---------- */
 .grid-5{display:flex;flex-wrap:wrap;justify-content:center;gap:22px}
 .grid-5 .vtile{flex:1 1 0;min-width:0;padding-inline:20px}
-.grid-5 .vtile h3{font-size:19px}
+.grid-5 .vtile h3{font-size:19px;text-wrap:balance}
+.grid-5 .vtile p{text-wrap:pretty}
+/* Wide screens: let the five cards break out of the 1140px column (up to
+   1400px) so each card is wide enough for its heading and text to sit evenly */
+@media (min-width:1101px){
+  .grid-5{flex-wrap:nowrap;margin-inline:calc(50% - min(700px, 50vw - 32px))}
+  .grid-5 .vtile{padding:34px 26px}
+  /* same 2-line slot for every heading, so all five texts start on one line */
+  .grid-5 .vtile h3{min-height:2.7em;display:flex;align-items:center;justify-content:center;line-height:1.35}
+  .grid-5 .vtile p{font-size:15px}
+}
 .sec-head h2{text-wrap:balance}
 .sec-head.wide{max-width:900px}
 .sec-head.wide h2{font-size:36px;line-height:1.25}
