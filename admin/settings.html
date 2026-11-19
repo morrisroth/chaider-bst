@@ -277,7 +277,7 @@ async function uploadVideo(input) {
   input.value = '';
 }
 async function clearVideo() {
-  if (!videoUrl || !confirm('להסיר את הסרטון מדף הבית?')) return;
+  if (!videoUrl || !(await confirmDialog({ title: 'להסיר את הסרטון מדף הבית?', okText: 'הסרה' }))) return;
   try {
     await api('PUT', '/settings', { hero_video: '' });
     setVideoPreview('');

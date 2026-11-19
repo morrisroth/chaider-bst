@@ -95,7 +95,7 @@ function render() {
 }
 
 async function del(id) {
-  if (!confirm('למחוק את הפוסט?')) return;
+  if (!(await confirmDialog({ title: 'למחוק את הפוסט?', message: 'הפוסט יוסר מהאתר. לא ניתן לבטל את הפעולה.', okText: 'כן, למחוק' }))) return;
   try {
     await api('DELETE', `/posts/${id}`);
     allPosts = allPosts.filter(p => p.id !== id);

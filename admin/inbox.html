@@ -121,7 +121,7 @@ async function select(id) {
 }
 
 async function delMsg() {
-  if (!selected || !confirm('למחוק הודעה זו?')) return;
+  if (!selected || !(await confirmDialog({ title: 'למחוק הודעה זו?', message: 'לא ניתן לבטל את הפעולה.', okText: 'כן, למחוק' }))) return;
   await api('DELETE', `/contact/${selected.id}`);
   msgs = msgs.filter(m => m.id !== selected.id);
   selected = null;

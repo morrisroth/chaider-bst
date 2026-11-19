@@ -107,7 +107,7 @@ async function addSlide() {
 }
 
 async function del(id) {
-  if (!confirm('למחוק שקף זה?')) return;
+  if (!(await confirmDialog({ title: 'למחוק שקף זה?', message: 'לא ניתן לבטל את הפעולה.', okText: 'כן, למחוק' }))) return;
   await api('DELETE', `/slider/${id}`);
   slides = slides.filter(s => s.id !== id); render();
 }

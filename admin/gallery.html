@@ -150,6 +150,38 @@
 .a-lb-next { left:  calc(100% + 14px); }
 .a-lb-counter { color: rgba(255,255,255,.5); font-size: 13px; }
 
+/* selection */
+.sel-box {
+  position: absolute; top: 8px; left: 8px; z-index: 3; width: 26px; height: 26px; border-radius: 8px;
+  border: 2px solid rgba(255,255,255,.9); background: rgba(14,58,70,.35); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; transition: .15s;
+  opacity: 0; color: #fff; padding: 0;
+}
+.sel-box svg { width: 15px; height: 15px; opacity: 0; }
+.photo-card:hover .sel-box, .photo-grid.selecting .sel-box { opacity: 1; }
+.photo-card.selected .sel-box { background: var(--teal); border-color: #fff; opacity: 1; }
+.photo-card.selected .sel-box svg { opacity: 1; }
+.photo-card.selected { outline: 3px solid var(--teal); outline-offset: -3px; }
+.photo-card.selected .media-wrap img { filter: brightness(.8); }
+.photo-grid.selecting .photo-actions { display: none; }
+.photo-actions { left: auto; right: 8px; top: 40px; }
+@media (hover: none) { .sel-box { opacity: 1; } .photo-actions { opacity: 1; } }
+
+.sel-bar {
+  position: sticky; top: 12px; z-index: 20; display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: rgba(14,58,70,.94); color: #fff; padding: 10px 14px 10px 10px; border-radius: 16px;
+  box-shadow: 0 14px 34px rgba(14,58,70,.28); margin-bottom: 16px; backdrop-filter: blur(8px);
+}
+.sel-bar.show { display: flex; }
+.sel-bar .sel-count { font-weight: 700; font-size: 14.5px; margin-left: auto; }
+.sel-bar button { border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff;
+  border-radius: 999px; padding: 7px 14px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.sel-bar button:hover { background: rgba(255,255,255,.22); }
+.sel-bar .sel-del { background: linear-gradient(135deg,#ef4444,#b91c1c); border-color: transparent; }
+.sel-bar .sel-del:hover { filter: brightness(1.1); }
+
+.upload-summary { margin-top: 12px; font-size: 13.5px; font-weight: 600; color: var(--teal); min-height: 1em; }
+
 /* toast */
 .toast {
   position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
@@ -199,9 +231,10 @@
         <div class="drop-icon">🖼️</div>
         <div class="drop-title">גררו תמונות או סרטונים לכאן</div>
         <div class="drop-sub">תמונות: JPG, PNG, WebP · סרטונים: MP4, MOV, WebM</div>
-        <div class="drop-hint">ניתן לבחור מספר קבצים בו-זמנית · כל קובץ יופיע מיד בגלריה</div>
+        <div class="drop-hint">ניתן לבחור או לגרור הרבה קבצים בבת אחת · 3 קבצים עולים במקביל</div>
       </div>
       <div class="upload-queue" id="uploadQueue"></div>
+      <div class="upload-summary" id="uploadSummary" aria-live="polite"></div>
 
       <!-- Filter bar -->
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:28px 0 18px">
@@ -215,9 +248,18 @@
           <button class="filter-btn" onclick="setFilter('שבתות',this)">שבתות</button>
           <button class="filter-btn" onclick="setFilter('לימוד',this)">לימוד</button>
         </div>
-        <div style="font-size:12.5px;color:var(--muted)">לחצו על כיתוב לעריכה · hover לאפשרויות</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:12.5px;color:var(--muted)">לחצו על כיתוב לעריכה · סמנו ☐ כדי למחוק כמה בבת אחת</span>
+          <button class="btn btn-line btn-sm" onclick="selectAllVisible()">בחירת הכל</button>
+        </div>
       </div>
 
+      <div class="sel-bar" id="selBar" role="region" aria-label="פריטים שנבחרו">
+        <button class="sel-del" onclick="deleteSelected()">🗑 מחיקת הנבחרים</button>
+        <button onclick="selectAllVisible()">בחירת כל המוצגים</button>
+        <button onclick="clearSelection()">ביטול בחירה</button>
+        <span class="sel-count" id="selCount"></span>
+      </div>
       <div class="photo-grid" id="photoGrid"></div>
     </div>
   </div>
@@ -250,6 +292,7 @@ const LAYOUT_ICONS = {
 const LAYOUT_TIPS = { normal:'רגיל (1×1)', wide:'רחב — 2 עמודות', tall:'גבוה — 2 שורות' };
 
 let items = [], activeFilter = 'הכל', lbItems = [], lbIdx = 0;
+const selected = new Set();
 
 // ── Load ──
 async function load() {
@@ -300,8 +343,11 @@ function renderGrid() {
          <div class="play-badge"><svg viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="30" fill="rgba(255,255,255,.22)"/><polygon points="23,18 47,30 23,42" fill="#fff"/></svg></div>`
       : `<img src="${escHtml(item.image)}" alt="${escHtml(item.caption)}" loading="lazy" />`;
     return `
-    <div class="photo-card" id="card-${item.id}">
-      <div class="media-wrap" onclick="lbOpen(${i})">
+    <div class="photo-card${selected.has(item.id) ? ' selected' : ''}" id="card-${item.id}">
+      <button class="sel-box" onclick="event.stopPropagation();toggleSelect('${item.id}')" aria-pressed="${selected.has(item.id)}" title="בחירה">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <div class="media-wrap" onclick="selected.size ? toggleSelect('${item.id}') : lbOpen(${i})">
         ${mediaHtml}
         <div class="type-chip ${isVideo?'vid':'img'}">${isVideo?'📹 וידאו':'🖼 תמונה'}</div>
       </div>
@@ -330,58 +376,143 @@ function renderGrid() {
       </div>
     </div>`;
   }).join('');
+  updateSelBar();
+}
+
+// ── Multi-select ──
+function toggleSelect(id) {
+  if (selected.has(id)) selected.delete(id); else selected.add(id);
+  const card = document.getElementById(`card-${id}`);
+  if (card) {
+    card.classList.toggle('selected', selected.has(id));
+    card.querySelector('.sel-box').setAttribute('aria-pressed', selected.has(id));
+  }
+  updateSelBar();
+}
+function selectAllVisible() {
+  visibleItems().forEach(i => selected.add(i.id));
+  renderGrid();
+}
+function clearSelection() {
+  selected.clear();
+  renderGrid();
+}
+function updateSelBar() {
+  // drop ids that no longer exist
+  for (const id of selected) if (!items.some(i => i.id === id)) selected.delete(id);
+  const n = selected.size;
+  document.getElementById('selBar').classList.toggle('show', n > 0);
+  document.getElementById('photoGrid').classList.toggle('selecting', n > 0);
+  document.getElementById('selCount').textContent = n === 1 ? 'נבחר פריט אחד' : `נבחרו ${n} פריטים`;
+}
+async function deleteSelected() {
+  const ids = [...selected];
+  if (!ids.length) return;
+  const ok = await confirmDialog({
+    title: ids.length === 1 ? 'למחוק את הפריט שנבחר?' : `למחוק ${ids.length} פריטים?`,
+    message: 'הפריטים יוסרו מהגלריה באתר. לא ניתן לבטל את הפעולה.',
+    okText: 'כן, למחוק'
+  });
+  if (!ok) return;
+  try {
+    const r = await api('POST', '/gallery/bulk-delete', { ids });
+    items = items.filter(i => !selected.has(i.id));
+    selected.clear();
+    renderGrid(); updateCount();
+    showToast(`${r.deleted} פריטים נמחקו`);
+  } catch (e) { showToast('שגיאה: ' + e.message, true); }
 }
 
 // ── Upload ──
 function isVideoFile(file) { return file.type.startsWith('video/'); }
 
+// Upload with real progress (XHR) — admin.js uploadFile() uses fetch, which can't report progress
+function uploadWithProgress(file, isVideo, onProgress) {
+  return new Promise((resolve, reject) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', API + (isVideo ? '/upload/video' : '/upload'));
+    xhr.setRequestHeader('Authorization', `Bearer ${getToken()}`);
+    xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
+    xhr.onload = () => {
+      let data = {};
+      try { data = JSON.parse(xhr.responseText); } catch {}
+      if (xhr.status === 401) { logout(); return reject(new Error('פג תוקף ההתחברות')); }
+      if (xhr.status >= 200 && xhr.status < 300 && data.url) resolve(data.url);
+      else reject(new Error(data.error || (xhr.status === 413 ? 'הקובץ גדול מדי' : 'שגיאת העלאה')));
+    };
+    xhr.onerror = () => reject(new Error('אין חיבור לשרת'));
+    xhr.send(fd);
+  });
+}
+
+let uploadSeq = 0, uploadsRunning = 0;
 async function handleFiles(files) {
   const queue = document.getElementById('uploadQueue');
-  const arr = Array.from(files);
-  arr.forEach((file, i) => {
+  const summary = document.getElementById('uploadSummary');
+  const arr = Array.from(files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+  document.getElementById('fileInput').value = '';
+  if (!arr.length) { showToast('ניתן להעלות רק תמונות וסרטונים', true); return; }
+
+  // Each tile gets a unique id, so a second batch never collides with the first
+  const jobs = arr.map(file => {
+    const n = ++uploadSeq, vid = isVideoFile(file);
     const div = document.createElement('div');
-    div.className = 'queue-item'; div.id = `q-${i}`;
+    div.className = 'queue-item'; div.id = `q-${n}`;
     const url = URL.createObjectURL(file);
-    if (isVideoFile(file)) {
-      div.innerHTML = `<video src="${url}" muted preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>
-        <div class="queue-progress" id="qp-${i}"><div style="font-size:11px">מעלה סרטון...</div>
-          <div class="progress-bar-wrap"><div class="progress-bar" id="pb-${i}" style="width:0%"></div></div></div>`;
-    } else {
-      div.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover"/>
-        <div class="queue-progress" id="qp-${i}"><div style="font-size:11px">מעלה...</div>
-          <div class="progress-bar-wrap"><div class="progress-bar" id="pb-${i}" style="width:0%"></div></div></div>`;
-    }
+    div.innerHTML = (vid ? `<video src="${url}" muted preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>`
+                         : `<img src="${url}" style="width:100%;height:100%;object-fit:cover"/>`) +
+      `<div class="queue-progress" id="qp-${n}"><div style="font-size:11px" id="qt-${n}">ממתין...</div>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="pb-${n}" style="width:0%"></div></div></div>`;
     queue.appendChild(div);
+    return { file, n, vid, url };
   });
 
-  for (let i = 0; i < arr.length; i++) {
-    const file = arr[i]; const vid = isVideoFile(file);
-    const pb = document.getElementById(`pb-${i}`);
-    const qp = document.getElementById(`qp-${i}`);
-    let prog = 0;
-    const iv = setInterval(() => { prog = Math.min(prog + (vid?4:12), 85); pb.style.width = prog+'%'; }, 150);
+  let done = 0, failed = 0;
+  const total = jobs.length;
+  uploadsRunning += total;
+  const report = () => { summary.textContent = `הועלו ${done} מתוך ${total}${failed ? ` · ${failed} נכשלו` : ''}`; };
+  report();
+
+  async function run(job) {
+    const pb = document.getElementById(`pb-${job.n}`), qt = document.getElementById(`qt-${job.n}`);
+    qt.textContent = job.vid ? 'מעלה סרטון...' : 'מעלה...';
     try {
-      const url = await uploadFile(file, vid);
-      clearInterval(iv); pb.style.width = '100%';
-      await new Promise(r => setTimeout(r,200));
-      qp.innerHTML = '<div class="queue-done">✓</div>';
+      const url = await uploadWithProgress(job.file, job.vid, f => { pb.style.width = Math.round(f * 100) + '%'; });
       const newItem = await api('POST', '/gallery', {
-        type: vid ? 'video' : 'image',
-        image: vid ? '' : url,
-        video: vid ? url  : '',
+        type: job.vid ? 'video' : 'image',
+        image: job.vid ? '' : url,
+        video: job.vid ? url : '',
         caption: '', category: 'כללי', layout: 'normal'
       });
       items.unshift(newItem);
-      renderGrid(); updateCount();
-      showToast(vid ? '✓ הסרטון הועלה' : '✓ התמונה הועלתה');
-    } catch(e) {
-      clearInterval(iv);
-      qp.innerHTML = '<div class="queue-err">✕</div>';
-      showToast('שגיאה: ' + e.message, true);
+      document.getElementById(`qp-${job.n}`).innerHTML = '<div class="queue-done">✓</div>';
+      done++;
+    } catch (e) {
+      document.getElementById(`qp-${job.n}`).innerHTML = `<div class="queue-err" title="${escHtml(e.message)}">✕</div>`;
+      failed++;
     }
+    report();
   }
-  setTimeout(() => { queue.innerHTML = ''; }, 2500);
-  document.getElementById('fileInput').value = '';
+
+  // 3 uploads at a time
+  const pending = jobs.slice();
+  await Promise.all(Array.from({ length: Math.min(3, pending.length) }, async () => {
+    while (pending.length) await run(pending.shift());
+  }));
+
+  renderGrid(); updateCount();
+  showToast(failed ? `הועלו ${done} · ${failed} נכשלו` : (total === 1 ? '✓ הקובץ הועלה' : `✓ הועלו ${done} קבצים`), !!failed);
+  uploadsRunning -= total;
+  setTimeout(() => {
+    // Successful tiles go away; failed ones stay so it's clear which file didn't upload
+    jobs.forEach(j => {
+      const el = document.getElementById(`q-${j.n}`);
+      if (el && el.querySelector('.queue-done')) { el.remove(); URL.revokeObjectURL(j.url); }
+    });
+    if (!uploadsRunning && !queue.children.length) summary.textContent = '';
+  }, 2500);
 }
 
 // drag & drop
@@ -449,8 +580,15 @@ async function saveLayout(id, layout, btn) {
   showToast(`פריסה: ${LAYOUT_TIPS[layout]} ✓`);
 }
 async function delItem(id) {
-  if (!confirm('למחוק פריט זה?')) return;
-  await api('DELETE',`/gallery/${id}`);
+  const ok = await confirmDialog({
+    title: 'למחוק פריט זה?',
+    message: 'הפריט יוסר מהגלריה באתר. לא ניתן לבטל את הפעולה.',
+    okText: 'כן, למחוק'
+  });
+  if (!ok) return;
+  try { await api('DELETE',`/gallery/${id}`); }
+  catch (e) { showToast('שגיאה: ' + e.message, true); return; }
+  selected.delete(id);
   items = items.filter(i=>i.id!==id);
   const card = document.getElementById(`card-${id}`);
   if (card) { card.style.opacity='0'; card.style.transform='scale(.85)'; card.style.transition='.3s'; }

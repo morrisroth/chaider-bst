@@ -34,6 +34,16 @@ router.patch('/:id', auth, (req, res) => {
   res.json(items[idx]);
 });
 
+// Delete several items at once — body: { ids: [...] }
+router.post('/bulk-delete', auth, (req, res) => {
+  const ids = new Set(Array.isArray(req.body?.ids) ? req.body.ids : []);
+  if (!ids.size) return res.status(400).json({ error: 'לא נבחרו פריטים' });
+  const items = read('gallery.json');
+  const kept = items.filter(i => !ids.has(i.id));
+  write('gallery.json', kept);
+  res.json({ ok: true, deleted: items.length - kept.length });
+});
+
 router.delete('/:id', auth, (req, res) => {
   const items = read('gallery.json');
   const idx = items.findIndex(i => i.id === req.params.id);

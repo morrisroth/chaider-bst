@@ -223,7 +223,7 @@ async function saveNotes() {
 }
 
 async function delReg() {
-  if (!selected || !confirm('למחוק הרשמה זו?')) return;
+  if (!selected || !(await confirmDialog({ title: 'למחוק הרשמה זו?', message: 'כל פרטי ההרשמה והמסמכים המצורפים יימחקו. לא ניתן לבטל את הפעולה.', okText: 'כן, למחוק' }))) return;
   await api('DELETE', `/register/${selected.id}`);
   regs = regs.filter(r => r.id !== selected.id);
   selected = null;
